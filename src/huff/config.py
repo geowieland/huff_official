@@ -4,10 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.3
-# Last update: 2026-01-20 07:05
+# Version:     1.0.4
+# Last update: 2026-01-27 18:06
 # Copyright (c) 2025 Thomas Wieland
 #-----------------------------------------------------------------------
+
+
+PACKAGE_NAME = "huff"
+PACKAGE_VERSION = "1.7.1"
 
 
 # Basic config:
@@ -65,6 +69,8 @@ DEFAULT_LCT_SUFFIX = "__LCT"
 DEFAULT_WEIGHTED_SUFFIX = "_weighted"
 DEFAULT_OBSERVED_SUFFIX = "_emp"
 DEFAULT_TOTAL_SUFFIX = "_total"
+DEFAULT_COORDS_SUFFIX = "_coords"
+DEFAULT_UNIQUE_ID_SUFFIX = "_uid"
 
 DEFAULT_OBSERVED_COL = "observed"
 DEFAULT_EXPECTED_COL = "expected"
@@ -82,6 +88,7 @@ DEFAULT_NAME_TC = "Transport costs"
 DEFAULT_NAME_MARKETSIZE = "Market size"
 DEFAULT_NAME_CUSTOMER_ORIGINS = "Customer origins"
 DEFAULT_NAME_SUPPLY_LOCATIONS = "Supply locations"
+DEFAULT_NAME_INTERACTION_MATRIX = "Interaction matrix"
 
 # Default weighting functions:
 PERMITTED_WEIGHTING_FUNCTIONS = {

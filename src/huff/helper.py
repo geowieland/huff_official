@@ -4,12 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.10
-# Last update: 2026-01-20 07:05
+# Version:     1.1.11
+# Last update: 2026-01-27 18:08
 # Copyright (c) 2025 Thomas Wieland
 #-----------------------------------------------------------------------
 
+from datetime import datetime
 import pandas as pd
+import huff.config as config
 
 
 def check_vars(
@@ -94,3 +96,39 @@ def check_constant_values(values):
         return True
     else:
         return False
+    
+def create_timestamp(
+    function: str,
+    status: str = "OK"
+    ):
+
+    now = datetime.now()
+
+    timestamp_dict = {
+        "package_version": f"{config.PACKAGE_NAME} {config.PACKAGE_VERSION}",
+        "function": function,
+        "datetime": now.strftime("%Y-%m-%d %H-%M-%S"),
+        "status": status
+    }
+
+    return timestamp_dict
+
+def add_timestamp(
+    function: str,
+    metadata: dict,
+    status: str = "OK"
+    ):
+    
+    timestamp_dict = create_timestamp(
+        function=function,
+        status=status
+        )
+    
+    if "timestamp" not in metadata:
+        metadata["timestamp"] = {}
+        
+    next_timestamp_index = max(metadata["timestamp"].keys(), default=-1) + 1
+    
+    metadata["timestamp"][next_timestamp_index] = timestamp_dict
+    
+    return metadata

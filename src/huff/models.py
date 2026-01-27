@@ -5,7 +5,7 @@
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
 # Version:     1.7.1
-# Last update: 2026-01-24 ??:??
+# Last update: 2026-01-27 18:13
 # Copyright (c) 2025 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ import huff.helper as helper
 import huff.config as config
 import huff.goodness_of_fit as gof
 from huff.ors import Client, TimeDistanceMatrix, Isochrone
-from huff.gistools import overlay_difference, distance_matrix, buffers
+from huff.gistools import overlay_difference, distance_matrix, buffers, map_with_basemap, distance_matrix_from_gdf
 
 
 class CustomerOrigins:
@@ -96,6 +96,34 @@ class CustomerOrigins:
 
         return metadata
     
+    def show_log(self):
+
+        metadata = self.metadata
+        
+        if "timestamp" not in metadata:
+            
+            print("No timestamps found in CustomerOrigins object")
+            
+            return None
+            
+        else:
+            
+            print("Timestamps for CustomerOrigins object")
+            
+            for key, value in metadata["timestamp"].items():
+                
+                datetime = value['datetime']
+                package_version = value['package_version']
+                function = value['function']
+                status = value['status']
+                
+                if key == 0:
+                    function = f"{function} (Creation)"
+                
+                print(f"Step {key} {datetime} {package_version} {function} --> Status: {status}")
+                
+            return metadata["timestamp"]            
+    
     def define_marketsize(
         self,
         marketsize_col: str,
@@ -110,6 +138,10 @@ class CustomerOrigins:
         else:
             metadata["marketsize_col"] = marketsize_col
 
+        metadata = helper.add_timestamp(
+            function = "define_marketsize",
+            metadata = metadata
+            )
         self.metadata = metadata
 
         if verbose:
@@ -158,6 +190,10 @@ class CustomerOrigins:
         else:
             metadata["weighting"][0]["param"] = float(param_lambda)
 
+        metadata = helper.add_timestamp(
+            function = "define_transportcosts_weighting",
+            metadata = metadata
+            )
         self.metadata = metadata
         
         if verbose:
@@ -202,6 +238,12 @@ class CustomerOrigins:
             output_crs = output_crs,
             verbose = verbose
             )
+        
+        metadata = helper.add_timestamp(
+            function = "isochrones",
+            metadata = metadata
+            )        
+        self.metadata = metadata
 
         self.isochrones_gdf = isochrones_gdf
 
@@ -231,9 +273,107 @@ class CustomerOrigins:
             verbose = verbose
             )
         
+        metadata = helper.add_timestamp(
+            function = "buffers",
+            metadata = metadata
+            )        
+        self.metadata = metadata
+        
         self.buffers_gdf = buffers_gdf
 
         return self
+    
+    def plot(
+        self,
+        point_style={},
+        polygon_style={},
+        save_output: bool = True,
+        output_filepath: str = "customer_origins.png",
+        output_dpi = 300,
+        zoom: int = 15,
+        legend: bool = True,
+        map_title: str = "Map of customer origins with OSM basemap",
+        verbose: bool = False
+        ):
+
+        """
+        point_style = {
+            "name": "Districts",
+            "color": "black",
+            "alpha": 1,
+            "size": 15,
+        },
+        polygon_style= {
+            "name": "Buffers",
+            "color": {
+                "buffer": {
+                    500: "midnightblue", 
+                    1000: "blue", 
+                    1500: "dodgerblue",
+                    }
+                },            
+            "alpha": 0.3
+        },
+        """
+
+        customer_origins_gdf = self.get_geodata_gpd_original()
+
+        if "geometry" not in customer_origins_gdf.columns:
+            print("No map plot possible because customer origins lack geometry.")
+            return None
+
+        if verbose:
+            print("Extracting layers from CustomerOrigins object", end = " ... ")
+
+        layers_to_plot = [customer_origins_gdf]
+        layers_to_plot_included = ["Customer origins points"] 
+
+        if self.get_isochrones_gdf() is not None:
+            customer_origins_gdf_iso = self.get_isochrones_gdf()
+            layers_to_plot = layers_to_plot + [customer_origins_gdf_iso]
+            layers_to_plot_included = layers_to_plot_included + ["Isochrones"]
+            color_key = f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_min"
+        else:
+            if self.get_buffers_gdf() is not None:
+                customer_origins_gdf_buf = self.get_buffers_gdf()
+                layers_to_plot = layers_to_plot + [customer_origins_gdf_buf]
+                layers_to_plot_included = layers_to_plot_included + ["Buffers"]
+                color_key = config.DEFAULT_SEGMENTS_COL
+
+        if verbose:
+            print("OK")
+            print(f"NOTE: CustomerOrigins object contains {len(layers_to_plot)} layers to plot: {', '.join(layers_to_plot_included)}.")
+      
+        layer_styles = {
+            0: point_style
+            }
+
+        if polygon_style is not None and len(polygon_style) > 0:
+            
+            layer_styles[1] = polygon_style
+
+            color_key_old = next(iter(layer_styles[1]["color"]))
+            layer_styles[1]["color"][color_key] = layer_styles[1]["color"].pop(color_key_old)
+
+        assert len(layers_to_plot) == len(layer_styles), f"Error while trying to plot customer origins: There are {len(layers_to_plot)} layers to plot but {len(layer_styles)} plot styles were stated." 
+
+        map_osm = map_with_basemap(
+            layers = layers_to_plot,
+            styles = layer_styles,
+            save_output = save_output,
+            output_filepath = output_filepath,
+            output_dpi = output_dpi,
+            legend = legend,
+            map_title = map_title,
+            zoom = zoom,
+            verbose = False
+            )
+        
+        return [
+            map_osm,
+            layers_to_plot,
+            layer_styles
+            ]
 
 class SupplyLocations:
 
@@ -299,6 +439,34 @@ class SupplyLocations:
 
         return metadata
 
+    def show_log(self):
+
+        metadata = self.metadata
+        
+        if "timestamp" not in metadata:
+            
+            print("No timestamps found in SupplyLocations object")
+            
+            return None
+            
+        else:
+            
+            print("Timestamps for SupplyLocations object")
+            
+            for key, value in metadata["timestamp"].items():
+                
+                datetime = value['datetime']
+                package_version = value['package_version']
+                function = value['function']
+                status = value['status']
+                
+                if key == 0:
+                    function = f"{function} (Creation)"
+                
+                print(f"Step {key} {datetime} {package_version} {function} --> Status: {status}")
+                
+            return metadata["timestamp"]
+
     def define_attraction(
         self,
         attraction_col: str,
@@ -313,6 +481,11 @@ class SupplyLocations:
         else:
             metadata["attraction_col"][0] = attraction_col
 
+        metadata = helper.add_timestamp(
+            function = "define_attraction",
+            metadata = metadata
+            )        
+        
         self.metadata = metadata
 
         if verbose:
@@ -337,6 +510,11 @@ class SupplyLocations:
         metadata["weighting"][0]["name"] = config.DEFAULT_COLNAME_ATTRAC
         metadata["weighting"][0]["func"] = func
         metadata["weighting"][0]["param"] = float(param_gamma)
+        
+        metadata = helper.add_timestamp(
+            function = "define_attraction_weighting",
+            metadata = metadata
+            )
         
         self.metadata = metadata
 
@@ -365,6 +543,11 @@ class SupplyLocations:
             "param": param
             }
 
+        metadata = helper.add_timestamp(
+            function = "add_var",
+            metadata = metadata
+            )
+        
         self.metadata = metadata
 
         return self
@@ -407,6 +590,13 @@ class SupplyLocations:
                 geodata_gpd_original.loc[geodata_gpd_original[unique_id].astype(str) == str(entry["location"]), entry["attraction_col"]] = entry["new_value"]
 
         self.geodata_gpd_original = geodata_gpd_original
+        
+        metadata = helper.add_timestamp(
+            function = "change_attraction_values",
+            metadata = metadata
+            )
+        
+        self.metadata = metadata
 
         return self
 
@@ -449,6 +639,11 @@ class SupplyLocations:
             )
         
         metadata["no_points"] = metadata["no_points"]+new_destinations_metadata["no_points"]
+        
+        metadata = helper.add_timestamp(
+            function = "add_new_destinations",
+            metadata = metadata
+            )       
         
         self.geodata_gpd = geodata_gpd
         self.geodata_gpd_original = geodata_gpd_original
@@ -495,6 +690,13 @@ class SupplyLocations:
             )
 
         self.isochrones_gdf = isochrones_gdf
+        
+        metadata = helper.add_timestamp(
+            function = "isochrones",
+            metadata = metadata
+            )       
+        
+        self.metadata = metadata
 
         return self
 
@@ -522,7 +724,116 @@ class SupplyLocations:
         
         self.buffers_gdf = buffers_gdf
 
-        return self    
+        metadata = helper.add_timestamp(
+            function = "buffers",
+            metadata = metadata
+            )       
+        
+        self.metadata = metadata
+        
+        return self
+    
+    def plot(
+        self,
+        point_style={},
+        polygon_style={},
+        save_output: bool = True,
+        output_filepath: str = "supply_locations.png",
+        output_dpi = 300,
+        zoom: int = 15,
+        legend: bool = True,
+        map_title: str = "Map of supply locations with OSM basemap",
+        verbose: bool = False
+        ):
+
+        """
+        point_style = {
+            "name": "Supermarket chains",
+            "color": {
+                "Name": {
+                    "Aldi S├╝d": "blue",
+                    "Edeka": "yellow",
+                    "Lidl": "red",
+                    "Netto": "orange",
+                    "Real": "darkblue",
+                    "Treff 3000": "fuchsia"
+                    }
+                },
+            "alpha": 1,
+            "size": 30
+        },
+        polygon_style = {
+            "name": "Isochrones",
+            "color": {
+                "segm_min": {
+                    3: "midnightblue", 
+                    6: "blue", 
+                    9: "dodgerblue", 
+                    12: "deepskyblue", 
+                    15: "aqua"
+                    }
+                },            
+            "alpha": 0.3
+        },
+        """
+
+        supply_locations_gdf = self.get_geodata_gpd_original()
+
+        if "geometry" not in supply_locations_gdf.columns:
+            print("No map plot possible because supply locations lack geometry.")
+            return None
+
+        if verbose:
+            print("Extracting layers from SupplyLocations object", end = " ... ")
+
+        layers_to_plot = [supply_locations_gdf]
+        layers_to_plot_included = ["Supply locations points"] 
+
+        if self.get_isochrones_gdf() is not None:
+            supply_locations_gdf_iso = self.get_isochrones_gdf()
+            layers_to_plot = layers_to_plot + [supply_locations_gdf_iso]
+            layers_to_plot_included = layers_to_plot_included + ["Isochrones"]
+            color_key = f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_min"
+        else:
+            if self.get_buffers_gdf() is not None:
+                supply_locations_gdf_buf = self.get_buffers_gdf()
+                layers_to_plot = layers_to_plot + [supply_locations_gdf_buf]
+                layers_to_plot_included = layers_to_plot_included + ["Buffers"]
+                color_key = config.DEFAULT_SEGMENTS_COL
+
+        if verbose:
+            print("OK")
+            print(f"NOTE: SupplyLocations object contains {len(layers_to_plot)} layers to plot: {', '.join(layers_to_plot_included)}.")
+      
+        layer_styles = {
+            0: point_style
+            }
+
+        if polygon_style is not None and len(polygon_style) > 0:
+            layer_styles[1] = polygon_style
+
+            color_key_old = next(iter(layer_styles[1]["color"]))
+            layer_styles[1]["color"][color_key] = layer_styles[1]["color"].pop(color_key_old)
+
+        assert len(layers_to_plot) == len(layer_styles), f"Error while trying to plot supply locations: There are {len(layers_to_plot)} layers to plot but {len(layer_styles)} plot styles were stated." 
+
+        map_osm = map_with_basemap(
+            layers = layers_to_plot,
+            styles = layer_styles,
+            save_output = save_output,
+            output_filepath = output_filepath,
+            output_dpi = output_dpi,
+            legend = legend,
+            map_title = map_title,
+            zoom = zoom,
+            verbose = verbose
+            )
+        
+        return [
+            map_osm,
+            layers_to_plot,
+            layer_styles
+            ]
 
 class InteractionMatrix:
 
@@ -557,7 +868,7 @@ class InteractionMatrix:
         supply_locations_metadata = self.get_supply_locations().get_metadata()
         interaction_matrix_metadata = self.get_metadata()
 
-        print("Interaction Matrix")
+        print(config.DEFAULT_NAME_INTERACTION_MATRIX)
         print("----------------------------------")
         
         print("Supply locations    " + str(supply_locations_metadata["no_points"]))
@@ -655,6 +966,35 @@ class InteractionMatrix:
             interaction_matrix_metadata
             ]
 
+    def show_log(self):
+
+        metadata = self.metadata
+        
+        if "timestamp" not in metadata:
+            
+            print("No timestamps found in InteractionMatrix object")
+            
+            return None
+            
+        else:
+            
+            print("Timestamps for InteractionMatrix object")
+            
+            for key, value in metadata["timestamp"].items():
+                
+                datetime = value['datetime']
+                package_version = value['package_version']
+                function = value['function']
+                status = value['status']
+                
+                if key == 0:
+                    function = f"{function} (Creation)"
+                
+                print(f"Step {key} {datetime} {package_version} {function} --> Status: {status}")
+                
+            return metadata["timestamp"]            
+    
+
     def transport_costs(
         self,
         network: bool = True,
@@ -673,8 +1013,8 @@ class InteractionMatrix:
         ):
 
         if not network and range_type == "time":
-            if verbose:
-                print ("NOTE: Calculating euclidean distances (network = False). Setting range_type = 'distance'")
+            
+            print ("NOTE: Calculating euclidean distances (network = False). Setting range_type = 'distance'")
             range_type = "distance"
         
         if verbose:
@@ -794,6 +1134,11 @@ class InteractionMatrix:
             "ors_auth": ors_auth
             }
 
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "transport_costs",
+            metadata = interaction_matrix_metadata
+            )
+        
         self.interaction_matrix_df = interaction_matrix_df
         self.metadata = interaction_matrix_metadata
 
@@ -829,6 +1174,8 @@ class InteractionMatrix:
 
         supply_locations_metadata = self.supply_locations.metadata
         customer_origins_metadata = self.customer_origins.metadata
+        
+        interaction_matrix_metadata = self.metadata
 
         supply_locations_metadata["weighting"][0]["name"] = vars_funcs[0]["name"]
         supply_locations_metadata["weighting"][0]["func"] = vars_funcs[0]["func"]
@@ -860,8 +1207,24 @@ class InteractionMatrix:
                 if "param" in var:
                     supply_locations_metadata["weighting"][key-1]["param"] = var["param"]
 
+        supply_locations_metadata = helper.add_timestamp(
+            function = "define_weightings",
+            metadata = supply_locations_metadata
+            )
+        customer_origins_metadata = helper.add_timestamp(
+            function = "define_weightings",
+            metadata = customer_origins_metadata
+            )
+
         self.supply_locations.metadata = supply_locations_metadata
-        self.customer_origins.metadata = customer_origins_metadata
+        self.customer_origins.metadata = customer_origins_metadata       
+        
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "transport_costs",
+            metadata = interaction_matrix_metadata            
+            )
+        
+        self.metadata = interaction_matrix_metadata        
 
     def utility(
         self,
@@ -953,6 +1316,11 @@ class InteractionMatrix:
             "model_type": config.MODELS_LIST[0]
             }
 
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "utility",
+            metadata = interaction_matrix_metadata
+            )
+        
         self.interaction_matrix_df = interaction_matrix_df
         self.metadata = interaction_matrix_metadata
         
@@ -961,13 +1329,15 @@ class InteractionMatrix:
 
         return self
     
-    def probabilities (
+    def probabilities(
         self,
         check_df_vars: bool = True,
         verbose: bool = config.VERBOSE        
         ):
 
         interaction_matrix_df = self.interaction_matrix_df
+        
+        interaction_matrix_metadata = self.get_metadata()
 
         if config.DEFAULT_COLNAME_UTILITY not in interaction_matrix_df.columns or interaction_matrix_df[config.DEFAULT_COLNAME_UTILITY].isna().all():
             self.utility()
@@ -998,6 +1368,13 @@ class InteractionMatrix:
 
         self.interaction_matrix_df = interaction_matrix_df
         
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "probabilities",
+            metadata = interaction_matrix_metadata
+            )
+        
+        self.metadata = interaction_matrix_metadata
+        
         if verbose:
             print("OK")
 
@@ -1010,6 +1387,8 @@ class InteractionMatrix:
         ):
 
         interaction_matrix_df = self.interaction_matrix_df
+        
+        interaction_matrix_metadata = self.get_metadata()
 
         if config.DEFAULT_COLNAME_MARKETSIZE not in interaction_matrix_df.columns:
             raise KeyError("Error in flows calculation: No market size variable in interaction matrix")
@@ -1032,6 +1411,13 @@ class InteractionMatrix:
         interaction_matrix_df[config.DEFAULT_COLNAME_FLOWS] = interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY] * interaction_matrix_df[config.DEFAULT_COLNAME_MARKETSIZE]
 
         self.interaction_matrix_df = interaction_matrix_df
+        
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "flows",
+            metadata = interaction_matrix_metadata
+            )
+        
+        self.metadata = interaction_matrix_metadata
         
         if verbose:
             print("OK")
@@ -1060,9 +1446,22 @@ class InteractionMatrix:
         market_areas_df = market_areas_df.reset_index(drop=False)
         market_areas_df = market_areas_df.rename(columns={config.DEFAULT_COLNAME_FLOWS: config.DEFAULT_COLNAME_TOTAL_MARKETAREA})
 
+        metadata = {
+            "fit": {
+                "function": None,
+                "fit_by": None
+            },
+        }
+        
+        metadata = helper.add_timestamp(
+            function = "marketareas",
+            metadata = metadata
+        )
+
         huff_model = HuffModel(
             self,
-            market_areas_df
+            market_areas_df,
+            metadata = metadata
             )
         
         if verbose:
@@ -1132,6 +1531,8 @@ class InteractionMatrix:
         verbose: bool = config.VERBOSE
         ):
 
+        interaction_matrix_metadata = self.get_metadata()
+
         if verbose:
             print(f"Processing log-centering transformation for {', '.join(cols)}", end = " ... ")
 
@@ -1146,6 +1547,13 @@ class InteractionMatrix:
             )
         
         self.interaction_matrix_df = interaction_matrix_df
+        
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "mci_transformation",
+            metadata = interaction_matrix_metadata
+            )
+        
+        self.metadata = interaction_matrix_metadata
 
         if verbose:
             print("OK")
@@ -1193,7 +1601,7 @@ class InteractionMatrix:
         coefs = {}
         for i, col in enumerate(cols_t):
             coefs[i] = {
-                "Coefficient": col[:-5],
+                "Coefficient": col[:-len(config.DEFAULT_LCT_SUFFIX)],
                 "Estimate": float(mci_ols_coefficients[col]),
                 "SE": float(mci_ols_coef_standarderrors[col]),
                 "t": float(mci_ols_coef_t[col]),
@@ -1224,13 +1632,24 @@ class InteractionMatrix:
         customer_origins.metadata = customer_origins_metadata
         supply_locations.metadata = supply_locations_metadata
         
-        interaction_matrix_metadata = {
-            "fit": {
-                "function": "mci_fit",
-                "fit_by": "probabilities",
-                "method": "OLS"
+        if self.metadata is None:
+        
+            interaction_matrix_metadata = {
+                "fit": {
+                    "function": "mci_fit",
+                    "fit_by": "probabilities",
+                    "method": "OLS"
+                    }
                 }
-            }
+            
+        else:
+            
+            interaction_matrix_metadata = self.metadata
+        
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "mci_transformation",
+            metadata = interaction_matrix_metadata
+            )               
                
         interaction_matrix = InteractionMatrix(
             interaction_matrix_df,
@@ -1239,11 +1658,19 @@ class InteractionMatrix:
             metadata=interaction_matrix_metadata
             )
         
+        metadata = {}
+        
+        metadata = helper.add_timestamp(
+            function = "mci_fit",
+            metadata = metadata
+        )
+        
         mci_model = MCIModel(
             interaction_matrix,
             coefs,
             mci_ols_model,
-            None
+            None,
+            metadata
             )
         
         if verbose:
@@ -1485,6 +1912,16 @@ class InteractionMatrix:
 
                     supply_locations_metadata["weighting"][(key+1)]["param"] = float(param)
                     
+            supply_locations_metadata = helper.add_timestamp(
+                function = "huff_ml_fit",
+                metadata = supply_locations_metadata
+                )
+            
+            customer_origins_metadata = helper.add_timestamp(
+                function = "huff_ml_fit",
+                metadata = customer_origins_metadata
+                )
+            
             if verbose:
                 print("OK")
                 print(f"Optimization via {method} algorithm succeeded with parameters: {', '.join(str(round(par, 3)) for par in param_results)}.")
@@ -1492,6 +1929,19 @@ class InteractionMatrix:
         else:
             if verbose:
                 print("OK")
+            
+            supply_locations_metadata = helper.add_timestamp(
+                function = "huff_ml_fit",
+                metadata = supply_locations_metadata,
+                status = f"Error: Optimiziation via {method} algorithm failed"
+                )
+            
+            customer_origins_metadata = helper.add_timestamp(
+                function = "huff_ml_fit",
+                metadata = customer_origins_metadata,
+                status = f"Error: Optimiziation via {method} algorithm failed"
+                )
+            
             print(f"WARNING: Optimiziation via {method} algorithm failed with error message: '{ml_result.message}'. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html for all available algorithms.")
 
         self.supply_locations.metadata = supply_locations_metadata    
@@ -1528,12 +1978,23 @@ class InteractionMatrix:
                 print("WARNING: No update of estimates because fit parameters contain NaN")
 
                 update_estimates = False
+                    
+                self.metadata = helper.add_timestamp(
+                    function = "huff_ml_fit",
+                    metadata = self.metadata,
+                    status = "Error: No update of estimates because fit parameters contain NaN"
+                    )
 
             else:
 
                 self = self.utility(verbose=False)
                 self = self.probabilities(verbose=False)
                 self = self.flows(verbose=False)
+                
+                self.metadata = helper.add_timestamp(
+                    function = "huff_ml_fit",
+                    metadata = self.metadata
+                )
         
         self.metadata["fit"] = {
             "function": "huff_ml_fit",
@@ -1545,7 +2006,7 @@ class InteractionMatrix:
             "minimize_success": ml_result.success,
             "minimize_fittedparams": ml_result.x,
             "update_estimates": update_estimates
-            }
+            }       
         
         if verbose:
             print("OK")
@@ -1559,6 +2020,8 @@ class InteractionMatrix:
         ):
 
         interaction_matrix_df = self.interaction_matrix_df
+        
+        interaction_matrix_metadata = self.metadata
 
         if len(new_attraction_values) > 0:
 
@@ -1578,6 +2041,13 @@ class InteractionMatrix:
                 interaction_matrix_df.loc[interaction_matrix_df[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS].astype(str) == str(entry["location"]), entry["attraction_col"]] = entry["new_value"]
 
         self.interaction_matrix_df = interaction_matrix_df
+        
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "huff_ml_fit",
+            metadata = interaction_matrix_metadata
+        )
+        
+        self.metadata = interaction_matrix_metadata
         
         if verbose:
             print(f"Set new attraction values for {len(new_attraction_values)} locations")
@@ -1605,6 +2075,7 @@ class InteractionMatrix:
 
         supply_locations_geodata_gpd_original = supply_locations.get_geodata_gpd_original().copy()        
         supply_locations_geodata_gpd_original_new = supply_locations_geodata_gpd_original[supply_locations_geodata_gpd_original[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_update"] == 1]
+        
         if len(supply_locations_geodata_gpd_original_new) < 1:
             raise ValueError("Error in InteractionMatrix update: There are no new destinations for an interaction matrix update. Use SupplyLocations.add_new_destinations()")
 
@@ -1637,7 +2108,15 @@ class InteractionMatrix:
             
             interaction_matrix_df = interaction_matrix_df.sort_values(by = config.DEFAULT_COLNAME_INTERACTION)
         
-            self.interaction_matrix_df = interaction_matrix_df   
+            self.interaction_matrix_df = interaction_matrix_df
+            
+            interaction_matrix_metadata = helper.add_timestamp(
+                function = "update",
+                metadata = interaction_matrix_metadata,
+                status = "Error"
+            )
+        
+            self.metadata = interaction_matrix_metadata
             
         else:
             
@@ -1673,10 +2152,181 @@ class InteractionMatrix:
             self.probabilities(verbose=False)
             self.flows(verbose=False)
             
+            interaction_matrix_metadata = helper.add_timestamp(
+                function = "update",
+                metadata = interaction_matrix_metadata
+            )
+        
+            self.metadata = interaction_matrix_metadata
+            
             if verbose:
                 print("Interaction matrix was updated")
 
         return self
+    
+    def plot(
+        self,
+        origin_point_style: dict = {},
+        location_point_style: dict = {},
+        line_color: str = "black",
+        line_alpha: float = 0.7,
+        line_size_by: str = "flows",
+        log_line_size: bool = True,
+        save_output: bool = True,
+        output_filepath: str = "interaction_matrix.png",
+        output_dpi: int = 300,
+        zoom: int = 15,
+        legend: bool = True,
+        map_title: str = "Map of interaction matrix with OSM basemap",
+        verbose: bool = False
+        ):
+
+        """
+        origin_point_style = {
+            "name": "Districts",
+            "color": "black",
+            "alpha": 1,
+            "size": 15,
+            },
+        location_point_style = {
+            "name": "Supermarket chains",
+            "color": {
+                "Name": {
+                    "Aldi Süd": "blue",
+                    "Edeka": "yellow",
+                    "Lidl": "red",
+                    "Netto": "orange",
+                    "Real": "darkblue",
+                    "Treff 3000": "fuchsia"
+                    }
+                },
+            "alpha": 1,
+            "size": 30
+            },
+        """
+        
+        if line_size_by not in ["probabilities", "flows"]:
+            raise ValueError(f"Parameter 'line_size_by' must be one of the following: probabilities, flows.")
+        
+        if verbose:
+            print("Checking customer origins and supply locations for geometry", end = " ... ")
+            
+        customer_origins = self.get_customer_origins()
+        customer_origins_gdf = customer_origins.get_geodata_gpd_original() 
+        customer_origins_metadata = customer_origins.get_metadata()
+        customer_origins_uid = customer_origins_metadata["unique_id"]
+
+        supply_locations = self.get_supply_locations()
+        supply_locations_gdf = supply_locations.get_geodata_gpd_original()
+        supply_locations_metadata = supply_locations.get_metadata()
+        supply_locations_uid = supply_locations_metadata["unique_id"]
+
+        interaction_matrix_df = self.get_interaction_matrix_df()
+
+        geometry_errors = []       
+
+        if "geometry" not in customer_origins_gdf.columns:
+            geometry_errors.append("Customer origins lack geometry.")
+        if "geometry" not in supply_locations_gdf.columns:
+            geometry_errors.append("Supply locations lack geometry.")
+
+        customer_origins_crs = customer_origins_metadata["crs_input"]
+            
+        if verbose:
+            print("OK")
+            
+        if len(geometry_errors) > 0:
+            
+            print(f"No map plot of InteractionMatrix object possible because of the following error(s): {' '.join(geometry_errors)}")            
+            
+            return None
+        
+        if verbose:
+            print(f"Constructing flow lines for {len(customer_origins_gdf)} customer origins and {len(supply_locations_gdf)} supply locations", end = " ... ")
+
+        distance_matrix_results = distance_matrix_from_gdf(
+            sources_points_gdf = customer_origins_gdf,
+            sources_uid_col = customer_origins_uid,
+            destinations_points_gdf = supply_locations_gdf,
+            destinations_uid_col = supply_locations_uid,
+            distance_type = "euclidean",
+            unit = "m",
+            remove_duplicates = True,
+            save_output = False,
+            output_crs = customer_origins_crs,
+            verbose = False
+            )
+        
+        flows_line_layer = distance_matrix_results[1]
+
+        if line_size_by == "probabilities":
+            line_size_col = config.DEFAULT_COLNAME_PROBABILITY
+        else:
+            line_size_col = config.DEFAULT_COLNAME_FLOWS
+            
+        if log_line_size:
+            interaction_matrix_df[line_size_col] = np.log(interaction_matrix_df[line_size_col]+0.01)
+
+        flows_line_layer = flows_line_layer.merge(
+            interaction_matrix_df[[config.DEFAULT_COLNAME_INTERACTION, line_size_col]],
+            left_on = f"{config.MATRIX_COL_SOURCE}{config.MATRIX_OD_SEPARATOR}{config.MATRIX_COL_DESTINATION}{config.DEFAULT_UNIQUE_ID_SUFFIX}",
+            right_on = config.DEFAULT_COLNAME_INTERACTION
+        )
+
+        if verbose:
+            print("OK")
+            print("Compiling layers and layer styles", end = " ... ")
+
+        flows_line_style = {
+            "name": "Customer flows",
+            "color": line_color,
+            "alpha": line_alpha,
+            "linewidth": {
+                "width_col": line_size_col
+            }
+        }
+
+        layers_to_plot = [            
+            customer_origins_gdf, 
+            supply_locations_gdf,
+            flows_line_layer,
+            ]
+                
+        layers_to_plot_included = [            
+            "Customer origins points",
+            "Supply locations points",
+            "Expected flows",
+            ] 
+
+        if verbose:
+            print("OK")
+            print(f"NOTE: InteractionMatrix object contains {len(layers_to_plot)} layers to plot: {', '.join(layers_to_plot_included)}.")
+      
+        layer_styles = {            
+            0: origin_point_style,
+            1: location_point_style,
+            2: flows_line_style,
+            }
+
+        assert len(layers_to_plot) == len(layer_styles), f"Error while trying to plot customer origins: There are {len(layers_to_plot)} layers to plot but {len(layer_styles)} plot styles were stated." 
+
+        map_osm = map_with_basemap(
+            layers = layers_to_plot,
+            styles = layer_styles,
+            save_output = save_output,
+            output_filepath = output_filepath,
+            output_dpi = output_dpi,
+            legend = legend,
+            map_title = map_title,
+            zoom = zoom,
+            verbose = verbose
+            )
+        
+        return [
+            map_osm,
+            layers_to_plot,
+            layer_styles
+            ]     
 
 class MarketAreas:
 
@@ -1708,21 +2358,37 @@ class MarketAreas:
         if isinstance(model_object, MCIModel):
             
             model_object_type = config.MODELS["MCI"]["description"]
-                        
+            
+            metadata = model_object.metadata
+            
+            metadata = helper.add_timestamp(
+                function = "add_to_model",
+                metadata = metadata,                
+                )
+             
             model = MCIModel(
                 interaction_matrix = model_object.interaction_matrix,
                 coefs = model_object.get_coefs_dict(),
                 mci_ols_model = model_object.get_mci_ols_model(),
-                market_areas_df = self.market_areas_df
+                market_areas_df = self.market_areas_df,
+                metadata = metadata
                 )            
     
         elif isinstance(model_object, HuffModel):
             
             model_object_type = config.MODELS["Huff"]["description"]
             
+            metadata = model_object.metadata
+            
+            metadata = helper.add_timestamp(
+                function = "add_to_model",
+                metadata = metadata,                
+                )
+            
             model = HuffModel(
                 interaction_matrix = model_object.interaction_matrix,
-                market_areas_df = self.market_areas_df
+                market_areas_df = self.market_areas_df,
+                metadata = metadata
             )
 
         elif isinstance(model_object, InteractionMatrix):
@@ -1734,17 +2400,34 @@ class MarketAreas:
             
             if output_model == config.MODELS_LIST[0]:
 
+                metadata = {}
+                
+                metadata = helper.add_timestamp(
+                    function = "add_to_model",
+                    metadata = metadata,                
+                    )
+
                 model = HuffModel(
                     interaction_matrix=model_object,
-                    market_areas_df=self.market_areas_df
+                    market_areas_df=self.market_areas_df,
+                    metadata=metadata
                 )
 
             if output_model == config.MODELS_LIST[1]:
 
+                metadata = {}
+                
+                metadata = helper.add_timestamp(
+                    function = "add_to_model",
+                    metadata = metadata,                
+                    )
+                
                 model = MCIModel(
+                    interaction_matrix=model_object,
                     coefs=model_object.coefs,
                     mci_ols_model=model_object.mci_ols_model,
-                    market_areas_df=self.market_areas_df
+                    market_areas_df=self.market_areas_df,
+                    metadata=metadata
                 )
 
         if verbose:
@@ -1757,11 +2440,13 @@ class HuffModel:
     def __init__(
         self,
         interaction_matrix, 
-        market_areas_df
+        market_areas_df,
+        metadata
         ):
 
         self.interaction_matrix = interaction_matrix
         self.market_areas_df = market_areas_df
+        self.metadata = metadata
 
     def get_interaction_matrix_df(self):
 
@@ -1893,6 +2578,71 @@ class HuffModel:
             huff_modelfit
             ]
 
+    def show_log(self):
+
+        metadata = self.metadata
+        
+        if "timestamp" not in metadata:
+            
+            print("No timestamps found in HuffModel object")
+            
+            return None
+            
+        else:
+            
+            print("Timestamps for HuffModel object")
+            
+            for key, value in metadata["timestamp"].items():
+                
+                datetime = value['datetime']
+                package_version = value['package_version']
+                function = value['function']
+                status = value['status']
+                
+                if key == 0:
+                    function = f"{function} (Creation)"
+                
+                print(f"Step {key} {datetime} {package_version} {function} --> Status: {status}")
+                
+            return metadata["timestamp"]
+
+    def plot(
+        self,
+        origin_point_style: dict = {},
+        location_point_style: dict = {},
+        line_color: str = "black",
+        line_alpha: float = 0.7,
+        line_size_by: str = "flows",
+        log_line_size: bool = True,
+        save_output: bool = True,
+        output_filepath: str = "Huff_model_results.png",
+        output_dpi: int = 300,
+        zoom: int = 15,
+        legend: bool = True,
+        map_title: str = "Map of Huff model results with OSM basemap",
+        verbose: bool = False
+        ):
+        
+        interaction_matrix = self.interaction_matrix        
+        
+        interaction_matrix_plot = interaction_matrix.plot(
+            origin_point_style = origin_point_style,
+            location_point_style = location_point_style,
+            line_color = line_color,
+            line_alpha = line_alpha,
+            line_size_by = line_size_by,
+            log_line_size = log_line_size,
+            save_output = save_output,
+            output_filepath = output_filepath,
+            output_dpi = output_dpi,
+            zoom = zoom,
+            legend = legend,
+            map_title = map_title,
+            verbose = verbose
+            )
+        
+        return interaction_matrix_plot
+
     def mci_fit(
         self,
         cols: list = [config.DEFAULT_COLNAME_ATTRAC, config.DEFAULT_COLNAME_TC],
@@ -1934,7 +2684,7 @@ class HuffModel:
         coefs = {}
         for i, col in enumerate(cols_t):
             coefs[i] = {
-                "Coefficient": col[:-5],
+                "Coefficient": col[:-len(config.DEFAULT_LCT_SUFFIX)],
                 "Estimate": float(mci_ols_coefficients[col]),
                 "SE": float(mci_ols_coef_standarderrors[col]),
                 "t": float(mci_ols_coef_t[col]),
@@ -1978,11 +2728,19 @@ class HuffModel:
             metadata=interaction_matrix_metadata
             )
         
+        metadata = {}
+        
+        metadata = helper.add_timestamp(
+            function = "mci_fit",
+            metadata = metadata
+        )
+        
         mci_model = MCIModel(
             interaction_matrix,
             coefs,
             mci_ols_model,
-            None
+            None,
+            metadata
             )
         
         if verbose:
@@ -2240,6 +2998,16 @@ class HuffModel:
                 if verbose:
                     print(f"Optimiziation via {method} algorithm failed with error message: '{ml_result.message}'. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html for all available algorithms.")
 
+            supply_locations_metadata = helper.add_timestamp(
+                function = "ml_fit",
+                metadata = supply_locations_metadata
+            )
+            
+            customer_origins_metadata = helper.add_timestamp(
+                function = "ml_fit",
+                metadata = customer_origins_metadata
+            )
+
             self.interaction_matrix.supply_locations.metadata = supply_locations_metadata    
             self.interaction_matrix.customer_origins.metadata = customer_origins_metadata
 
@@ -2262,15 +3030,37 @@ class HuffModel:
                     print("WARNING: No update of estimates because fit parameters contain NaN")
 
                     update_estimates = False
+                    
+                    self.interaction_matrix.metadata = helper.add_timestamp(
+                        function = "ml_fit",
+                        metadata = self.interaction_matrix.metadata,
+                        status = "Error: No update of estimates because fit parameters contain NaN"
+                        )
+                    
+                    self.metadata = helper.add_timestamp(
+                        function = "ml_fit",
+                        metadata = self.metadata,
+                        status = "Error: No update of estimates because fit parameters contain NaN"
+                        )
 
                 else:
                                        
                     self.interaction_matrix.utility(check_df_vars = check_df_vars)
                     self.interaction_matrix.probabilities(check_df_vars = check_df_vars)
-                    self.interaction_matrix.flows(check_df_vars = check_df_vars) 
+                    self.interaction_matrix.flows(check_df_vars = check_df_vars)
+                    
+                    self.interaction_matrix.metadata = helper.add_timestamp(
+                        function = "ml_fit",
+                        metadata = self.interaction_matrix.metadata
+                        )
                     
                     huff_model_new_marketareas = self.interaction_matrix.marketareas(check_df_vars = check_df_vars)
                     self.market_areas_df[config.DEFAULT_COLNAME_TOTAL_MARKETAREA] = huff_model_new_marketareas.get_market_areas_df()[config.DEFAULT_COLNAME_TOTAL_MARKETAREA]
+                    
+                    self.metadata = helper.add_timestamp(
+                        function = "ml_fit",
+                        metadata = self.metadata
+                        )
             
             self.interaction_matrix.metadata["fit"] = {
                 "function": "huff_ml_fit",
@@ -2282,7 +3072,7 @@ class HuffModel:
                 "minimize_success": ml_result.success,
                 "minimize_fittedparams": ml_result.x,
                 "update_estimates": update_estimates
-                }
+                }                    
             
         else:
 
@@ -2403,6 +3193,11 @@ class HuffModel:
         
         self.market_areas_df = self.interaction_matrix.marketareas().get_market_areas_df()
         
+        self.metadata = helper.add_timestamp(
+            function = "update",
+            metadata = self.metadata,            
+        )
+        
         return self
     
     def modelfit(
@@ -2501,13 +3296,15 @@ class MCIModel:
         interaction_matrix: InteractionMatrix,
         coefs: dict,
         mci_ols_model,
-        market_areas_df
+        market_areas_df,
+        metadata
         ):
 
         self.interaction_matrix = interaction_matrix
         self.coefs = coefs
         self.mci_ols_model = mci_ols_model
         self.market_areas_df = market_areas_df
+        self.metadata = metadata
 
     def get_interaction_matrix_df(self):
 
@@ -2576,7 +3373,7 @@ class MCIModel:
         supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
         interaction_matrix_metadata = interaction_matrix.get_metadata()
 
-        print("Multiplicative Competitive Interaction Model")
+        print(config.MODELS["MCI"]["description"])
         print("--------------------------------------------")
         print("Supply locations   " + str(supply_locations_metadata["no_points"]))
         print("Customer origins   " + str(customer_origins_metadata["no_points"]))
@@ -2623,6 +3420,71 @@ class MCIModel:
             interaction_matrix_metadata,
             mci_modelfit
             ]
+    
+    def show_log(self):
+
+        metadata = self.metadata
+        
+        if "timestamp" not in metadata:
+            
+            print("No timestamps found in MCIModel object")
+            
+            return None
+            
+        else:
+            
+            print("Timestamps for MCIModel object")
+            
+            for key, value in metadata["timestamp"].items():
+                
+                datetime = value['datetime']
+                package_version = value['package_version']
+                function = value['function']
+                status = value['status']
+                
+                if key == 0:
+                    function = f"{function} (Creation)"
+                
+                print(f"Step {key} {datetime} {package_version} {function} --> Status: {status}")
+                
+            return metadata["timestamp"]
+         
+    def plot(
+        self,
+        origin_point_style: dict = {},
+        location_point_style: dict = {},
+        line_color: str = "black",
+        line_alpha: float = 0.7,
+        line_size_by: str = "flows",
+        log_line_size: bool = True,
+        save_output: bool = True,
+        output_filepath: str = "MCI_model_results.png",
+        output_dpi: int = 300,
+        zoom: int = 15,
+        legend: bool = True,
+        map_title: str = "Map of MCI model results with OSM basemap",
+        verbose: bool = False
+        ):
+        
+        interaction_matrix = self.interaction_matrix        
+        
+        interaction_matrix_plot = interaction_matrix.plot(
+            origin_point_style = origin_point_style,
+            location_point_style = location_point_style,
+            line_color = line_color,
+            line_alpha = line_alpha,
+            line_size_by = line_size_by,
+            log_line_size = log_line_size,
+            save_output = save_output,
+            output_filepath = output_filepath,
+            output_dpi = output_dpi,
+            zoom = zoom,
+            legend = legend,
+            map_title = map_title,
+            verbose = verbose
+            )
+        
+        return interaction_matrix_plot
                   
     def utility(
         self,
@@ -2679,6 +3541,11 @@ class MCIModel:
             "model_type": config.MODELS_LIST[1],
             "transformation": transformation
             }
+        
+        interaction_matrix_metadata = helper.add_timestamp(
+            function = "utility",
+            metadata = interaction_matrix_metadata
+            )            
 
         interaction_matrix = InteractionMatrix(
             interaction_matrix_df,
@@ -2697,8 +3564,8 @@ class MCIModel:
         ):
 
         interaction_matrix = self.interaction_matrix        
-        interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()
-        
+        interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()        
+       
         if config.DEFAULT_COLNAME_PROBABILITY in interaction_matrix_df.columns and config.DEFAULT_COLNAME_PROBABILITY_OBSERVED not in interaction_matrix_df.columns:
             
             if verbose:
@@ -2737,6 +3604,11 @@ class MCIModel:
 
         interaction_matrix.interaction_matrix_df = interaction_matrix_df
         self.interaction_matrix = interaction_matrix
+        
+        self.metadata = helper.add_timestamp(
+            function = "probabilities",
+            metadata = self.metadata
+            )
 
         return self
         
@@ -2769,10 +3641,15 @@ class MCIModel:
         interaction_matrix_df[config.DEFAULT_COLNAME_FLOWS] = interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY] * interaction_matrix_df[config.DEFAULT_COLNAME_MARKETSIZE]
 
         self.interaction_matrix_df = interaction_matrix_df
+        
+        self.metadata = helper.add_timestamp(
+            function = "flows",
+            metadata = self.metadata
+            )
 
         return self
 
-    def marketareas (
+    def marketareas(
         self,
         check_df_vars: bool = True
         ):
@@ -2790,15 +3667,21 @@ class MCIModel:
         market_areas_df = market_areas_df.reset_index(drop=False)
         market_areas_df = market_areas_df.rename(columns={config.DEFAULT_COLNAME_FLOWS: config.DEFAULT_COLNAME_TOTAL_MARKETAREA})
 
+        self.metadata = helper.add_timestamp(
+            function = "marketareas",
+            metadata = self.metadata
+            )
+        
         mci_model = MCIModel(
             interaction_matrix = interaction_matrix,
             coefs = self.get_coefs_dict(),
             mci_ols_model = self.get_mci_ols_model(),
-            market_areas_df = market_areas_df
+            market_areas_df = market_areas_df,
+            metadata = self.metadata
             )
 
         return mci_model
-  
+
 def create_interaction_matrix(
     customer_origins,
     supply_locations,
@@ -2892,6 +3775,11 @@ def create_interaction_matrix(
     interaction_matrix_df[config.DEFAULT_COLNAME_FLOWS] = None
 
     metadata = {}
+    
+    metadata = helper.add_timestamp(
+        function = "create_interaction_matrix",
+        metadata = metadata
+    )
 
     interaction_matrix = InteractionMatrix(
         interaction_matrix_df,

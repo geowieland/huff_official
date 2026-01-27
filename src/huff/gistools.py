@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.19
-# Last update: 2025-12-23 14:37
+# Version:     1.4.20
+# Last update: 2026-01-27 18:07
 # Copyright (c) 2025 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -30,18 +30,25 @@ def manhattan_distance(
     destination: list,
     unit: str = "m"
 ):
-    lat1, lat2, lon1, lon2 = lonlat_transform(
-        source,
-        destination,
-        transform=False
-    )
 
-    distance = abs(lat1-lat2)*111.32+abs(lon1-lon2)*111.32*cos(radians(lat1))
+    if source == destination:
+        
+        distance = 0
 
-    if unit == "m": 
-        distance = distance*1000
-    elif unit == "mile": 
-        distance = distance/1.60934
+    else:
+
+        lat1, lat2, lon1, lon2 = lonlat_transform(
+            source,
+            destination,
+            transform=False
+        )
+
+        distance = abs(lat1-lat2)*111.32+abs(lon1-lon2)*111.32*cos(radians(lat1))
+
+        if unit == "m": 
+            distance = distance*1000
+        elif unit == "mile": 
+            distance = distance/1.60934
 
     return distance
 
@@ -51,17 +58,23 @@ def euclidean_distance(
     unit: str = "m"
     ):
 
-    lat1_r, lat2_r, lon1_r, lon2_r = lonlat_transform(
-        source,
-        destination
-        )
+    if source == destination:
+        
+        distance = 0
 
-    distance = 6378 * (acos(sin(lat1_r) * sin(lat2_r) + cos(lat1_r) * cos(lat2_r) * cos(lon2_r - lon1_r)))
+    else:
 
-    if unit == "m": 
-        distance = distance*1000
-    elif unit == "mile": 
-        distance = distance/1.60934
+        lat1_r, lat2_r, lon1_r, lon2_r = lonlat_transform(
+            source,
+            destination
+            )
+
+        distance = 6378 * (acos(sin(lat1_r) * sin(lat2_r) + cos(lat1_r) * cos(lat2_r) * cos(lon2_r - lon1_r)))
+
+        if unit == "m": 
+            distance = distance*1000
+        elif unit == "mile": 
+            distance = distance/1.60934
 
     return distance
 
@@ -122,9 +135,9 @@ def distance_matrix(
                         config.MATRIX_COL_DESTINATION: destination,
                         "distance": dist,
                         "geometry": line,
-                        f"{config.MATRIX_COL_SOURCE}_uid": sources_uid[i],
-                        f"{config.MATRIX_COL_DESTINATION}_uid": destinations_uid[j],
-                        f"{config.MATRIX_COL_SOURCE}_{config.MATRIX_COL_DESTINATION}_uid": f"{sources_uid[i]}{config.MATRIX_OD_SEPARATOR}{destinations_uid[j]}"
+                        f"{config.MATRIX_COL_SOURCE}{config.DEFAULT_UNIQUE_ID_SUFFIX}": sources_uid[i],
+                        f"{config.MATRIX_COL_DESTINATION}{config.DEFAULT_UNIQUE_ID_SUFFIX}": destinations_uid[j],
+                        f"{config.MATRIX_COL_SOURCE}{config.MATRIX_OD_SEPARATOR}{config.MATRIX_COL_DESTINATION}{config.DEFAULT_UNIQUE_ID_SUFFIX}": f"{sources_uid[i]}{config.MATRIX_OD_SEPARATOR}{destinations_uid[j]}"
                         }
                     )
             
@@ -249,7 +262,7 @@ def distance_matrix_from_gdf(
         output_filepath = output_filepath,
         output_crs = output_crs,
         verbose = verbose
-    )
+    )    
     
     return distance_matrix_results   
     
@@ -597,7 +610,7 @@ def map_with_basemap(
     
     crs_layer0 = layers[0].crs
 
-    unique_crs = [layer.crs for layer in layers]
+    unique_crs = list(set(layer.crs for layer in layers))
     
     if verbose:
         print("OK")
@@ -608,10 +621,10 @@ def map_with_basemap(
             
             for i, layer in enumerate(layers):
                 
-                layers[i].crs = crs_layer0
+                layers[i] = layers[i].to_crs(crs_layer0)
             
             if verbose:
-                print(f"NOTE: Input layers have different CRS: {', '.join(unique_crs)}. All layers were automatically converted to CRS {crs_layer0}.")
+                print(f"NOTE: Input layers have different CRS: {', '.join(map(str, unique_crs))}. All layers were automatically converted to CRS {str(crs_layer0)}.")
                 
         else:
             raise TypeError(f"The {len(layers)} layers have {len(unique_crs)} different CRS: {', '.join(unique_crs)}.")
@@ -639,7 +652,7 @@ def map_with_basemap(
         print("Retrieving total bounds ...", end = " ")
         
     bounds = layers_combined_wgs84.total_bounds
-
+    
     sw_lon, sw_lat, ne_lon, ne_lat = bounds[0]*bounds_factor[0], bounds[1]*bounds_factor[1], bounds[2]*bounds_factor[2], bounds[3]*bounds_factor[3]
 
     if verbose:
@@ -657,7 +670,7 @@ def map_with_basemap(
             ne_lon, 
             zoom=zoom,
             tile_delay=tile_delay,
-            verbose=verbose
+            verbose=False
             )
 
     fig, ax = plt.subplots(figsize=figsize)
@@ -679,7 +692,7 @@ def map_with_basemap(
 
     for i, layer in enumerate(layers):
         
-        layer_3857 = layer.to_crs(crs = config.PSEUDO_MERCATOR_CRS)
+        layer_3857 = layer.to_crs(crs = config.PSEUDO_MERCATOR_CRS)        
 
         if styles != {}:
             
@@ -696,9 +709,15 @@ def map_with_basemap(
                 if "size" not in layer_style:
                     raise KeyError(f"No 'size' key in definition of point layer {i}")
             
+            if all(layer_3857.geometry.geom_type.isin(["LineString", "MultiLineString"])):
+                if "linewidth" not in layer_style:
+                    raise KeyError(f"No 'linewidth' key in definition of line layer {i}")
+                else:
+                    layer_linewidth = layer_style["linewidth"]
+            
             layer_color = layer_style["color"]
             layer_alpha = layer_style["alpha"]
-            layer_name = layer_style["name"]           
+            layer_name = layer_style["name"]            
 
             if all(layer_3857.geometry.geom_type == "Point"):
                 
@@ -759,25 +778,55 @@ def map_with_basemap(
                                 )
                                 legend_handles.append(handle)
                                                                 
-            else:
-                
+            else:                
+
+                layer_linewidth = layer_style.get("linewidth", None)
+
                 if isinstance(layer_color, str):
-                    layer_3857.plot(
-                        ax=ax,
-                        color=layer_color,
-                        alpha=layer_alpha,
-                        label=layer_name,
-                    )
-                    if legend:
-                                               
-                        patch = Patch(
-                            facecolor=layer_color, 
-                            alpha=layer_alpha, 
+
+                    if isinstance(layer_linewidth, dict):
+
+                        width_col = layer_linewidth["width_col"]
+                        width_mapping = layer_linewidth.get("mapping")
+
+                        if width_col not in layer_3857.columns:
+                            raise KeyError(f"Column {width_col} not in layer.")
+
+                        if width_mapping:
+                            lw = layer_3857[width_col].map(width_mapping)
+                        else:
+                            lw = layer_3857[width_col]
+
+                        layer_3857.plot(
+                            ax=ax,
+                            color=layer_color,
+                            alpha=layer_alpha,
+                            linewidth=lw,
                             label=layer_name,
-                            )
-                        legend_handles.append(patch)
+                        )
+
+                    else:
+                        layer_3857.plot(
+                            ax=ax,
+                            color=layer_color,
+                            alpha=layer_alpha,
+                            linewidth=layer_linewidth,
+                            label=layer_name,
+                        )
+
+                    if legend:
+                        handle = Line2D(
+                            [],
+                            [],
+                            color=layer_color,
+                            linewidth=2,
+                            alpha=layer_alpha,
+                            label=layer_name,
+                        )
+                        legend_handles.append(handle)
 
                 elif isinstance(layer_color, dict):
+
                     color_key = list(layer_color.keys())[0]
                     color_mapping = layer_color[color_key]
 
@@ -785,26 +834,46 @@ def map_with_basemap(
                         raise KeyError(f"Column {color_key} not in layer.")
 
                     for value, color in color_mapping.items():
-                        
+
                         subset = layer_3857[layer_3857[color_key].astype(str) == str(value)]
-                        
-                        if not subset.empty:
-                            
-                            subset.plot(
-                                ax=ax,
+
+                        if subset.empty:
+                            continue
+
+                        if isinstance(layer_linewidth, dict):
+
+                            width_col = layer_linewidth["width_col"]
+                            width_mapping = layer_linewidth.get("mapping")
+
+                            if width_col not in subset.columns:
+                                raise KeyError(f"Column {width_col} not in layer.")
+
+                            if width_mapping:
+                                lw = subset[width_col].map(width_mapping)
+                            else:
+                                lw = subset[width_col]
+
+                        else:
+                            lw = layer_linewidth
+
+                        subset.plot(
+                            ax=ax,
+                            color=color,
+                            alpha=layer_alpha,
+                            linewidth=lw,
+                            label=str(value),
+                        )
+
+                        if legend:
+                            handle = Line2D(
+                                [],
+                                [],
                                 color=color,
+                                linewidth=2,
                                 alpha=layer_alpha,
                                 label=str(value),
                             )
-                            
-                            if legend:
-                                
-                                patch = Patch(
-                                    facecolor=color, 
-                                    alpha=layer_alpha, 
-                                    label=str(value),
-                                    )
-                                legend_handles.append(patch)
+                            legend_handles.append(handle)
 
         else:
             

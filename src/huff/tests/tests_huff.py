@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.18
-# Last update: 2026-01-23 08:38
+# Version:     1.5.21
+# Last update: 2026-01-27 18:09
 # Copyright (c) 2025 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -35,6 +35,29 @@ Haslach_buf = Haslach.buffers(
 Haslach.summary()
 # Summary of customer origins
 
+Haslach.plot(
+    point_style = {
+            "name": "Districts",
+            "color": "black",
+            "alpha": 1,
+            "size": 15,
+        },
+    polygon_style= {
+        "name": "Buffers",
+        "color": {
+            "buffer": {
+                500: "midnightblue", 
+                1000: "blue", 
+                1500: "dodgerblue",
+                }
+            },            
+        "alpha": 0.3
+    },
+    map_title = "Districts in Haslach with buffers",    
+)
+# Plot map of customer origins and assigned buffers, 
+# both with user-defined layer styles
+
 Haslach.define_marketsize("pop")
 # Definition of market size variable
 
@@ -48,8 +71,10 @@ Haslach.define_transportcosts_weighting(
 Haslach.summary()
 # Summary after update
 
+Haslach.show_log()
+# Show log of CustomerOrigins object
 
-# Dealing with upply locations (supermarkets):
+# Dealing with supply locations (supermarkets):
 
 Haslach_supermarkets = load_geodata(
     "data/Haslach_supermarkets.shp",
@@ -70,7 +95,7 @@ Haslach_supermarkets.define_attraction_weighting(
 # Define attraction weighting (gamma)
 
 Haslach_supermarkets.isochrones(
-    segments=[5, 10],
+    segments=[2, 4, 6],
     # minutes or kilometers
     range_type = "time",
     # "time" or "distance" (default: "time")
@@ -87,6 +112,38 @@ Haslach_supermarkets.isochrones(
 Haslach_supermarkets.summary()
 # Summary of updated customer origins
 
+Haslach_supermarkets.plot(
+    point_style = {
+        "name": "Supermarket chains",
+        "color": {
+            "Name": {
+                "Aldi Süd": "blue",
+                "Edeka": "yellow",
+                "Lidl": "red",
+                "Netto": "orange",
+                "Real": "darkblue",
+                "Treff 3000": "fuchsia"
+                }
+            },
+        "alpha": 1,
+        "size": 30
+    },
+    polygon_style= {
+        "name": "Isochrones",
+        "color": {
+            "segm_min": {
+                2: "midnightblue", 
+                4: "blue",
+                6: "dodgerblue"
+                }
+            },            
+        "alpha": 0.3
+    },
+    map_title = "Supermarkets in Haslach with isochrones"
+)
+# Plot map of supply locations and assigned isochrones,
+# both with user-defined layer styles
+
 Haslach_supermarkets_isochrones = Haslach_supermarkets.get_isochrones_gdf()
 # Extracting isochrones as gdf
 
@@ -101,7 +158,7 @@ haslach_interactionmatrix = create_interaction_matrix(
 
 haslach_interactionmatrix.transport_costs(
     ors_auth="5b3ce3597851110001cf62480a15aafdb5a64f4d91805929f8af6abd",
-    network=True,
+    network=False,
     #distance_unit="meters",
     # set network = True to calculate transport costs matrix via ORS API (default)
     )
@@ -116,6 +173,31 @@ print(haslach_interactionmatrix.hansen())
 
 haslach_interactionmatrix.flows()
 # Calculating spatial flows for interaction matrix
+
+haslach_interactionmatrix.plot(
+    origin_point_style = {
+        "name": "Districts",
+        "color": "black",
+        "alpha": 1,
+        "size": 100,
+        },
+    location_point_style = {
+        "name": "Supermarket chains",
+        "color": {
+            "Name": {
+                "Aldi Süd": "blue",
+                "Edeka": "yellow",
+                "Lidl": "red",
+                "Netto": "orange",
+                "Real": "darkblue",
+                "Treff 3000": "fuchsia"
+                }
+            },
+        "alpha": 1,
+        "size": 100
+        },    
+    )
+# Plot of interaction matrix with expected customer flows
 
 huff_model = haslach_interactionmatrix.marketareas()
 # Calculating total market areas
@@ -151,6 +233,7 @@ print(bootstrap_cis)
 huff_model_fit.summary()
 # Huff model summary
 
+
 # Adding new supply location:
 
 Haslach_new_supermarket = load_geodata(
@@ -175,6 +258,15 @@ huff_model.update()
 huff_model.summary()
 # Summary of updated interaction matrix
 
+Haslach_supermarkets.show_log()
+# Log of SupplyLocations object
+
+huff_model.interaction_matrix.show_log()
+# Log of InteractionMatrix object
+
+huff_model.show_log()
+# Log of HuffModel object
+
 print(huff_model.get_market_areas_df())
 # Showing total market areas of model with estimated parameters and new destination
 
@@ -198,6 +290,9 @@ mci_fit.marketareas()
 
 mci_fit.get_market_areas_df()
 # MCI model market areas
+
+mci_fit.show_log()
+# Log of MCIModel object
 
 
 # Loading own interaction matrix:
@@ -244,6 +339,34 @@ Wieland2015_fit_interactionmatrix = Wieland2015_fit.get_interaction_matrix_df()
 
 Wieland2015_fit.summary()
 # MCI model summary
+
+Wieland2015_interaction_matrix.show_log()
+# Logs of InteractionMatrix object
+
+Wieland2015_fit.plot(
+    origin_point_style = {
+        "name": "ZIP codes",
+        "color": "black",
+        "alpha": 1,
+        "size": 30,
+        },
+    location_point_style = {
+        "name": "CE stores",
+        "color": {
+            "Zielort": {
+                "E01": "blue",
+                "E02": "yellow",
+                "E03": "red",
+                "E04": "orange",
+                "E07": "darkblue",
+                }
+            },
+        "alpha": 1,
+        "size": 50
+        },    
+    )
+# Plot of interaction matrix with customer flows
+# This does NOT work because there is no geometry
 
 
 # Parameter estimation via Maximum Likelihood:
@@ -307,6 +430,9 @@ Wieland2015_interaction_matrix2.huff_ml_fit(
 Wieland2015_interaction_matrix2.summary()
 # Summary of interaction matrix
 
+print(Wieland2015_interaction_matrix2.get_metadata()["timestamp"])
+# Show timestamp(s) from metadata
+
 huff_model_fit2 = Wieland2015_interaction_matrix2.marketareas()
 # Calculation of market areas
 
@@ -361,6 +487,9 @@ huff_model_fit3 = huff_model_fit2.ml_fit(
 huff_model_fit3.summary()
 # Show summary
 
+huff_model_fit3.show_log()
+# Show log
+
 print(huff_model_fit3.get_market_areas_df())
 # Show market areas df
 
@@ -409,12 +538,12 @@ print(Haslach_supermarkets_iso[1])
 # Showing df with overlay statistics
 
 
-# Creating map:
+# Creating map (stand-alone):
 
 Haslach_gdf = Haslach.get_geodata_gpd_original()
 Haslach_supermarkets_gdf = Haslach_supermarkets.get_geodata_gpd_original()
 Haslach_supermarkets_gdf_iso = Haslach_supermarkets.get_isochrones_gdf()
-# Extracttion geopandas.GeoDataFrames
+# Extraction geopandas.GeoDataFrames
 
 map_with_basemap(
     layers = [
@@ -427,11 +556,8 @@ map_with_basemap(
             "name": "Isochrones",
             "color": {
                 "segm_min": {
-                    "3": "midnightblue", 
-                    "6": "blue", 
-                    "9": "dodgerblue", 
-                    "12": "deepskyblue", 
-                    "15": "aqua"
+                    5: "midnightblue", 
+                    10: "blue",
                     }
                 },            
             "alpha": 0.3
@@ -446,7 +572,7 @@ map_with_basemap(
             "name": "Supermarket chains",
             "color": {
                 "Name": {
-                    "Aldi S├╝d": "blue",
+                    "Aldi Süd": "blue",
                     "Edeka": "yellow",
                     "Lidl": "red",
                     "Netto": "orange",
@@ -463,7 +589,7 @@ map_with_basemap(
 # Map with three layers and OSM basemap
 
 
-# Distance matrix for point gdfs:
+# Distance matrix for point gdfs (stand-alone):
 
 Haslach_SHP = gp.read_file("data/Haslach.shp")
 Haslach_supermarkets_SHP  = gp.read_file("data/Haslach_supermarkets.shp")

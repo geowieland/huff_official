@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.2
-# Last update: 2026-01-20 07:05
+# Version:     1.0.4
+# Last update: 2026-01-27 18:07
 # Copyright (c) 2025 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ def load_geodata(
     crs_output = config.WGS84_CRS
 
     geodata_gpd = geodata_gpd_original.to_crs(crs_output)
-    geodata_gpd = geodata_gpd[[unique_id, "geometry"]]
+    geodata_gpd = geodata_gpd[[unique_id, "geometry"]]   
     
     metadata = {
         "location_type": location_type,
@@ -102,8 +102,13 @@ def load_geodata(
             },
         "crs_input": crs_input,
         "crs_output": crs_output,
-        "no_points": len(geodata_gpd)
+        "no_points": len(geodata_gpd),
         }
+    
+    metadata = helper.add_timestamp(
+        function = "load_geodata",
+        metadata = metadata
+        )
     
     if location_type == "origins":
 
@@ -193,8 +198,8 @@ def load_interaction_matrix(
         helper.check_vars(
             interaction_matrix_df,
             cols = cols_check
-            )
-
+            )   
+    
     if customer_origins_coords_col is not None:
 
         if isinstance(customer_origins_coords_col, str):
@@ -205,10 +210,13 @@ def load_interaction_matrix(
             customer_origins_geodata_tab = interaction_matrix_df[[customer_origins_col, customer_origins_coords_col]]
             customer_origins_geodata_tab = customer_origins_geodata_tab.drop_duplicates()
             customer_origins_geodata_tab["geometry"] = customer_origins_geodata_tab[customer_origins_coords_col].apply(lambda x: wkt.loads(x))
+            
             customer_origins_geodata_gpd = gp.GeoDataFrame(
                 customer_origins_geodata_tab, 
                 geometry="geometry",
-                crs = crs_input)
+                crs = crs_input
+                )
+            
             customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop(
                 columns = customer_origins_coords_col
                 )
@@ -226,7 +234,10 @@ def load_interaction_matrix(
             customer_origins_geodata_tab = interaction_matrix_df[[customer_origins_col, customer_origins_coords_col[0], customer_origins_coords_col[1]]]
             customer_origins_geodata_tab = customer_origins_geodata_tab.drop_duplicates()
             customer_origins_geodata_tab["geometry"] = customer_origins_geodata_tab.apply(lambda row: Point(row[customer_origins_coords_col[0]], row[customer_origins_coords_col[1]]), axis=1)
-            customer_origins_geodata_gpd = gp.GeoDataFrame(customer_origins_geodata_tab, geometry="geometry")
+            customer_origins_geodata_gpd = gp.GeoDataFrame(
+                customer_origins_geodata_tab, 
+                geometry="geometry"
+                )
                       
         customer_origins_geodata_gpd.set_crs(crs_output, inplace=True)
 
@@ -235,12 +246,39 @@ def load_interaction_matrix(
         customer_origins_geodata_gpd = interaction_matrix_df[customer_origins_col]
         customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop_duplicates()
 
+    customer_origins_coords_col_list = []
+    if customer_origins_coords_col is not None:
+        if isinstance(customer_origins_coords_col, list):
+            customer_origins_coords_col_list = customer_origins_coords_col
+        elif isinstance(customer_origins_coords_col, str):
+            customer_origins_coords_col_list = [customer_origins_coords_col]     
+    
     if market_size_col is not None:
-        customer_origins_cols = [customer_origins_col] + [market_size_col]
+        customer_origins_cols = [customer_origins_col] + [market_size_col] + customer_origins_coords_col_list
     else:
-        customer_origins_cols = [customer_origins_col]
-    customer_origins_geodata_original_tab = customer_origins_geodata_tab = interaction_matrix_df[customer_origins_cols]
+        customer_origins_cols = [customer_origins_col] + customer_origins_coords_col_list        
+        
+    customer_origins_geodata_original_tab = interaction_matrix_df[customer_origins_cols].drop_duplicates()
+    
+    if isinstance(customer_origins_coords_col, list):
+        customer_origins_geodata_original_tab["geometry"] = customer_origins_geodata_original_tab.apply(lambda row: Point(row[customer_origins_coords_col[0]], row[customer_origins_coords_col[1]]), axis=1)
+    elif isinstance(customer_origins_coords_col, str):
+        customer_origins_geodata_original_tab = customer_origins_geodata_original_tab.rename(
+            columns = {
+                customer_origins_coords_col: "geometry"
+            }
+        )
 
+    customer_origins_geodata_gpd_original = customer_origins_geodata_original_tab
+
+    if len(customer_origins_coords_col_list) > 0:
+        
+        customer_origins_geodata_gpd_original = gp.GeoDataFrame(
+            customer_origins_geodata_original_tab, 
+            geometry="geometry",
+            crs = crs_input
+            )
+            
     customer_origins_metadata = {
         "location_type": "origins",
         "unique_id": customer_origins_col,
@@ -255,12 +293,17 @@ def load_interaction_matrix(
             },
         "crs_input": crs_input,
         "crs_output": crs_output,
-        "no_points": len(customer_origins_geodata_gpd)
+        "no_points": len(customer_origins_geodata_gpd),
         }
+    
+    customer_origins_metadata = helper.add_timestamp(
+        function = "load_interaction_matrix",
+        metadata = customer_origins_metadata
+        )
 
     customer_origins = CustomerOrigins(
         geodata_gpd = customer_origins_geodata_gpd,
-        geodata_gpd_original = customer_origins_geodata_original_tab,
+        geodata_gpd_original = customer_origins_geodata_gpd_original,
         metadata = customer_origins_metadata,
         isochrones_gdf = None,
         buffers_gdf = None
@@ -306,9 +349,39 @@ def load_interaction_matrix(
         supply_locations_geodata_gpd = interaction_matrix_df[supply_locations_col]
         supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop_duplicates()
 
-    supply_locations_cols = [supply_locations_col] + attraction_col
-    supply_locations_geodata_original_tab = supply_locations_geodata_tab = interaction_matrix_df[supply_locations_cols]
+    supply_locations_coords_col_list = []
+    if supply_locations_coords_col is not None:
+        if isinstance(supply_locations_coords_col, list):
+            supply_locations_coords_col_list = supply_locations_coords_col
+        elif isinstance(supply_locations_coords_col, str):
+            supply_locations_coords_col_list = [supply_locations_coords_col]     
+    
+    if len(attraction_col) > 0:
+        supply_locations_cols = [supply_locations_col] + attraction_col + supply_locations_coords_col_list
+    else:
+        supply_locations_cols = [supply_locations_col] + supply_locations_coords_col_list        
+        
+    supply_locations_geodata_original_tab = interaction_matrix_df[supply_locations_cols].drop_duplicates()
+    
+    if isinstance(supply_locations_coords_col, list):
+        supply_locations_geodata_original_tab["geometry"] = supply_locations_geodata_original_tab.apply(lambda row: Point(row[supply_locations_coords_col[0]], row[supply_locations_coords_col[1]]), axis=1)
+    elif isinstance(supply_locations_coords_col, str):
+        supply_locations_geodata_original_tab = supply_locations_geodata_original_tab.rename(
+            columns = {
+                supply_locations_coords_col: "geometry"
+            }
+        )
 
+    supply_locations_geodata_gpd_original = supply_locations_geodata_original_tab
+    
+    if len(supply_locations_coords_col_list) > 0:        
+        
+        supply_locations_geodata_gpd_original = gp.GeoDataFrame(
+            supply_locations_geodata_original_tab, 
+            geometry = "geometry",
+            crs = crs_input
+            )
+               
     supply_locations_metadata = {
         "location_type": "destinations",
         "unique_id": supply_locations_col,
@@ -323,12 +396,17 @@ def load_interaction_matrix(
             },
         "crs_input": crs_input,
         "crs_output": crs_output,
-        "no_points": len(supply_locations_geodata_gpd)
+        "no_points": len(supply_locations_geodata_gpd),
         }
+    
+    supply_locations_metadata = helper.add_timestamp(
+        function = "load_interaction_matrix",
+        metadata = supply_locations_metadata
+        )
 
     supply_locations = SupplyLocations(
         geodata_gpd = supply_locations_geodata_gpd,
-        geodata_gpd_original = supply_locations_geodata_original_tab,
+        geodata_gpd_original = supply_locations_geodata_gpd_original,
         metadata = supply_locations_metadata,
         isochrones_gdf = None,
         buffers_gdf = None
@@ -368,8 +446,13 @@ def load_interaction_matrix(
         "fit": {
             "function": None,
             "fit_by": None
-        }
+        },
     }
+    
+    metadata = helper.add_timestamp(
+        function = "load_interaction_matrix",
+        metadata = metadata
+        )
 
     interaction_matrix = InteractionMatrix(
         interaction_matrix_df=interaction_matrix_df,
@@ -426,8 +509,8 @@ def load_marketareas(
         helper.check_vars(
             market_areas_df,
             cols = [total_col]
-            )
-    
+            )    
+   
     market_areas_df = market_areas_df.rename(
         columns = {
             supply_locations_col: config.DEFAULT_COLNAME_SUPPLY_LOCATIONS,
@@ -438,8 +521,13 @@ def load_marketareas(
     metadata = {
         "unique_id": supply_locations_col,
         "total_col": total_col,
-        "no_points": len(market_areas_df)
+        "no_points": len(market_areas_df),
         }
+    
+    metadata = helper.add_timestamp(
+        function = "load_marketareas",
+        metadata = metadata
+        )
     
     market_areas = MarketAreas(
         market_areas_df,
