@@ -4,9 +4,9 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.4
-# Last update: 2026-01-27 18:07
-# Copyright (c) 2025 Thomas Wieland
+# Version:     1.0.5
+# Last update: 2026-02-02 20:42
+# Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
@@ -23,15 +23,58 @@ def load_geodata(
     data, 
     location_type: str, 
     unique_id: str,
-    x_col: str = None, 
-    y_col: str = None,
-    data_type = "shp", 
-    csv_sep = ";", 
-    csv_decimal = ",", 
-    csv_encoding="unicode_escape", 
-    crs_input = "EPSG:4326"    
-    ):
+    x_col: str | None = None, 
+    y_col: str | None = None,
+    data_type: str = "shp", 
+    csv_sep: str = ";", 
+    csv_decimal: str = ",", 
+    csv_encoding: str = "unicode_escape", 
+    crs_input: str = "EPSG:4326",
+    ) -> CustomerOrigins | SupplyLocations:
+    
+    """
+    Load spatial data and return it as a CustomerOrigins or SupplyLocations object.
 
+    The function supports CSV, Excel, shapefiles, pandas DataFrames, and
+    GeoDataFrames. For tabular data without geometry information, x and y
+    coordinate columns must be provided.
+
+    Parameters
+    ----------
+    data : str or pandas.DataFrame or geopandas.GeoDataFrame
+        Input data containing spatial information. Can be a file path or
+        an in-memory data object.
+    location_type : {"origins", "destinations"}
+        Specifies whether customer origins or supply locations are loaded.
+    unique_id : str
+        Name of the column containing a unique identifier.
+    x_col : str, optional
+        Name of the column containing x coordinates (required for tabular data).
+    y_col : str, optional
+        Name of the column containing y coordinates (required for tabular data).
+    data_type : {"csv", "xlsx", "shp"}, default="shp"
+        File type if data is loaded from disk.
+    csv_sep : str, default=";"
+        Column separator used in CSV files.
+    csv_decimal : str, default=","
+        Decimal mark used in CSV files.
+    csv_encoding : str, default="unicode_escape"
+        Encoding used in CSV files.
+    crs_input : str, default="EPSG:4326"
+        Coordinate reference system of the input data.
+
+    Returns
+    -------
+    CustomerOrigins or SupplyLocations
+        A CustomerOrigins object if `location_type` is ``"origins"``,
+        otherwise a SupplyLocations object.
+
+    Notes
+    -----
+    If `data` does not contain geometry information, both `x_col` and
+    `y_col` must be provided.
+    """
+    
     if location_type is None or (location_type not in config.PERMITTED_LOCATION_TYPES):
         raise ValueError (f"Error while loading geodata: Argument location_type must be one of the following: {', '.join(config.PERMITTED_LOCATION_TYPES)}")
 
@@ -104,12 +147,7 @@ def load_geodata(
         "crs_output": crs_output,
         "no_points": len(geodata_gpd),
         }
-    
-    metadata = helper.add_timestamp(
-        function = "load_geodata",
-        metadata = metadata
-        )
-    
+      
     if location_type == "origins":
 
         geodata_object = CustomerOrigins(
@@ -121,9 +159,9 @@ def load_geodata(
             )
                 
     elif location_type == "destinations":
-        
+
         geodata_gpd[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_update"] = 0
-        geodata_gpd_original[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_update"] = 0
+        geodata_gpd_original[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_update"] = 0    
 
         geodata_object = SupplyLocations(
             geodata_gpd, 
@@ -132,6 +170,12 @@ def load_geodata(
             None,
             None
             )
+        
+    helper.add_timestamp(
+        geodata_object,
+        function="data_management.load_geodata",
+        process = "Creation by import"
+        )
 
     return geodata_object
 
@@ -139,23 +183,94 @@ def load_interaction_matrix(
     data,
     customer_origins_col: str,
     supply_locations_col: str,
-    attraction_col: list,
+    attraction_col: list[str],
     transport_costs_col: str,
-    flows_col: str = None,
-    probabilities_col: str = None,
-    market_size_col: str = None,
-    customer_origins_coords_col = None,
-    supply_locations_coords_col = None,
-    data_type = "csv", 
-    csv_sep = ";", 
-    csv_decimal = ",", 
-    csv_encoding="unicode_escape",
-    xlsx_sheet: str = None,
-    crs_input = "EPSG:4326",
-    crs_output = "EPSG:4326",
-    check_df_vars: bool = True
-    ):    
+    flows_col: str | None = None,
+    probabilities_col: str | None = None,
+    market_size_col: str | None = None,
+    customer_origins_coords_col: str | list[str] | None = None,
+    supply_locations_coords_col: str | list[str] | None = None,
+    data_type: str = "csv", 
+    csv_sep: str = ";", 
+    csv_decimal: str = ",", 
+    csv_encoding: str = "unicode_escape",
+    xlsx_sheet: str | None = None,
+    crs_input: str = "EPSG:4326",
+    crs_output: str = "EPSG:4326",
+    check_df_vars: bool = True,
+    ) -> InteractionMatrix:
+    
+    """    
+    Load an interaction matrix from tabular or spatial data and return it as an InteractionMatrix object.
 
+    This function imports interaction data describing flows or probabilities
+    between customer origins and supply locations. It constructs 
+    CustomerOrigins and SupplyLocations objects including optional geospatial
+    information, and normalizes column names to internal defaults.
+
+    Parameters
+    ----------
+    data : str or pandas.DataFrame
+        Input data containing interaction information. Can be a file path
+        (CSV/XLSX) or a pandas DataFrame.
+    customer_origins_col : str
+        Column identifying customer origins.
+    supply_locations_col : str
+        Column identifying supply locations.
+    attraction_col : list of str
+        Column(s) describing attraction values of supply locations.
+    transport_costs_col : str
+        Column describing transport costs between origins and destinations.
+    flows_col : str, optional
+        Column describing observed flows between origins and destinations.
+    probabilities_col : str, optional
+        Column describing interaction probabilities.
+    market_size_col : str, optional
+        Column describing market size at customer origins.
+    customer_origins_coords_col : str or list of str, optional
+        Column(s) containing coordinates of customer origins.
+        If a list, interpreted as `[x, y]`.
+    supply_locations_coords_col : str or list of str, optional
+        Column(s) containing coordinates of supply locations.
+        If a list, interpreted as `[x, y]`.
+    data_type : {"csv", "xlsx"}, default="csv"
+        File type if loading from disk.
+    csv_sep : str, default=";"
+        Column separator for CSV files.
+    csv_decimal : str, default=","
+        Decimal mark for CSV files.
+    csv_encoding : str, default="unicode_escape"
+        Encoding used in CSV files.
+    xlsx_sheet : str, optional
+        Excel sheet name if reading from an XLSX file.
+    crs_input : str, default="EPSG:4326"
+        Coordinate reference system of input geospatial data.
+    crs_output : str, default="EPSG:4326"
+        Target coordinate reference system for geospatial data.
+    check_df_vars : bool, default=True
+        If True, validates that required columns exist using `helper.check_vars`.
+
+    Returns
+    -------
+    InteractionMatrix
+        An InteractionMatrix object containing the loaded data, CustomerOrigins,
+        SupplyLocations, and associated metadata.
+
+    Raises
+    ------
+    TypeError
+        If `data` is not a DataFrame or a recognized file type.
+    ValueError
+        If `data_type` is invalid, or if coordinate columns are not correctly specified.
+    KeyError
+        If required columns are missing from the input data.
+        
+    Notes
+    -----
+    If `data` does not contain geometry information, `customer_origins_coords_col` and/or
+    `supply_locations_coords_col` must be provided if interaction matrix must be interpreted as spatial data.
+    """
+    
     if isinstance(data, pd.DataFrame):
         interaction_matrix_df = data
     elif isinstance(data, str):
@@ -295,11 +410,6 @@ def load_interaction_matrix(
         "crs_output": crs_output,
         "no_points": len(customer_origins_geodata_gpd),
         }
-    
-    customer_origins_metadata = helper.add_timestamp(
-        function = "load_interaction_matrix",
-        metadata = customer_origins_metadata
-        )
 
     customer_origins = CustomerOrigins(
         geodata_gpd = customer_origins_geodata_gpd,
@@ -307,6 +417,12 @@ def load_interaction_matrix(
         metadata = customer_origins_metadata,
         isochrones_gdf = None,
         buffers_gdf = None
+        )
+    
+    helper.add_timestamp(
+        customer_origins,
+        function="data_management.load_interaction_matrix",
+        process = "Creation by import"
         )
 
     if supply_locations_coords_col is not None:
@@ -399,17 +515,18 @@ def load_interaction_matrix(
         "no_points": len(supply_locations_geodata_gpd),
         }
     
-    supply_locations_metadata = helper.add_timestamp(
-        function = "load_interaction_matrix",
-        metadata = supply_locations_metadata
-        )
-
     supply_locations = SupplyLocations(
         geodata_gpd = supply_locations_geodata_gpd,
         geodata_gpd_original = supply_locations_geodata_gpd_original,
         metadata = supply_locations_metadata,
         isochrones_gdf = None,
         buffers_gdf = None
+        )
+    
+    helper.add_timestamp(
+        supply_locations,
+        function="data_management.load_interaction_matrix",
+        process = "Creation by import"
         )
     
     interaction_matrix_df = interaction_matrix_df.rename(
@@ -449,16 +566,17 @@ def load_interaction_matrix(
         },
     }
     
-    metadata = helper.add_timestamp(
-        function = "load_interaction_matrix",
-        metadata = metadata
-        )
-
     interaction_matrix = InteractionMatrix(
         interaction_matrix_df=interaction_matrix_df,
         customer_origins=customer_origins,
         supply_locations=supply_locations,
         metadata=metadata
+        )
+    
+    helper.add_timestamp(
+        interaction_matrix,
+        function="data_management.load_interaction_matrix",
+        process = "Creation by import"
         )
     
     return interaction_matrix
@@ -473,7 +591,45 @@ def load_marketareas(
     csv_encoding="unicode_escape",
     xlsx_sheet: str = None,
     check_df_vars: bool = True
-    ):    
+    ):
+
+    """
+    data : str or pandas.DataFrame
+        Input data containing market area information. Can be a file path
+        or an in-memory DataFrame.
+    supply_locations_col : str
+        Name of the column identifying supply locations.
+    total_col : str
+        Name of the column containing total market area values.
+    data_type : {"csv", "xlsx"}, default="csv"
+        File type if data is loaded from disk.
+    csv_sep : str, default=";"
+        Column separator used in CSV files.
+    csv_decimal : str, default=","
+        Decimal mark used in CSV files.
+    csv_encoding : str, default="unicode_escape"
+        Encoding used in CSV files.
+    xlsx_sheet : str, optional
+        Name of the Excel sheet to read, if reading from an XLSX file.
+    check_df_vars : bool, default=True
+        If True, checks whether required columns are present in the input data
+        using helper.check_vars.
+
+    Returns
+    -------
+    MarketAreas
+        A MarketAreas object containing the imported data and metadata.
+
+    Raises
+    ------
+    TypeError
+        If `data` is not a DataFrame or recognized file type.
+    ValueError
+        If `data_type` is not "csv" or "xlsx" when providing a file path.
+    KeyError
+        If required columns (`supply_locations_col` or `total_col`) are missing
+        in the input data.
+    """
 
     if isinstance(data, pd.DataFrame):
         market_areas_df = data
@@ -524,14 +680,15 @@ def load_marketareas(
         "no_points": len(market_areas_df),
         }
     
-    metadata = helper.add_timestamp(
-        function = "load_marketareas",
-        metadata = metadata
-        )
-    
     market_areas = MarketAreas(
         market_areas_df,
         metadata
+        )
+    
+    helper.add_timestamp(
+        market_areas,
+        function="data_management.load_marketareas",
+        process = "Creation by import"
         )
     
     return market_areas
@@ -551,7 +708,66 @@ def survey_to_matrix(
     csv_encoding="unicode_escape",
     xlsx_sheet: str = None,
     check_df_vars: bool = True
-    ):
+    ) -> pd.DataFrame:
+    
+    """
+    Convert survey data into a fully expanded origin-destination matrix.
+
+    This function takes survey data with information about customer origins
+    and supply locations and aggregates it into a complete interaction matrix
+    as a pandas DataFrame. Optional columns for attraction, transport costs,
+    flows, and coordinates are supported. Market shares are calculated automatically.
+
+    Parameters
+    ----------
+    survey_data : str or pandas.DataFrame
+        Input survey data. Can be a CSV/XLSX file path or a pandas DataFrame.
+    customer_origins_col : str
+        Column identifying customer origins.
+    supply_locations_col : str
+        Column identifying supply locations.
+    attraction_col : list of str, optional
+        Column(s) describing attraction values of supply locations.
+    transport_costs_col : str, optional
+        Column describing transport costs between origins and destinations.
+    flows_col : str, optional
+        Column containing observed flows.
+    customer_origins_coords_col : str or list of str, optional
+        Column(s) with coordinates of customer origins.
+        If a list, interpreted as `[x, y]`.
+    supply_locations_coords_col : str or list of str, optional
+        Column(s) with coordinates of supply locations.
+        If a list, interpreted as `[x, y]`.
+    data_type : {"csv", "xlsx"}, default="csv"
+        File type if loading from disk.
+    csv_sep : str, default=";"
+        Column separator for CSV files.
+    csv_decimal : str, default=","
+        Decimal mark for CSV files.
+    csv_encoding : str, default="unicode_escape"
+        Encoding for CSV files.
+    xlsx_sheet : str, optional
+        Sheet name when loading from an XLSX file.
+    check_df_vars : bool, default=True
+        If True, validates required columns using `helper.check_vars`.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A fully expanded interaction matrix with one row per origin-destination
+        pair, including calculated market shares, optional flows, attraction
+        values, transport costs, and coordinates if provided.
+    
+    Raises
+    ------
+    TypeError
+        If `survey_data` is not a DataFrame or recognized file type.
+    ValueError
+        If `data_type` is invalid or coordinate columns are incorrectly specified.
+    KeyError
+        If required columns (`customer_origins_col`, `supply_locations_col`, or
+        optional coordinate columns) are missing.
+    """
 
     if isinstance(survey_data, pd.DataFrame):
         data = survey_data
@@ -792,4 +1008,4 @@ def survey_to_matrix(
             how = "left"
         )        
     
-    return data_agg   
+    return data_agg

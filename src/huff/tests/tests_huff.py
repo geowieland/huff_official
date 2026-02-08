@@ -4,9 +4,9 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.21
-# Last update: 2026-01-27 18:09
-# Copyright (c) 2025 Thomas Wieland
+# Version:     1.6.1
+# Last update: 2026-02-04 19:00
+# Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 import geopandas as gp
@@ -37,11 +37,11 @@ Haslach.summary()
 
 Haslach.plot(
     point_style = {
-            "name": "Districts",
-            "color": "black",
-            "alpha": 1,
-            "size": 15,
-        },
+        "name": "Districts",
+        "color": "black",
+        "alpha": 1,
+        "size": 15,
+    },
     polygon_style= {
         "name": "Buffers",
         "color": {
@@ -102,6 +102,7 @@ Haslach_supermarkets.isochrones(
     profile = "foot-walking",
     save_output=True,
     ors_auth="5b3ce3597851110001cf62480a15aafdb5a64f4d91805929f8af6abd",
+    # Authentification token FOR TESTING
     output_filepath="Haslach_supermarkets_iso.shp",
     output_crs="EPSG:31467",
     delay=0.2
@@ -111,6 +112,9 @@ Haslach_supermarkets.isochrones(
 
 Haslach_supermarkets.summary()
 # Summary of updated customer origins
+
+Haslach_supermarkets.show_log()
+# Log of customer origins
 
 Haslach_supermarkets.plot(
     point_style = {
@@ -205,6 +209,9 @@ huff_model = haslach_interactionmatrix.marketareas()
 
 huff_model.summary()
 # Summary of Huff model
+
+huff_model.show_log()
+# Log of Huff model
 
 print(huff_model.get_market_areas_df())
 # Showing total market areas
@@ -455,7 +462,7 @@ huff_model_fit2.summary()
 
 # Loading and including total market areas
 
-Wieland2025_totalmarketareas = load_marketareas(
+wieland2015_totalmarketareas = load_marketareas(
     data="data/Wieland2015.xlsx",
     supply_locations_col="Zielort",
     total_col="Anb_Eink",
@@ -464,7 +471,7 @@ Wieland2025_totalmarketareas = load_marketareas(
 )
 # Loading empirical total market areas
 
-huff_model_fit2 = Wieland2025_totalmarketareas.add_to_model(
+huff_model_fit2 = wieland2015_totalmarketareas.add_to_model(
     huff_model_fit2
     )
 # Adding total market areas to HuffModel object
@@ -493,6 +500,8 @@ huff_model_fit3.show_log()
 print(huff_model_fit3.get_market_areas_df())
 # Show market areas df
 
+
+# Stand-alone functions:
 
 # Buffer analysis:
 

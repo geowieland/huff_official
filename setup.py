@@ -7,7 +7,7 @@ def read_README():
     
 setup(
     name='huff',
-    version='1.7.1',
+    version='1.8.0',
     description='huff: Market Area Analysis in Python',
     packages=find_packages(where="src"),
     package_dir={"": "src"},

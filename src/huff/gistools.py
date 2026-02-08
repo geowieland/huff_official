@@ -4,9 +4,9 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.20
-# Last update: 2026-01-27 18:07
-# Copyright (c) 2025 Thomas Wieland
+# Version:     1.4.22
+# Last update: 2026-02-02 21:07
+# Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
@@ -30,6 +30,36 @@ def manhattan_distance(
     destination: list,
     unit: str = "m"
 ):
+    """
+    Compute the Manhattan (L1) distance between two geographic coordinates.
+
+    Parameters
+    ----------
+    source : list
+        Geographic coordinates of the source location given as a list
+        (latitude, longitude) in decimal degrees.
+    destination : list
+        Geographic coordinates of the destination location given as a list
+        (latitude, longitude) in decimal degrees.
+    unit : str, optional
+        Unit of the returned distance. Supported values are:
+        - ``"m"`` for meters (default)
+        - ``"mile"`` for miles
+
+    Returns
+    -------
+    distance : float
+        Manhattan distance between ``source`` and ``destination`` in the
+        specified unit.
+
+    Examples
+    --------
+    >>> manhattan_distance([52.52, 13.405], [48.8566, 2.3522])
+    877463.2
+
+    >>> manhattan_distance([52.52, 13.405], [48.8566, 2.3522], unit="mile")
+    545.37
+    """
 
     if source == destination:
         
@@ -58,6 +88,38 @@ def euclidean_distance(
     unit: str = "m"
     ):
 
+    """
+    Compute the Euclidean (great-circle) distance between two geographic
+    coordinates on the Earth's surface.
+
+    Parameters
+    ----------
+    source : list
+        Geographic coordinates of the source location given as a list
+        (latitude, longitude) in decimal degrees.
+    destination : list
+        Geographic coordinates of the destination location given as a list
+        (latitude, longitude) in decimal degrees.
+    unit : str, optional
+        Unit of the returned distance. Supported values are:
+        - ``"m"`` for meters (default)
+        - ``"mile"`` for miles
+
+    Returns
+    -------
+    distance : float
+        Euclidean (great-circle) distance between ``source`` and
+        ``destination`` in the specified unit.
+
+    Examples
+    --------
+    >>> euclidean_distance([52.52, 13.405], [48.8566, 2.3522])
+    878000.0
+
+    >>> euclidean_distance([52.52, 13.405], [48.8566, 2.3522], unit="mile")
+    545.7
+    """
+
     if source == destination:
         
         distance = 0
@@ -81,21 +143,85 @@ def euclidean_distance(
 def distance_matrix(
     sources: list,
     destinations: list,
-    sources_uid: list = [],
-    destinations_uid: list = [],
+    sources_uid: list | None = None,
+    destinations_uid: list | None = None,
     distance_type: str = "euclidean",
     unit: str = "m",    
     save_output: bool = True,
     output_filepath: str = "lines.shp",
     output_crs: str = "EPSG:4326",    
     verbose: bool = False
-    ):    
+    ):
 
+    """
+    Compute a distance matrix between source and destination coordinates and
+    optionally export the results as geospatial data.
+
+    Parameters
+    ----------
+    sources : list
+        List of source coordinates given as (latitude, longitude) pairs in
+        decimal degrees.
+    destinations : list
+        List of destination coordinates given as (latitude, longitude) pairs
+        in decimal degrees.
+    sources_uid : list, optional
+        List of unique identifiers for the source locations. If provided, its
+        length must match the number of sources.
+    destinations_uid : list, optional
+        List of unique identifiers for the destination locations. If provided,
+        its length must match the number of destinations.
+    distance_type : str, optional
+        Distance metric to use. Must be one of the values defined in
+        ``config.DISTANCE_TYPES_LIST_FUNC``. Default is ``"euclidean"``.
+    unit : str, optional
+        Unit of the computed distances. Supported values are:
+        - ``"m"`` for meters (default)
+        - ``"mile"`` for miles
+    save_output : bool, optional
+        If ``True``, the line geometries are written to disk. Default is ``True``.
+    output_filepath : str, optional
+        File path for the exported line geometry dataset. Default is
+        ``"lines.shp"``.
+    output_crs : str, optional
+        Coordinate reference system of the output GeoDataFrames, given as an
+        EPSG code. Default is ``"EPSG:4326"``.
+    verbose : bool, optional
+        If ``True``, progress information is printed to stdout. Default is
+        ``False``.
+
+    Returns
+    -------
+    result : list
+        A list containing four elements:
+
+        1. matrix : list of list of float  
+           Distance matrix with shape
+           ``(len(sources), len(destinations))``.
+        2. line_data_gdf : geopandas.GeoDataFrame  
+           GeoDataFrame containing line geometries for each
+           source–destination pair and their associated distances.
+        3. sources_point_gpd : geopandas.GeoDataFrame  
+           GeoDataFrame of source points.
+        4. destinations_point_gpd : geopandas.GeoDataFrame  
+           GeoDataFrame of destination points.
+
+    Raises
+    ------
+    ValueError
+        If ``distance_type`` is not supported.
+    """
+    
     if distance_type not in config.DISTANCE_TYPES_LIST_FUNC:
         raise ValueError(f"Distance type {distance_type} is unknown. Please choose one of the following: {', '.join(config.DISTANCE_TYPES_LIST_FUNC)}.")
     
     if verbose:
         print(f"Calculating {distance_type} distance matrix for {len(sources)} sources and {len(destinations)} destinations", end = " ... ")
+    
+    if sources_uid is None:
+        sources_uid = []
+    if destinations_uid is None:
+        destinations_uid = []
 
     if len(sources_uid) > 0 and len(sources_uid) != len(sources):
         print(f"Source unique IDs were stated ({len(sources_uid)}), but do not correspond to the number of sources ({len(sources)}). No source IDs are added to the GeoDataFrame.")
@@ -228,6 +354,45 @@ def distance_matrix_from_gdf(
     verbose: bool = False
     ):
     
+    """
+    Compute a distance matrix between two sets of points stored in GeoDataFrames.
+
+    Parameters
+    ----------
+    sources_points_gdf : gp.GeoDataFrame
+        GeoDataFrame containing the source points.
+    sources_uid_col : str
+        Column name in `sources_points_gdf` containing unique IDs for sources.
+    destinations_points_gdf : gp.GeoDataFrame
+        GeoDataFrame containing the destination points.
+    destinations_uid_col : str
+        Column name in `destinations_points_gdf` containing unique IDs for destinations.
+    distance_type : str, default "euclidean"
+        Type of distance to compute ("euclidean" or "manhattan").
+    unit : str, default "m"
+        Unit of distance (e.g., meters "m", kilometers "km").
+    remove_duplicates : bool, default True
+        Whether to remove duplicate entries in the distance matrix.
+    save_output : bool, default True
+        Whether to save the output as a shapefile.
+    output_filepath : str, default "lines.shp"
+        File path for saving the shapefile if `save_output` is True.
+    output_crs : str, default "EPSG:4326"
+        Coordinate Reference System for the output shapefile.
+    verbose : bool, default False
+        Whether to print progress messages.
+
+    Returns
+    -------
+    gp.GeoDataFrame
+        GeoDataFrame containing the distance matrix as lines between sources and destinations,
+        including distances and IDs.
+
+    Examples
+    --------
+    >>> distance_matrix_from_gdf(sources_gdf, "id", destinations_gdf, "id")
+    """
+
     if sources_points_gdf.crs != destinations_points_gdf.crs:        
         print(f"NOTE: Sources and destinations have different CRS: {sources_points_gdf.crs}, {destinations_points_gdf.crs}")
             
@@ -380,6 +545,45 @@ def polygon_select(
     output_crs: str = "EPSG:4326",
     verbose: bool = False
     ):
+
+    """
+    Select features from a GeoDataFrame based on their proximity to polygons.
+
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        GeoDataFrame containing the features to be selected.
+    gdf_unique_id_col : str
+        Column name in `gdf` containing unique identifiers for the features.
+    gdf_polygon_select : GeoDataFrame
+        GeoDataFrame containing the polygons used for selection.
+    gdf_polygon_select_unique_id_col : str
+        Column name in `gdf_polygon_select` containing unique polygon IDs.
+    distance : int
+        Distance buffer around polygons for selection (in CRS units, e.g., meters).
+    within : bool, default False
+        If True, select only features completely within the polygons. 
+        If False, select features intersecting the polygons or within the buffer distance.
+    save_output : bool, default True
+        Whether to save the resulting selected features as a shapefile.
+    output_filepath : str, default "polygon_select.shp"
+        File path for saving the selected features shapefile.
+    output_filepath_buffer : str, default "gdf_buffer.shp"
+        File path for saving the buffer around polygons, if created.
+    output_crs : str, default "EPSG:4326"
+        Coordinate Reference System for the output shapefile.
+    verbose : bool, default False
+        Whether to print progress messages during processing.
+
+    Returns
+    -------
+    GeoDataFrame
+        GeoDataFrame of selected features that meet the distance or within criteria.
+
+    Examples
+    --------
+    >>> polygon_select(gdf, "id", polygons_gdf, "poly_id", distance=100)
+    """
     
     if gdf.crs != gdf_polygon_select.crs:
         raise ValueError(f"Coordinate reference systems of inputs do not match. Polygons: {str(gdf.crs)}, points: {str(gdf_polygon_select.crs)}")
@@ -444,6 +648,34 @@ def overlay_difference(
     verbose: bool = False
     ):
 
+    """
+    Compute the overlay difference of a GeoDataFrame of polygons.
+
+    This function subtracts each polygon from the previous one in the 
+    sorted GeoDataFrame, returning only the unique parts of each polygon. 
+    The first polygon (innermost) is always included.
+
+    Parameters
+    ----------
+    polygon_gdf : GeoDataFrame
+        GeoDataFrame containing the polygons to process.
+    sort_col : str, optional
+        Column name to sort the polygons before computing differences.
+        If None, the original order is used. Default is None.
+    verbose : bool, default False
+        If True, print progress messages during processing.
+
+    Returns
+    -------
+    GeoDataFrame
+        A GeoDataFrame containing the difference polygons with the same
+        non-geometry attributes as the input, preserving the CRS.
+
+    Examples
+    --------
+    >>> overlay_difference(polygons_gdf, sort_col="area", verbose=True)
+    """
+
     if verbose:
         print(f"Performing overlay difference on {len(polygon_gdf)} polygons", end = " ... ")
 
@@ -496,6 +728,53 @@ def point_spatial_join(
     output_crs: str = "EPSG:4326",
     verbose: bool = False
     ):
+
+    """
+    Perform a spatial join between points and polygons, optionally calculating statistics.
+
+    This function joins points to polygons based on spatial relationships (intersect),
+    allows optional statistics aggregation for specified columns, and can save the results.
+
+    Parameters
+    ----------
+    polygon_gdf : GeoDataFrame
+        GeoDataFrame containing the polygons to join.
+    point_gdf : GeoDataFrame
+        GeoDataFrame containing the points to join.
+    join_type : str, default "inner"
+        Type of spatial join: "inner", "left", or "right".
+    polygon_ref_cols : list of str, optional
+        Column(s) in `polygon_gdf` used for grouping when calculating statistics.
+        Default is empty list.
+    point_stat_col : str, optional
+        Column in `point_gdf` for which statistics (count, sum, min, max, mean) are calculated.
+        Default is None.
+    check_polygon_ref_cols : bool, default False
+        If True, checks that all columns in `polygon_ref_cols` exist in `polygon_gdf`.
+    save_output : bool, default True
+        Whether to save the joined GeoDataFrame and statistics to disk.
+    output_filepath_join : str, default "shp_points_gdf_join.shp"
+        File path to save the joined GeoDataFrame shapefile.
+    output_filepath_stat : str, default "spatial_join_stat.csv"
+        File path to save the statistics CSV.
+    output_crs : str, default "EPSG:4326"
+        Coordinate Reference System for the output shapefile.
+    verbose : bool, default False
+        If True, prints progress messages during processing.
+
+    Returns
+    -------
+    list
+        A list containing:
+        - GeoDataFrame: the joined points GeoDataFrame
+        - DataFrame or None: statistics DataFrame if `polygon_ref_cols` and `point_stat_col` 
+          are provided, otherwise None
+
+    Examples
+    --------
+    >>> point_spatial_join(polygons_gdf, points_gdf, join_type="inner", 
+    ...     polygon_ref_cols=["region"], point_stat_col="value", verbose=True)
+    """
     
     if polygon_gdf is None:
         raise ValueError("Parameter 'polygon_gdf' is None")
@@ -592,12 +871,63 @@ def map_with_basemap(
     styles: dict = {},
     save_output: bool = True,
     output_filepath: str = "osm_map_with_basemap.png",
-    output_dpi=300,
+    output_dpi = 300,
     legend: bool = True,
     map_title: str = "Map with OSM basemap",
     show_plot: bool = True,
     verbose: bool = False
     ):
+
+    """
+    Plot multiple GeoDataFrame layers on an OSM basemap with optional styling.
+
+    Layers with different CRS are automatically reprojected if requested. 
+    The function supports point, line, and polygon layers, custom styles, legends, 
+    and saving the figure to disk.
+
+    Parameters
+    ----------
+    layers : list of GeoDataFrames
+        List of GeoDataFrames to plot on the map.
+    layers_auto_crs : bool, default True
+        If True, automatically reprojects layers to the CRS of the first layer.
+    osm_basemap : bool, default True
+        Whether to display an OpenStreetMap basemap.
+    zoom : int, default 15
+        Zoom level for the OSM basemap.
+        See https://wiki.openstreetmap.org/wiki/Zoom_levels
+    tile_delay : float, default 0.1
+        Delay (seconds) between tile requests when retrieving basemap tiles.
+    figsize : tuple, default (10, 10)
+        Figure size in inches (width, height).
+    bounds_factor : list of float, default [0.9999, 0.9999, 1.0001, 1.0001]
+        Factor to adjust map area based on the map bounds (SW_lon, SW_lat, NE_lon, NE_lat).
+    styles : dict, default {}
+        Dictionary defining layer styles (color, alpha, name, size, linewidth).
+    save_output : bool, default True
+        Whether to save the generated map as an image file.
+    output_filepath : str, default "osm_map_with_basemap.png"
+        File path to save the map image.
+    output_dpi : int, default 300
+        Resolution of the saved map image in DPI.
+    legend : bool, default True
+        Whether to display a legend on the map.
+    map_title : str, default "Map with OSM basemap"
+        Title of the map.
+    show_plot : bool, default True
+        Whether to display the plot interactively.
+    verbose : bool, default False
+        If True, prints progress messages during processing.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the map plot.
+
+    Examples
+    --------
+    >>> fig = map_with_basemap([gdf1, gdf2], zoom=14, styles={0: {"color":"red", "alpha":0.5, "name":"Layer1", "size":10}})
+    """
     
     if not isinstance(layers, list):
         raise TypeError("Param 'layers' must be a list")
@@ -952,12 +1282,42 @@ def map_with_basemap(
 
 def point_gpd_from_list(
     input_lonlat: list,
-    input_id: list = [],
-    input_crs = "EPSG:4326",
-    output_crs = "EPSG:4326",
-    save_shapefile = None,
+    input_id: list | None = None,
+    input_crs: str = "EPSG:4326",
+    output_crs: str = "EPSG:4326",
+    save_shapefile: str = None,
     verbose: bool = False
     ):
+
+    """
+    Create a GeoDataFrame of points from a list of coordinates.
+
+    Parameters
+    ----------
+    input_lonlat : list of list of float
+        List of coordinates, each element as [lon, lat].
+    input_id : list, optional
+        List of IDs for each point. If empty, sequential integers are used. Default is [].
+    input_crs : str, default "EPSG:4326"
+        CRS of the input coordinates.
+    output_crs : str, default "EPSG:4326"
+        CRS of the output GeoDataFrame.
+    save_shapefile : str or None, optional
+        File path to save the GeoDataFrame as a shapefile. If None, no file is saved.
+        Default is None.
+    verbose : bool, default False
+        If True, prints progress messages during processing.
+
+    Returns
+    -------
+    GeoDataFrame
+        GeoDataFrame containing points with geometry and ID column in the specified CRS.
+
+    Examples
+    --------
+    >>> points = [[13.405, 52.52], [2.3522, 48.8566]]
+    >>> gdf = point_gpd_from_list(points, input_id=["Berlin","Paris"], verbose=True)
+    """
 
     if verbose:
         print(f"Calucalating point gdf from list with {len(input_lonlat)} entries", end = " ... ")
@@ -977,7 +1337,7 @@ def point_gpd_from_list(
             crs=input_crs
         )
         
-        if input_id != []:
+        if input_id != [] and input_id is not None:
             coords_gpd["ID"] = input_id[entry]
         else:
             coords_gpd["ID"] = entry
@@ -999,6 +1359,30 @@ def lonlat_transform(
     destination: list,
     transform: bool = True
     ):
+
+    """
+    Transform longitude and latitude coordinates from degrees to radians.
+
+    Parameters
+    ----------
+    source : list of float
+        Source coordinate as [longitude, latitude] in degrees.
+    destination : list of float
+        Destination coordinate as [longitude, latitude] in degrees.
+    transform : bool, default True
+        If True, convert coordinates from degrees to radians.
+        If False, return the original degree values.
+
+    Returns
+    -------
+    tuple of float
+        (lat1, lat2, lon1, lon2) as either radians (if transform=True) or degrees.
+
+    Examples
+    --------
+    >>> lonlat_transform([13.405, 52.52], [2.3522, 48.8566], transform=True)
+    (0.916646, 0.852708, 0.230907, 0.041063)
+    """
 
     lon1 = source[0]
     lat1 = source[1]

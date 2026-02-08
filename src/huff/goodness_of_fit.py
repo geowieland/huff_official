@@ -4,9 +4,9 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.3
-# Last update: 2025-12-23 14:37
-# Copyright (c) 2025 Thomas Wieland
+# Version:     1.0.5
+# Last update: 2026-02-08 12:56
+# Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
@@ -27,6 +27,63 @@ def modelfit(
     perc_factor: int = 100,
     verbose: bool = False
     ):
+
+    """
+    Compute goodness-of-fit metrics for observed and expected values.
+
+    Parameters
+    ----------
+    observed : array-like
+        One-dimensional numeric vector containing observed (true) values.
+        Supported types include NumPy arrays and pandas Series.
+    expected : array-like
+        One-dimensional numeric vector containing expected (predicted) values.
+        Must have the same length as `observed`.
+    remove_nan : bool, optional
+        If True (default), rows containing NaN values in either `observed`
+        or `expected` are removed prior to computation. If False, the
+        presence of NaNs raises a ValueError.
+    perc_factor : int, optional
+        Scaling factor for percentage-based error metrics (default is 100).
+    verbose : bool, optional
+        If True, print informational messages during processing.
+
+    Returns
+    -------
+    data_residuals : pandas.DataFrame
+        DataFrame containing observed values, expected values, residuals,
+        squared residuals, absolute residuals, absolute percentage error
+        (APE), and symmetric APE (sAPE) for each observation.
+    data_lossfunctions : dict
+        Dictionary containing aggregated goodness-of-fit metrics, including
+        R-squared, MAE, MSE, RMSE, MAPE, sMAPE, negative log-likelihood, and
+        APE-threshold statistics.
+
+    Raises
+    ------
+    ValueError
+        If `perc_factor` <= 0.
+    AssertionError
+        If `observed` and `expected` differ in length.
+    ValueError
+        If input data are non-numeric or contain NaN values while
+        `remove_nan` is False.
+
+    Notes
+    -----
+    - Mean Absolute Percentage Error (MAPE) is not computed if any observed
+      value equals zero.
+
+    Examples
+    --------
+    >>> obs = np.array([1.0, 2.0, 3.0])
+    >>> exp = np.array([1.1, 1.9, 3.2])
+    >>> residuals, metrics = modelfit(obs, exp)
+    >>> metrics["Root mean squared error"]
+    """
+    
+    if perc_factor <= 0:
+        raise ValueError("Parameter 'perc_factor' must be positive. Use perc_factor = 100 to get deviation-based metrics in percent")
 
     observed_no = len(observed)
     expected_no = len(expected)
@@ -106,8 +163,7 @@ def modelfit(
     sMAPE = float(np.mean(sAPE))
 
     APEs = {}
-    i = 0
-   
+    i = 0   
 
     for APE_value in range(config.APE_MIN, config.APE_MAX + 1):
         i = i+1
@@ -134,28 +190,112 @@ def modelfit(
     return modelfit_results
 
 def modelfit_plot(
-    observed_expected: list = [],     
+    observed_expected: list | None = None,     
     remove_nan: bool = True,
     perc_factor: int = 100,
     title: str = "Observed vs. expected",
     x_lab: str = "Observed",
     y_lab: str = "Expected",
-    points_cols: list = [],
-    points_alpha = 0.5,
-    figsize = (8,6),
-    show_diag: list = ["MAPE", "Rsq"],
+    points_cols: list | None = None,
+    points_alpha: float = 0.5,
+    figsize: tuple = (8,6),
+    show_diag: list | None = None,
     round_float: int = 1,
-    label_prefixes: list = [],
+    label_prefixes: list | None = None,
     grid: bool = True,
     diagonale: bool = True,
     diagonale_col = "black",
     legend_fontsize = "small",
     save_as: str = "scatterplot.png",
-    save_dpi = 300,
+    save_dpi: int = 300,
     show_plot: bool = False,
     verbose: bool = False
     ):
     
+    """
+    Create an observed-vs-expected scatter plot with goodness-of-fit diagnostics.
+
+    This function computes model fit statistics for one or multiple pairs of
+    observed and expected values using `modelfit` and visualizes them in a
+    scatter plot. Each dataset can be displayed with individual colors and
+    labels, optionally annotated with selected goodness-of-fit metrics.
+
+    Parameters
+    ----------
+    observed_expected : list of tuple, optional
+        List of (observed, expected) pairs. Each element must be a tuple
+        containing two one-dimensional numeric vectors of equal length.
+        Supported types include NumPy arrays and pandas Series.
+    remove_nan : bool, optional
+        If True (default), rows containing NaN values are removed prior to
+        computing fit metrics. If False, NaNs raise a ValueError.
+    perc_factor : int, optional
+        Scaling factor for percentage-based error metrics (default is 100).
+    title : str, optional
+        Plot title.
+    x_lab : str, optional
+        Label for the x-axis (observed values).
+    y_lab : str, optional
+        Label for the y-axis (expected values).
+    points_cols : list, optional
+        List of colors for scatter points. If provided, its length must match
+        the number of datasets. 
+        Colors are randomly assigned if `points_cols` is not provided.
+    points_alpha : float, optional
+        Alpha (transparency) value for scatter points.
+    figsize : tuple, optional
+        Figure size passed to matplotlib (width, height).
+    show_diag : list, optional
+        List of goodness-of-fit metric names to include in the legend
+        (e.g., ["MAPE", "Rsq"]; available metrics: see config.GOODNESS_OF_FIT.values()).
+    round_float : int, optional
+        Number of decimal places used when rounding diagnostic values
+        displayed in the legend.
+    label_prefixes : list, optional
+        List of label prefixes for each dataset shown in the legend.
+    grid : bool, optional
+        If True, display a grid on the plot.
+    diagonale : bool, optional
+        If True, plot the 1:1 diagonal line.
+    diagonale_col : str, optional
+        Color of the diagonal reference line.
+    legend_fontsize : str or int, optional
+        Font size of the legend.
+    save_as : str or None, optional
+        File path for saving the plot. If None, the plot is not saved.
+    save_dpi : int, optional
+        DPI used when saving the figure.
+    show_plot : bool, optional
+        If True, display the plot using matplotlib.
+    verbose : bool, optional
+        If True, print informational messages during processing.
+
+    Returns
+    -------
+    modelfit_list : list
+        List of results returned by `modelfit` for each (observed, expected)
+        pair. Each element contains a residuals DataFrame and a dictionary
+        of goodness-of-fit metrics.
+
+    Examples
+    --------
+    >>> data = [(obs1, exp1), (obs2, exp2)]
+    >>> results = modelfit_plot(
+    ...     observed_expected=data,
+    ...     show_diag=["MAPE", "Rsq"],
+    ...     show_plot=True
+    ... )
+    """
+
+    if observed_expected is None:
+        observed_expected = []
+    if points_cols is None:
+        points_cols = []
+    if show_diag is None:
+        show_diag = ["MAPE", "Rsq"]
+    if label_prefixes is None:
+        label_prefixes = []
+        
     modelfit_list = []
     
     for obs_exp_data in observed_expected:
@@ -230,6 +370,20 @@ def modelfit_plot(
 
 
 def modelfit_print(modelfit_results):
+    
+    """
+    Print goodness-of-fit statistics of an output from the function `modelfit()`.
+
+    Parameters
+    ----------
+    modelfit_results : tuple
+        Output from the function `modelfit()` containing goodness-of-fit values.
+
+    Returns
+    -------
+    tuple
+        The unchanged model fitting results.
+    """
 
     maxlen = max(len(str(key)) for key in config.GOODNESS_OF_FIT.keys())
 
@@ -242,7 +396,6 @@ def modelfit_print(modelfit_results):
 
     return modelfit_results
 
-
 def modelfit_cat(
     observed,
     expected,
@@ -250,6 +403,50 @@ def modelfit_cat(
     perc_factor: int = 100,
     verbose: bool = False
     ):
+
+    """
+    Compute categorical goodness-of-fit statistics for observed and expected binary values.
+
+    Parameters
+    ----------
+    observed : array-like
+        Vector of observed binary values (0/1).
+    expected : array-like
+        Vector of expected binary values (0/1).
+    remove_nan : bool, optional
+        If True, remove pairs with NaN values before calculation (default: True).
+    perc_factor : int, optional
+        Factor used to scale percentage-based metrics (default: 100).
+    verbose : bool, optional
+        If True, print informational messages during processing.
+
+    Returns
+    -------
+    list
+        A list containing a residuals DataFrame and a dictionary with goodness-of-fit
+        measures (sensitivity, specificity, accuracy, ni-information rate, 
+        true positives, false positives, true negatives, false negatives).
+
+    Raises
+    ------
+    ValueError
+        If `perc_factor` <= 0.
+    AssertionError
+        If `observed` and `expected` differ in length.
+    ValueError
+        If input data are non-numeric or contain NaN values while
+        `remove_nan` is False.
+
+    Examples
+    --------
+    >>> observed = np.array([1, 0, 1, 1, 0])
+    >>> expected = np.array([1, 0, 0, 1, 0])
+    >>> results = modelfit_cat(observed, expected)
+    >>> results[1]["acc"]
+    """
+
+    if perc_factor <= 0:
+        raise ValueError("Parameter 'perc_factor' must be positive. Use perc_factor = 100 to get deviation-based metrics in percent")
 
     observed_no = len(observed)
     expected_no = len(expected)
@@ -308,15 +505,17 @@ def modelfit_cat(
     sens = TP / (TP + FN) if (TP + FN) > 0 else 0 
     spec = TN / (TN + FP) if (TN + FP) > 0 else 0 
     acc = (TP + TN) / (TP + TN + FP + FN)
+    nir = TN / (TP + TN + FP + FN)
     
     data_lossfunctions = {
         "sens": sens*perc_factor,
         "spec": spec*perc_factor,
         "acc": acc*perc_factor,
+        "nir": nir*perc_factor,
         "TP": TP,
         "FP": FP,
         "TN": TN,
-        "FN": FN,        
+        "FN": FN,
      }
 
     modelfit_results = [

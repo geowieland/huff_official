@@ -4,9 +4,9 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.8
-# Last update: 2025-12-08 17:15
-# Copyright (c) 2025 Thomas Wieland
+# Version:     1.4.9
+# Last update: 2026-02-05 16:24
+# Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
@@ -24,12 +24,18 @@ class Client:
         self,
         server = config.OSM_TILES_SERVER,
         headers = {
-           'User-Agent': 'huff.osm/1.4.4 (your_name@your_email_provider.com)'
+           'User-Agent': 'huff.osm/1.4.9 (your_name@your_email_provider.com)'
            }
         ):
         
         self.server = server
         self.headers = headers
+
+    """
+    Client for downloading OpenStreetMap tiles.
+
+    Sett the OSM documentation: https://wiki.openstreetmap.org/wiki/Raster_tile_providers
+    """
 
     def download_tile(
         self,
@@ -38,6 +44,33 @@ class Client:
         y,
         timeout = 10
         ):
+
+        """
+        Download a single OSM tile as a PIL.Image object.
+
+        Parameters
+        ----------
+        zoom : int
+            Zoom level of the tile.
+            See the OSM documentation with respect to zoom: https://wiki.openstreetmap.org/wiki/Zoom_levels
+        x : int
+            X coordinate of the tile.
+        y : int
+            Y coordinate of the tile.
+        timeout : int, optional
+            Request timeout in seconds (default 10).
+
+        Returns
+        -------
+        PIL.Image.Image or None
+            Tile image if successful, None on error.
+
+        Example
+        -------
+        >>> client = Client()
+        >>> img = client.download_tile(12, 1205, 1532)
+        >>> img.show()
+        """
 
         osm_url = self.server + f"{zoom}/{x}/{y}.png"
        
@@ -67,7 +100,6 @@ class Client:
             print(f"Error while accessing OSM server with URL {osm_url}. Error message: {e}")
             
             return None
-    
 
 def get_basemap(
     sw_lat, 
@@ -79,11 +111,38 @@ def get_basemap(
     verbose: bool = False
     ):
 
+    """
+    Retrieve and stitch OSM tiles to create a basemap for a bounding box.
+
+    Parameters
+    ----------
+    sw_lat, sw_lon : float
+        Latitude and longitude of the southwest corner.
+    ne_lat, ne_lon : float
+        Latitude and longitude of the northeast corner.
+    zoom : int, optional
+        Zoom level of the map (default 15).
+        See the OSM documentation with respect to zoom: https://wiki.openstreetmap.org/wiki/Zoom_levels
+    tile_delay : float, optional
+        Delay in seconds between tile downloads (default 0.1).
+    verbose : bool, optional
+        If True, print progress messages (default False).
+
+    Returns
+    -------
+    PIL.Image.Image
+        Stitched basemap image.
+
+    Example
+    -------
+    >>> img = get_basemap(40.712, -74.227, 40.774, -74.125, zoom=14)
+    >>> img.show()
+    """
+
     def lat_lon_to_tile(
         lat, 
         lon, 
         zoom
-        # https://wiki.openstreetmap.org/wiki/Zoom_levels
         ):
         
         n = 2 ** zoom

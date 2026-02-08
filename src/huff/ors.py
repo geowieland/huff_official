@@ -4,9 +4,9 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.13
-# Last update: 2025-12-08 17:17
-# Copyright (c) 2025 Thomas Wieland
+# Version:     1.5.0
+# Last update: 2026-02-05 16:18
+# Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
@@ -15,6 +15,7 @@ import requests
 import geopandas as gp
 from shapely.geometry import shape
 import huff.config as config
+import huff.helper as helper
 
 class Isochrone:
 
@@ -33,12 +34,37 @@ class Isochrone:
         self.save_config = save_config
         self.error_message = error_message
 
+    """
+    Container class for isochrone results from OpenRouteService and related metadata.
+
+    Attributes
+    ----------
+    isochrones_gdf : geopandas.GeoDataFrame
+        Geometries of computed isochrones.
+    metadata : dict
+        Metadata associated with the isochrone computation (from ORS server).
+    status_code : int
+        Status code of the isochrone request (from ORS server).
+    save_config : dict
+        Configuration used for saving outputs.
+    error_message : str or None
+        Error message if the computation failed.
+    """
+
     def get_isochrones_gdf(self):
+    
+        """
+        Return the geopandas.GeoDataFrame containing the computed isochrones.
+        """
 
         isochrones_gdf = self.isochrones_gdf
         return isochrones_gdf
 
     def summary(self):
+
+        """
+        Print a summary of the isochrone query and status.
+        """
 
         metadata = self.metadata
         status_code = self.status_code
@@ -76,24 +102,55 @@ class TimeDistanceMatrix:
         self.save_config = save_config
         self.error_message = error_message
 
+    """
+    Container class for time/distance matrix results from OpenRouteService and related metadata.
+
+    Attributes
+    ----------
+    matrix_df : pandas.DataFrame
+        Table with all distances/travel times (I origins x J destinations).
+    metadata : dict
+        Metadata associated with the matrix computation (from ORS server).
+    status_code : int
+        Status code of the matrix request (from ORS server).
+    save_config : dict
+        Configuration used for saving outputs.
+    error_message : str or None
+        Error message if the computation failed.
+    """
+
     def get_matrix(self):
+
+        """
+        Return the pandas.DataFrame containing the computed distance/travel time matrix.
+        """
 
         return self.matrix_df
     
     def get_metadata(self):
 
+        """
+        Return the metadata (dict) associated with the matrix computation (from ORS server).
+        """
+
         return self.metadata
     
     def get_config(self):
+
+        """
+        Return the configuration used for saving outputs (dict).
+        """
 
         return self.save_config
     
     def summary(self):
 
+        """
+        Print a summary of the distance/time matrix query and status.
+        """
+
         metadata = self.metadata
         status_code = self.status_code
-
-        config = self.save_config
 
         if metadata is not None:
 
@@ -104,8 +161,11 @@ class TimeDistanceMatrix:
             print("Locations    " + str(no_locations))
             print("Range type   " + range_type)
             print("Profile      " + profile)
+
         else:
+
             print("No time/distance matrix was built.")
+
         print("Status code  " + str(status_code))
 
 class Client:
@@ -118,11 +178,20 @@ class Client:
         
         self.server = server
         self.auth = auth
+
+        """
+        A client for accessing the OpenRouteService (ORS) API.
+
+        Provides methods for retrieving distance/travel time matrices and isochrones 
+        from ORS given locations and user parameters.
+        See the ORS API documentation: https://openrouteservice.org/dev/#/api-docs
+        See the current API restrictions: https://openrouteservice.org/restrictions/
+        """
             
     def isochrone(
         self,
         locations: list,
-        segments: list = [900, 600, 300],
+        segments: list = None,
         range_type: str = "time",
         intersections: str = "true",
         profile: str = "driving-car",
@@ -133,10 +202,62 @@ class Client:
         verbose: bool = False
         ):
         
+        """
+        Retrieve isochrones from the ORS API for given locations and user parameters.
+
+        Parameters
+        ----------
+        locations : list
+            List of coordinates (lon, lat) representing origin points.
+            Example from ORS documentation: [[8.681495,49.41461],[8.686507,49.41943]].
+        segments : list, optional
+            Travel time or distance thresholds for isochrones (default: [900, 600, 300]).
+            Note: Travel time is measured in seconds, and distance in meters.
+        range_type : str, optional
+            Type of range measurement: {"origins", "destinations"} (default: "time").
+        intersections : str, optional
+            Whether to return isochrones as intersections ("true"/"false") (default: "true").
+        profile : str, optional
+            Travel mode, e.g., "driving-car", "cycling", "walking" (default: "driving-car").
+            See https://openrouteservice.org/dev/#/api-docs/v2/isochrones/{profile}/post for available profiles.
+        timeout : int, optional
+            Maximum request time in seconds (default: 10).
+        save_output : bool, optional
+            Whether to save the resulting GeoDataFrame as a file (default: True).
+        output_filepath : str, optional
+            Filepath to save the output if save_output=True (default: "isochrones.shp").
+        output_crs : str, optional
+            Coordinate reference system of the output (default: "EPSG:4326").
+        verbose : bool, optional
+            If True, print additional information during execution (default: False).
+
+        Returns
+        -------
+        Isochrone
+            An `Isochrone` object containing the geopandas.GeoDataFrame, metadata, status, and error message.
+
+        Examples
+        --------
+        >>> client = Client(auth="your_api_key")
+        >>> locations = [[8.004, 48.013], [8.005, 48.014]]
+        >>> result = client.isochrone(
+        ...     locations=locations,
+        ...     segments=[600, 300],
+        ...     range_type="time",
+        ...     profile="driving-car",
+        ...     verbose=True
+        ... )
+
+        """
+
+        if segments is None:
+            segments = [900, 600, 300]
+        
         check_params(
             range_type,
             profile,
         )
+
         assert len(segments) <= config.ORS_ENDPOINTS["Isochrones"]["Restrictions"]["Intervals"], f"ORS client does not allow >{config.ORS_ENDPOINTS['Isochrones']['Restrictions']['Intervals']} intervals in an Isochrones query. See {config.ORS_URL_RESTRICTIONS}."
         assert len(locations) <= config.ORS_ENDPOINTS["Isochrones"]["Restrictions"]["Locations"], f"ORS client does not allow >{config.ORS_ENDPOINTS['Isochrones']['Restrictions']['Locations']} locations in an Isochrones query. See {config.ORS_URL_RESTRICTIONS}."
     
@@ -179,7 +300,7 @@ class Client:
             
             status_code = 99999
             isochrones_gdf = None 
-            metadata = None
+            metadata = {}
 
             isochrone_output = Isochrone(
                 isochrones_gdf, 
@@ -236,8 +357,11 @@ class Client:
             print(error_message)
             
             isochrones_gdf = None
-            metadata = None
+            metadata = {}
         
+        if "timestamp" in metadata:
+            metadata["ors_metadata"] = metadata.pop("timestamp")
+
         isochrone_output = Isochrone(
             isochrones_gdf, 
             metadata,
@@ -245,14 +369,21 @@ class Client:
             save_config,
             error_message
             )
+               
+        helper.add_timestamp(
+            isochrone_output,
+            function="ors.Client.isochrone",
+            process=f"Retrieved isochrones ({range_type}, {profile}) with {len(segments)} for {len(locations)} locations",
+            status = "OK" if error_message == "" else error_message
+            )
         
         return isochrone_output
 
     def matrix(
         self,
         locations: list,
-        sources: list = [],
-        destinations: list = [],
+        sources: list = None,
+        destinations: list = None,
         id: str = None,
         range_type: str = "time",
         profile: str = "driving-car",
@@ -261,11 +392,71 @@ class Client:
         timeout: int = 10,
         save_output: bool = False,
         output_filepath: str = "matrix.csv",
-        csv_sep = ";",
-        csv_decimal = ",",
-        csv_encoding = None,
+        csv_sep: str = ";",
+        csv_decimal: str = ",",
+        csv_encoding: str = None,
         verbose: bool = config.VERBOSE
         ):
+
+        """
+        Retrieves a travel time or distance matrix from OpenRouteService (ORS) for a set of locations.
+
+        Parameters
+        ----------
+        locations : list
+            Coordinates of locations for the matrix query, e.g., [[lon1, lat1], [lon2, lat2]].
+            ORS documentation example: [[9.70093,48.477473],[9.207916,49.153868],[37.573242,55.801281],[115.663757,38.106467]].
+        sources : list, optional
+            Indices of source locations in `locations` to include (if available).
+        destinations : list, optional
+            Indices of destination locations in `locations` to include (if available).
+        id : str, optional
+            Optional identifier for the request.
+        range_type : str, optional
+            Type of range measurement: {"origins", "destinations"} (default: "time").
+        profile : str, optional
+            Mode of travel: "driving-car", "cycling-regular", etc. (default: "driving-car").
+        resolve_locations : bool, optional
+            Whether ORS should snap coordinates to the road network (default: False).
+        units : str, optional
+            Output units, e.g., "mi" or "km" (default: "mi").
+        timeout : int, optional
+            Request timeout in seconds (default: 10).
+        save_output : bool, optional
+            If True, saves the result as a CSV file (default: False).
+        output_filepath : str, optional
+            Filepath to save CSV if `save_output=True` (default: "matrix.csv").
+        csv_sep : str, optional
+            Separator for CSV file (default: ";").
+        csv_decimal : str, optional
+            Decimal symbol for CSV file (default: ",").
+        csv_encoding : str, optional
+            Encoding for CSV file (default: None, system default).
+        verbose : bool, optional
+            If True, print additional information during execution (default: False).
+
+        Returns
+        -------
+        TimeDistanceMatrix
+            Object containing the DataFrame (`matrix_df`), metadata, status code, save config,
+            and error message. Provides additional methods and timestamps.
+
+        Examples
+        --------
+        >>> client = Client(auth="your_api_key")
+        >>> locations = [[8.004, 48.013], [8.005, 48.014]]
+        >>> result = client.matrix(
+        ...     locations=locations,
+        ...     range_type="time",
+        ...     profile="driving-car",
+        ...     verbose=True
+        ... )
+        """
+
+        if sources is None:
+            sources = []
+        if destinations is None:
+            destinations = []
 
         check_params(
             range_type,
@@ -317,17 +508,7 @@ class Client:
             
             status_code = 99999
             matrix_df = None
-            metadata = None
-
-            matrix_output = TimeDistanceMatrix(
-                matrix_df, 
-                metadata,
-                status_code,
-                save_config,
-                error_message
-                )
-
-            return matrix_output
+            metadata = {}
 
         status_code = response.status_code
 
@@ -407,7 +588,7 @@ class Client:
             print(error_message)
 
             matrix_df = None
-            metadata = None
+            metadata = {}
 
         matrix_output = TimeDistanceMatrix(
             matrix_df, 
@@ -416,14 +597,25 @@ class Client:
             save_config,
             error_message
             )
+        
+        helper.add_timestamp(
+            matrix_output,
+            function="ors.Client.matrix",
+            process=f"Retrieved transport costs matrix ({range_type}, {profile}) for {len(locations)} locations",
+            status = "OK" if error_message == "" else error_message
+            )
              
-        return matrix_output
-    
+        return matrix_output    
     
 def check_params(
     range_type,
     profile
     ):
-    
+
+    """
+    Validate `range_type` and `profile` against allowed ORS API values, definded in the `config` module.
+    This function is implemented in the Client methods.
+    """
+        
     assert range_type in config.ORS_RANGE_TYPES_LIST_API, f"Parameter 'range_type' must be one of these: {', '.join(config.ORS_RANGE_TYPES_LIST_API)}."
     assert profile in config.ORS_PROFILES_LIST_API, f"Parameter 'profile' must be one of these: {', '.join(config.ORS_PROFILES_LIST_API)}."

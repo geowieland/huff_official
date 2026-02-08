@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.4
-# Last update: 2026-01-27 18:06
-# Copyright (c) 2025 Thomas Wieland
+# Version:     1.0.7
+# Last update: 2026-02-07 12:56
+# Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.7.1"
+PACKAGE_VERSION = "1.8.0"
 
 
 # Basic config:
@@ -47,7 +47,11 @@ MODELS = {
     "Hansen": {
         "description": "Hansen Accessibility",
         "metadata_model_type": "Hansen"
-    }
+    },
+    "2SFCA": {
+        "description": "Two-step floating catchment area analysis",
+        "metadata_model_type": "2SFCA"
+    },
 }
 MODELS_LIST = list(MODELS.keys())
 
@@ -63,6 +67,9 @@ DEFAULT_COLNAME_CUSTOMER_ORIGINS = "i"
 DEFAULT_COLNAME_SUPPLY_LOCATIONS = "j"
 DEFAULT_COLNAME_INTERACTION = "ij"
 DEFAULT_COLNAME_TOTAL_MARKETAREA = "T_j"
+DEFAULT_COLNAME_UTILITY_SUPPLY = "U_ji"
+DEFAULT_COLNAME_ACCESSIBILITY_ORIGINS = "A_i"
+DEFAULT_COLNAME_SD_RATIO = "R_j"
 
 # Default column name suffixes:
 DEFAULT_LCT_SUFFIX = "__LCT"
@@ -89,6 +96,7 @@ DEFAULT_NAME_MARKETSIZE = "Market size"
 DEFAULT_NAME_CUSTOMER_ORIGINS = "Customer origins"
 DEFAULT_NAME_SUPPLY_LOCATIONS = "Supply locations"
 DEFAULT_NAME_INTERACTION_MATRIX = "Interaction matrix"
+DEFAULT_NAME_SD_RATIO = "Supply-to-demand ratio"
 
 # Default weighting functions:
 PERMITTED_WEIGHTING_FUNCTIONS = {
