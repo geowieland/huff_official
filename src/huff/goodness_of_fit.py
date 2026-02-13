@@ -368,34 +368,6 @@ def modelfit_plot(
      
     return modelfit_list
 
-
-def modelfit_print(modelfit_results):
-    
-    """
-    Print goodness-of-fit statistics of an output from the function `modelfit()`.
-
-    Parameters
-    ----------
-    modelfit_results : tuple
-        Output from the function `modelfit()` containing goodness-of-fit values.
-
-    Returns
-    -------
-    tuple
-        The unchanged model fitting results.
-    """
-
-    maxlen = max(len(str(key)) for key in config.GOODNESS_OF_FIT.keys())
-
-    for gof_key, gof_value in config.GOODNESS_OF_FIT.items():
-                    
-        if gof_key in config.GOODNESS_OF_FIT.keys():                        
-        
-            if modelfit_results[1][gof_value] is not None:
-                print(f"{gof_key:<{maxlen}}  {round(modelfit_results[1][gof_value], 2)}")
-
-    return modelfit_results
-
 def modelfit_cat(
     observed,
     expected,

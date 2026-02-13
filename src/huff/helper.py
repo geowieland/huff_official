@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.16
-# Last update: 2026-02-05 15:29
+# Version:     1.1.19
+# Last update: 2026-02-12 19:22
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -51,7 +51,6 @@ def check_vars(
 
     Examples
     --------
-    >>> import pandas as pd
     >>> df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
     >>> check_vars(df, ["a", "b"])
 
@@ -115,7 +114,7 @@ def check_vars(
     
     if len(errors) > 0:
 
-        raise Exception(f"The following error(s) occured with respect to the input dataframe: {' '.join(errors)}.")
+        raise Exception(f"The following error(s) occured with respect to the input dataframe: {' '.join(errors)}")
 
 def check_numeric_series(values):
     
@@ -132,6 +131,11 @@ def check_numeric_series(values):
     -------
     bool
         True if values are numeric, False otherwise.
+
+    Examples
+    --------
+    >>> values = pd.Series([1, 2, 3, 4, 5, 6])
+    >>> check_numeric_series(values)
     """
 
     if not isinstance(values, pd.Series):
@@ -157,6 +161,11 @@ def check_constant_values(values):
     -------
     bool
         True if all values are identical, False otherwise.
+    
+    Examples
+    --------
+    >>> values = pd.Series([1, 1, 1, 1])
+    >>> check_numeric_series(values)
     """
 
     if not isinstance(values, pd.Series):
@@ -176,6 +185,7 @@ def create_timestamp(
     """
     Create a timestamp dictionary for logging function processes.
     This function is called by `add_timestamp()`.
+    Using this function only makes sense internally within the modules.
 
     Parameters
     ----------
@@ -191,6 +201,14 @@ def create_timestamp(
     dict
         Dictionary containing package version, function name, process,
         timestamp, and status.
+    
+    Examples
+    --------
+    >>> timestamp_dict = create_timestamp(
+    ...     function="any_function()",
+    ...     process="Doing something",
+    ...     status="OK"
+    ... )
     """
 
     now = datetime.now()
@@ -217,7 +235,8 @@ def add_timestamp(
     Add a timestamp entry to an object's metadata.
     This function is built into the `models` module and is called every time an object 
     of the library's internal classes (e.g., InteractionMatrix) is modified.
-
+    Using this function only makes sense internally within the modules.
+    
     Parameters
     ----------
     obj : object
@@ -235,6 +254,14 @@ def add_timestamp(
     -------
     object
         The input object with updated timestamp metadata.
+
+    Examples
+    --------
+    >>> add_timestamp(
+    ...     self.interaction_matrix,
+    ...     function="models.MCIModel.probabilities",
+    ...     process="Calculated probabilities"
+    ... )
     """
 
     obj_class = obj.__class__.__name__
@@ -269,6 +296,7 @@ def print_timestamp(
     """
     Print timestamp metadata of an object of the library's internal 
     classes (e.g., InteractionMatrix).
+    Using this function only makes sense internally within the modules.
 
     Parameters
     ----------
@@ -279,6 +307,10 @@ def print_timestamp(
     -------
     dict or None
         Timestamp metadata if present, otherwise None.
+
+    Examples
+    --------
+    >>> obj_timestamp = print_timestamp(obj)
     """
 
     obj_class = obj.__class__.__name__
@@ -332,12 +364,13 @@ def print_timestamp(
 def print_summary_row(
     output_name, 
     output_value, 
-    width=26
+    width=config.SUMMARY_WIDTH
     ):
     
     """
-    Print a formatted name–value pair for model summaries.
+    Print a formatted name-value pair for model summaries.
     This function is a helper function for the summary() methods in the `models` module.
+    Using this function only makes sense internally within the modules.
 
     Parameters
     ----------
@@ -347,7 +380,188 @@ def print_summary_row(
         Value to print.
     width : int, optional
         Field width for alignment (default is 26).
+
+    Examples
+    --------
+    >>> print_summary_row(
+    ...     "No. locations",
+    ...     4
+    ... )
     """
 
-    value = output_value if output_value is not None else "not defined"
+    value = output_value if output_value is not None else config.SUMMARY_NOT_DEFINED
     print(f"{output_name:<{width}} {value}")
+
+def print_weightings(interaction_matrix):
+    
+    """
+    Retrieves information from an InteractionMatrix object's metadata
+    and prints the weightings. This function is a helper function 
+    for the summary() methods in the `models` module.
+    Using this function only makes sense internally within the modules.
+
+    Parameters
+    ----------
+    interaction_matrix : InteractionMatrix
+        Instance of class InteractionMatrix.
+    
+    Examples
+    --------
+    >>> print_weightings(self)
+    """
+    
+    customer_origins_metadata = interaction_matrix.get_customer_origins().get_metadata()
+    supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
+    interaction_matrix_metadata = interaction_matrix.get_metadata()
+    
+    if (supply_locations_metadata["weighting"][0]["name"] is not None and supply_locations_metadata["weighting"][0]["func"] is not None and supply_locations_metadata["weighting"][0]["param"] is not None) or (customer_origins_metadata['weighting'][0]['param'] is not None):
+    
+        print("--------------------------------------")
+
+        print("Weightings")
+
+        for key, value in supply_locations_metadata["weighting"].items():
+
+            if value['name'] is not None and value['func'] is not None and value['param'] is not None:
+
+                if supply_locations_metadata["attraction_col"][key] is not None:
+                    name = supply_locations_metadata["attraction_col"][key]
+                else:
+                    if value['name'] is not None:
+                        name = value['name']
+                    else:
+                        name = f"Attraction variable {key}"
+                
+                if isinstance(value['param'], list):
+                    param = ', '.join(str(round(x, config.FLOAT_ROUND)) for x in value['param'])
+                elif isinstance(value['param'], (int, float)):
+                    param = round(value['param'], config.FLOAT_ROUND)
+                else:
+                    param = "Invalid format"
+
+                func_description = config.PERMITTED_WEIGHTING_FUNCTIONS[value['func']]['description']
+
+                print_summary_row(
+                    name,
+                    f"{param} ({func_description})"
+                )
+
+            else:
+                if key == 0:
+                    break
+
+        if customer_origins_metadata['weighting'][0]['param'] is not None:
+
+            tc_weighting = None
+
+            transport_costs_col = "Transport costs"
+            if "transport_costs_col" in interaction_matrix_metadata and interaction_matrix_metadata["transport_costs_col"] != config.DEFAULT_COLNAME_TC:
+                transport_costs_col = interaction_matrix_metadata["transport_costs_col"]
+
+            if isinstance(customer_origins_metadata['weighting'][0]['param'], list):
+                tc_params = ', '.join(str(round(x, config.FLOAT_ROUND)) for x in customer_origins_metadata['weighting'][0]['param'])
+            elif isinstance(customer_origins_metadata['weighting'][0]['param'], (int, float)):
+                tc_params = round(customer_origins_metadata['weighting'][0]['param'], config.FLOAT_ROUND)
+            else:
+                tc_params = "Invalid format"
+
+            tc_function = config.PERMITTED_WEIGHTING_FUNCTIONS[customer_origins_metadata["weighting"][0]["func"]]["description"]
+            tc_weighting = f"{tc_params} ({tc_function})"
+
+            print_summary_row(
+                transport_costs_col,
+                tc_weighting
+            )
+
+    return [
+        customer_origins_metadata,
+        supply_locations_metadata,
+        interaction_matrix_metadata
+    ]
+
+def print_interaction_matrix_info(interaction_matrix):
+
+    """
+    Retrieves information from an InteractionMatrix object's metadata
+    and prints the related information. This function is a helper function 
+    for the summary() methods in the `models` module.
+    Using this function only makes sense internally within the modules.
+
+    Parameters
+    ----------
+    interaction_matrix : InteractionMatrix
+        Instance of class InteractionMatrix.
+    
+    Examples
+    --------
+    >>> print_interaction_matrix_info(self)
+    """
+
+    customer_origins_metadata = interaction_matrix.get_customer_origins().get_metadata()
+    supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
+    interaction_matrix_metadata = interaction_matrix.get_metadata()
+
+    print("--------------------------------------")
+
+    interactions = supply_locations_metadata["no_points"] * customer_origins_metadata["no_points"]
+
+    print_summary_row(
+        "Interactions",
+        interactions
+        )
+
+    transport_costs_metrics = config.DEFAULT_NAME_TC
+
+    if interaction_matrix_metadata != {} and "transport_costs" in interaction_matrix_metadata:
+
+        transport_costs_metrics = interaction_matrix_metadata["transport_costs"]["metrics"]            
+        
+        print_summary_row(
+            f"{config.DEFAULT_NAME_TC} type",
+            transport_costs_metrics
+        )
+
+        if transport_costs_metrics == "distance":
+            print_summary_row(
+                f"{config.DEFAULT_NAME_TC} unit",
+                interaction_matrix_metadata["transport_costs"]["distance_unit"]
+            )
+        else:
+            print_summary_row(
+                f"{config.DEFAULT_NAME_TC} unit",
+                interaction_matrix_metadata["transport_costs"]["time_unit"]
+            )
+
+    return [
+        customer_origins_metadata,
+        supply_locations_metadata,
+        interaction_matrix_metadata
+    ]
+
+def print_modelfit(modelfit_results):
+    
+    """
+    Print goodness-of-fit statistics of an output from the function `modelfit()`.
+    Using this function only makes sense internally within the modules.
+
+    Parameters
+    ----------
+    modelfit_results : tuple
+        Output from the function `modelfit()` containing goodness-of-fit values.
+
+    Returns
+    -------
+    tuple
+        The unchanged model fitting results.
+    """
+
+    maxlen = max(len(str(key)) for key in config.GOODNESS_OF_FIT.keys())
+
+    for gof_key, gof_value in config.GOODNESS_OF_FIT.items():
+                    
+        if gof_key in config.GOODNESS_OF_FIT.keys():                        
+        
+            if modelfit_results[1][gof_value] is not None:
+                print(f"{gof_key:<{maxlen}}  {round(modelfit_results[1][gof_value], 2)}")
+
+    return modelfit_results

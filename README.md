@@ -2,7 +2,7 @@
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
-This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment areas analysis* (Luo and Wang 2003). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
+This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
 
 
 ## Author
@@ -34,7 +34,7 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 - **Two-step floating catchment area analysis**:
   - Calculating basic 2SFCA analysis based on an interaction matrix
   - Calculating multivariate and (empirically) weighted 2SFCA analysis based on an interaction matrix
- - **GIS tools**:
+- **GIS tools**:
   - OpenRouteService(1) Client (implemented in model functions, but also available stand-alone):
     - Creating transport costs matrix from origins and destinations
     - Creating isochrones from origins and destinations
@@ -118,7 +118,7 @@ haslach_interactionmatrix = create_interaction_matrix(
 # Creating interaction matrix
 
 haslach_interactionmatrix.transport_costs(
-    ors_auth="5b3ce3597851110001cf62480a15aafdb5a64f4d91805929f8af6abd",
+    ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
     network=True,
     )
 # Obtaining transport costs (default: driving-car)
@@ -185,18 +185,18 @@ See the /tests directory for usage examples of most of the included functions.
   - Wieland T (2015) *Räumliches Einkaufsverhalten und Standortpolitik im Einzelhandel unter Berücksichtigung von Agglomerationseffekten - Theoretische Erklärungsansätze, modellanalytische Zugänge und eine empirisch-ökonometrische Marktgebietsanalyse anhand eines Fallbeispiels aus dem ländlichen Raum Ostwestfalens/Südniedersachsens*. Mannheim: MetaGIS. https://nbn-resolving.org/urn:nbn:de:bvb:20-opus-180753
   - Wieland T (2017) Market Area Analysis for Retail and Service Locations with MCI. *R Journal* 9(1): 298-323. [10.32614/RJ-2017-020](https://doi.org/10.32614/RJ-2017-020)
   - Wieland T (2018) A Hurdle Model Approach of Store Choice and Market Area Analysis in Grocery Retailing. *Papers in Applied Geography* 4(4): 370-389. [10.1080/23754931.2018.1519458](https://doi.org/10.1080/23754931.2018.1519458)
+  - Wieland T (2018) Competitive locations of grocery stores in the local supply context - The case of the urban district Freiburg-Haslach. *European Journal of Geography* 9(3): 98-115. https://www.eurogeojournal.eu/index.php/egj/article/view/41
 
 
-## What's new (v1.8.0)
-- New accessibility analysis: Two-step floating catchment area analysis (2SFCA)
-- Calculation of supply-to-demand ratio, weighted and non-weighted
-- Own class for Hansen accessibility analysis
-- More flexible, bug-free and more efficient logging of timestamps
-- New example data: Pediatricians and city districts of Freiburg
-- Extended documentation of functions via docstrings
+## What's new (v1.8.1)
 - Bugfixes:
-  - Check if dict in SupplyLocations.change_attraction_values() is empty
-  - Check if parameter 'new_destinations' in SupplyLocations.add_new_destinations() is a SupplyLocations object
-  - Functions modelfit() and modelfit_cat(): Check if perc_factor is valid
-  - Instead of raising ValueError, create_interaction_matrix() now sets default values for market size and attraction if not stated
-  - SupplyLocations.define_attraction() and CustomerOrigins.define_marketsize() now check whether variable is numeric
+  - Added 'profile' parameter to models.InteractionMatrix.transport_costs()
+  - Fixed conflict of ORS metadata and instance metadata in ors.Client.matrix()  
+  - Avoid pandas FutureWarning with respect to pandas.concat() operation in ors.Client.matrix()
+  - Saving empirical market shares in any case in models.MCIModel.probabilities()
+  - Correct transport costs type/unit in models.InteractionMatrix.summary()
+  - Corrections in docstrings
+- Other:
+  - Define transport costs metrics and unit in data_management.load_interaction_matrix()
+  - Several standardization and bugfixes within summary outputs
+  - Added huff.tests_accessbility and huff.tests_ors to setup.setup()

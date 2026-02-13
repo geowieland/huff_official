@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.5
-# Last update: 2026-02-02 20:42
+# Version:     1.0.8
+# Last update: 2026-02-12 19:17
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -73,6 +73,23 @@ def load_geodata(
     -----
     If `data` does not contain geometry information, both `x_col` and
     `y_col` must be provided.
+
+    Examples
+    --------
+    >>> Haslach = load_geodata(
+    ...     "data/Haslach.shp", 
+    ...     location_type="origins", 
+    ...     unique_id="BEZEICHN"
+    ... )
+    >>> Haslach_supermarkets = load_geodata(
+    ...     "data/Haslach_supermarkets.shp", 
+    ...     location_type="destinations", 
+    ...     unique_id="LFDNR"
+    ... )
+    >>> Haslach_interaction_matrix = create_interaction_matrix(
+    ...     Haslach, 
+    ...     Haslach_supermarkets
+    ... )
     """
     
     if location_type is None or (location_type not in config.PERMITTED_LOCATION_TYPES):
@@ -185,6 +202,9 @@ def load_interaction_matrix(
     supply_locations_col: str,
     attraction_col: list[str],
     transport_costs_col: str,
+    transport_costs_metrics: str | None = None,
+    transport_costs_distance_unit: str | None = None,
+    transport_costs_time_unit: str | None = None,
     flows_col: str | None = None,
     probabilities_col: str | None = None,
     market_size_col: str | None = None,
@@ -221,6 +241,14 @@ def load_interaction_matrix(
         Column(s) describing attraction values of supply locations.
     transport_costs_col : str
         Column describing transport costs between origins and destinations.
+    transport_costs_metrics : str, optional
+        Description of transport costs metrics: {"distance", "time"}.
+    transport_costs_distance_unit : str, optional
+        Description of distance unit (e.g., "kilometers").
+        Should be None if transport_costs_metrics = "time".
+    transport_costs_time_unit : str, optional
+        Description of time unit (e.g., "minutes").
+        Should be None if transport_costs_metrics = "distance".
     flows_col : str, optional
         Column describing observed flows between origins and destinations.
     probabilities_col : str, optional
@@ -269,6 +297,24 @@ def load_interaction_matrix(
     -----
     If `data` does not contain geometry information, `customer_origins_coords_col` and/or
     `supply_locations_coords_col` must be provided if interaction matrix must be interpreted as spatial data.
+
+    Examples
+    --------
+    >>> Wieland2015_interaction_matrix = load_interaction_matrix(
+    ...     data="data/Wieland2015.xlsx",
+    ...     customer_origins_col="Quellort",
+    ...     supply_locations_col="Zielort",
+    ...     attraction_col=[
+    ...         "VF", 
+    ...         "K", 
+    ...         "K_KKr"
+    ...         ],
+    ...     market_size_col="Sum_Ek1",
+    ...     flows_col="Anb_Eink1",
+    ...     transport_costs_col="Dist_Min2",
+    ...     probabilities_col="MA_Anb1",
+    ...     data_type="xlsx"
+    ... )
     """
     
     if isinstance(data, pd.DataFrame):
@@ -564,8 +610,14 @@ def load_interaction_matrix(
             "function": None,
             "fit_by": None
         },
+        "transport_costs_col": transport_costs_col,
+        "transport_costs": {
+            "metrics": transport_costs_metrics,
+            "distance_unit": transport_costs_distance_unit,
+            "time_unit": transport_costs_time_unit
+        }
     }
-    
+
     interaction_matrix = InteractionMatrix(
         interaction_matrix_df=interaction_matrix_df,
         customer_origins=customer_origins,
@@ -589,7 +641,7 @@ def load_marketareas(
     csv_sep = ";", 
     csv_decimal = ",", 
     csv_encoding="unicode_escape",
-    xlsx_sheet: str = None,
+    xlsx_sheet: str | None = None,
     check_df_vars: bool = True
     ):
 
@@ -629,6 +681,17 @@ def load_marketareas(
     KeyError
         If required columns (`supply_locations_col` or `total_col`) are missing
         in the input data.
+
+    Examples
+    --------
+    >>> wieland2015_totalmarketareas = load_marketareas(
+    ...     data="data/Wieland2015.xlsx",
+    ...     supply_locations_col="Zielort",
+    ...     total_col="Anb_Eink",
+    ...     data_type="xlsx",
+    ...     xlsx_sheet="total_marketareas"
+    ... )
+    >>> huff_model_fit2 = wieland2015_totalmarketareas.add_to_model(huff_model_fit2)    
     """
 
     if isinstance(data, pd.DataFrame):
@@ -697,16 +760,16 @@ def survey_to_matrix(
     survey_data,
     customer_origins_col: str,
     supply_locations_col: str,
-    attraction_col: list = [],
-    transport_costs_col: str = None,
-    flows_col: str = None,
+    attraction_col: list[str] | None = None,
+    transport_costs_col: str | None = None,
+    flows_col: str | None = None,
     customer_origins_coords_col = None,
     supply_locations_coords_col = None,
     data_type = "csv", 
     csv_sep = ";", 
     csv_decimal = ",", 
     csv_encoding="unicode_escape",
-    xlsx_sheet: str = None,
+    xlsx_sheet: str | None = None,
     check_df_vars: bool = True
     ) -> pd.DataFrame:
     
@@ -768,6 +831,9 @@ def survey_to_matrix(
         If required columns (`customer_origins_col`, `supply_locations_col`, or
         optional coordinate columns) are missing.
     """
+
+    if attraction_col is None:
+        attraction_col = []
 
     if isinstance(survey_data, pd.DataFrame):
         data = survey_data

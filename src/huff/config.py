@@ -4,18 +4,20 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.7
-# Last update: 2026-02-07 12:56
+# Version:     1.0.8
+# Last update: 2026-02-12 19:15
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.8.0"
-
+PACKAGE_VERSION = "1.8.1"
 
 # Basic config:
+
 FLOAT_ROUND = 3
+SUMMARY_WIDTH = 22
+SUMMARY_NOT_DEFINED = "Not defined"
 
 VERBOSE = False
 
@@ -171,7 +173,7 @@ ORS_HEADERS = {
     "Accept": "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",    
 }
 
-ORS_AUTH = "5b3ce3597851110001cf62480a15aafdb5a64f4d91805929f8af6abd"
+ORS_AUTH = "5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f"
 # for TESTING
 
 ORS_ENDPOINTS = {

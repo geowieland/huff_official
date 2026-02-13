@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.0
-# Last update: 2026-02-05 16:18
+# Version:     1.5.2
+# Last update: 2026-02-11 20:49
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -17,22 +17,8 @@ from shapely.geometry import shape
 import huff.config as config
 import huff.helper as helper
 
+
 class Isochrone:
-
-    def __init__(
-        self, 
-        isochrones_gdf, 
-        metadata,
-        status_code,
-        save_config,
-        error_message
-        ):
-
-        self.isochrones_gdf = isochrones_gdf
-        self.metadata = metadata
-        self.status_code = status_code
-        self.save_config = save_config
-        self.error_message = error_message
 
     """
     Container class for isochrone results from OpenRouteService and related metadata.
@@ -51,56 +37,171 @@ class Isochrone:
         Error message if the computation failed.
     """
 
-    def get_isochrones_gdf(self):
-    
-        """
-        Return the geopandas.GeoDataFrame containing the computed isochrones.
-        """
-
-        isochrones_gdf = self.isochrones_gdf
-        return isochrones_gdf
-
-    def summary(self):
-
-        """
-        Print a summary of the isochrone query and status.
-        """
-
-        metadata = self.metadata
-        status_code = self.status_code
-
-        if metadata is not None:
-            range_str = [str(range) for range in metadata["query"]["range"]]
-            profile = metadata["query"]["profile"]
-            range_type = metadata["query"][config.ORS_ENDPOINTS["Isochrones"]["Parameters"]["unit"]["param"]]
-            no_locations = len(metadata["query"]["locations"])
-
-            print("Locations    " + str(no_locations))
-            print("Segments     " + ", ".join(range_str))
-            print("Range type   " + range_type)
-            print("Profile      " + profile)
-            
-        else:
-            print("No isochrones were built.")
-        
-        print("Status code  " + str(status_code))
-
-class TimeDistanceMatrix:
-
     def __init__(
         self, 
-        matrix_df, 
+        isochrones_gdf, 
         metadata,
         status_code,
         save_config,
         error_message
         ):
 
-        self.matrix_df = matrix_df
+        self.isochrones_gdf = isochrones_gdf
         self.metadata = metadata
         self.status_code = status_code
         self.save_config = save_config
         self.error_message = error_message
+
+    def get_isochrones_gdf(self):
+    
+        """
+        Return the geopandas.GeoDataFrame containing the computed isochrones.
+
+        Returns
+        -------
+        geopandas.GeoDataFrame or None
+            Isochrones GeoDataFrame if available, otherwise None.
+        """
+
+        isochrones_gdf = self.isochrones_gdf
+        return isochrones_gdf
+
+    def summary(
+        self,
+        ors_info: bool = False
+        ):
+
+        """
+        Print a summary of the isochrone query and status.
+
+        Parameters
+        ----------
+        ors_info : bool
+            Whether to include detailed ORS server output in the summary (default: False).
+
+        Returns
+        -------
+        dict
+            Metadata associated with this Isochrone object. Keys may include:
+            - 'attribution': str
+            - 'service': str        
+            - 'query': dict
+            - 'engine': dict
+            - 'ors_timestamp': str
+            - 'timestamp': dict
+
+        Examples
+        --------
+        >>> ors_client = Client(auth = "5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f")
+        >>> x, y = 7.84117, 47.997697
+        >>> Freiburg_main_station_iso = ors_client.isochrone(
+        ...     locations = [[x,y]],
+        ...     segments = [900, 300, 600],
+        ...     save_output = True,
+        ...     output_filepath = "Freiburg_main_station_iso.shp",
+        ...     output_crs = "EPSG:4326",
+        ...     verbose = True
+        ... )
+        >>> Freiburg_main_station_iso.summary(ors_info=False)
+        """
+
+        metadata = self.metadata
+        status_code = self.status_code
+        save_config = self.save_config
+        error_message = self.error_message
+
+        print("Isochrones")
+        print("===========================================")
+
+        print("Server respone")
+        
+        helper.print_summary_row(
+            "ORS Status code",
+            status_code
+            )
+        if error_message != "":
+            helper.print_summary_row(
+                "Error message",
+                error_message
+                )
+
+        print("-------------------------------------------")
+
+        if metadata is not None and len(metadata) > 0 and "query" in metadata:
+            
+            range_str = [str(range) for range in metadata["query"]["range"]]
+            profile = metadata["query"]["profile"]
+            range_type = metadata["query"][config.ORS_ENDPOINTS["Isochrones"]["Parameters"]["unit"]["param"]]
+            no_locations = len(metadata["query"]["locations"])
+
+            helper.print_summary_row(
+                "Locations",
+                no_locations
+            )
+            helper.print_summary_row(
+                "Segments",
+                ", ".join(range_str)
+            )
+            helper.print_summary_row(
+                "Range type",
+                range_type
+            )
+            helper.print_summary_row(
+                "Profile",
+                profile
+            )
+
+            if ors_info:
+
+                attribution = metadata["attribution"]
+                engine_version = metadata["engine"]["version"]
+                engine_build_date = metadata["engine"]["build_date"]
+                engine_graph_date = metadata["engine"]["graph_date"]
+                engine_osm_date = metadata["engine"]["osm_date"]
+
+                ors_url = save_config["ors_url"]
+                auth = save_config["auth"]
+
+                print("-------------------------------------------")
+
+                helper.print_summary_row(
+                    "Attribution",
+                    attribution
+                )
+                helper.print_summary_row(
+                    "Engine version",
+                    engine_version
+                )
+                helper.print_summary_row(
+                    "Engine build date",
+                    engine_build_date
+                )
+                helper.print_summary_row(
+                    "Graph date",
+                    engine_graph_date
+                )
+                helper.print_summary_row(
+                    "OSM date",
+                    engine_osm_date
+                )
+                helper.print_summary_row(
+                    "ORS URL",
+                    ors_url
+                )
+                helper.print_summary_row(
+                    "ORS API Token",
+                    auth
+                )
+
+        else:
+
+            print("No isochrones were built.")
+        
+        print("===========================================")
+        
+        return metadata
+
+class TimeDistanceMatrix:
 
     """
     Container class for time/distance matrix results from OpenRouteService and related metadata.
@@ -119,10 +220,30 @@ class TimeDistanceMatrix:
         Error message if the computation failed.
     """
 
+    def __init__(
+        self, 
+        matrix_df, 
+        metadata,
+        status_code,
+        save_config,
+        error_message
+        ):
+
+        self.matrix_df = matrix_df
+        self.metadata = metadata
+        self.status_code = status_code
+        self.save_config = save_config
+        self.error_message = error_message
+
     def get_matrix(self):
 
         """
         Return the pandas.DataFrame containing the computed distance/travel time matrix.
+
+        Returns
+        -------
+        pandas.DataFrame or None
+            Matrix DataFrame if available, otherwise None.
         """
 
         return self.matrix_df
@@ -131,6 +252,17 @@ class TimeDistanceMatrix:
 
         """
         Return the metadata (dict) associated with the matrix computation (from ORS server).
+
+        Returns
+        -------
+        dict
+            Metadata associated with this Isochrone object. Keys may include:
+            - 'attribution': str
+            - 'service': str        
+            - 'query': dict
+            - 'engine': dict
+            - 'ors_timestamp': str
+            - 'timestamp': dict
         """
 
         return self.metadata
@@ -139,37 +271,173 @@ class TimeDistanceMatrix:
 
         """
         Return the configuration used for saving outputs (dict).
+
+        Returns
+        -------
+        dict
+            Configuration details associated with this Isochrone object. Keys may include:
+            - 'range_type': range_type
+            - 'save_output': bool
+            - 'output_filepath' : str
+            - 'output_crs': str
+            - 'ors_url': str
+            - 'auth': str
         """
 
         return self.save_config
     
-    def summary(self):
+    def summary(
+        self,
+        ors_info: bool = False
+        ):
 
         """
         Print a summary of the distance/time matrix query and status.
+
+        Parameters
+        ----------
+        ors_info : bool
+            Whether to include detailed ORS server output in the summary (default: False).
+
+        Returns
+        -------
+        dict
+            Metadata associated with this Isochrone object. Keys may include:
+            - 'attribution': str
+            - 'service': str        
+            - 'query': dict
+            - 'engine': dict
+            - 'ors_timestamp': str
+            - 'timestamp': dict
+
+        Examples
+        --------
+        >>> coords = [
+        ...     [7.84117, 47.997697],
+        ...     [7.945725, 48.476014],
+        ...     [8.400558, 48.993997],
+        ...     [8.41080, 49.01090] 
+        ... ]
+        >>> travel_time_matrix = ors_client.matrix(
+        ...     locations=coords,
+        ...     sources=[0,1],
+        ...     destinations=[2,3],
+        ...     verbose=True
+        ... )
+        >>> travel_time_matrix.summary(ors_info=False)
         """
 
         metadata = self.metadata
         status_code = self.status_code
+        save_config = self.save_config
+        error_message = self.error_message
 
-        if metadata is not None:
+        print("Matrix")
+        print("===========================================")
+
+        print("Server response")
+        
+        helper.print_summary_row(
+            "ORS Status code",
+            status_code
+            )
+        if error_message != "":
+            helper.print_summary_row(
+                "Error message",
+                error_message
+                )
+       
+        if metadata is not None and len(metadata) > 0 and "query" in metadata:
+
+            print("-------------------------------------------")
 
             profile = metadata["query"]["profile"]
             no_locations = len(metadata["query"]["locations"])
-            range_type = config[config.ORS_ENDPOINTS["Matrix"]["Parameters"]["unit"]["param"]]
+            range_type = ', '.join(metadata["query"][config.ORS_ENDPOINTS["Matrix"]["Parameters"]["unit"]["param"]])
+     
+            helper.print_summary_row(
+                "Locations",
+                no_locations
+            )
+            if save_config["sources"] is not None:
+                helper.print_summary_row(
+                    "Sources",
+                    save_config["sources"]
+                )
+            if save_config["destinations"] is not None:
+                helper.print_summary_row(
+                    "Destinations",
+                    save_config["destinations"]
+                )
 
-            print("Locations    " + str(no_locations))
-            print("Range type   " + range_type)
-            print("Profile      " + profile)
+            helper.print_summary_row(
+                "Range type",
+                range_type
+            )
+            helper.print_summary_row(
+                "Profile",
+                profile
+            )
+
+            if ors_info:
+
+                attribution = metadata["attribution"]
+                engine_version = metadata["engine"]["version"]
+                engine_build_date = metadata["engine"]["build_date"]
+                engine_graph_date = metadata["engine"]["graph_date"]
+                engine_osm_date = metadata["engine"]["osm_date"]
+
+                ors_url = save_config["ors_url"]
+                auth = save_config["auth"]
+
+                print("-------------------------------------------")
+
+                helper.print_summary_row(
+                    "Attribution",
+                    attribution
+                )
+                helper.print_summary_row(
+                    "Engine version",
+                    engine_version
+                )
+                helper.print_summary_row(
+                    "Engine build date",
+                    engine_build_date
+                )
+                helper.print_summary_row(
+                    "Graph date",
+                    engine_graph_date
+                )
+                helper.print_summary_row(
+                    "OSM date",
+                    engine_osm_date
+                )
+                helper.print_summary_row(
+                    "ORS URL",
+                    ors_url
+                )
+                helper.print_summary_row(
+                    "ORS API Token",
+                    auth
+                )
 
         else:
 
             print("No time/distance matrix was built.")
 
-        print("Status code  " + str(status_code))
+        print("===========================================")
 
 class Client:
 
+    """
+    A client for accessing the OpenRouteService (ORS) API.
+
+    Provides methods for retrieving distance/travel time matrices and isochrones 
+    from ORS given locations and user parameters.
+    See the ORS API documentation: https://openrouteservice.org/dev/#/api-docs
+    See the current API restrictions: https://openrouteservice.org/restrictions/
+    """
+    
     def __init__(
         self,
         server = config.ORS_SERVER,
@@ -178,15 +446,6 @@ class Client:
         
         self.server = server
         self.auth = auth
-
-        """
-        A client for accessing the OpenRouteService (ORS) API.
-
-        Provides methods for retrieving distance/travel time matrices and isochrones 
-        from ORS given locations and user parameters.
-        See the ORS API documentation: https://openrouteservice.org/dev/#/api-docs
-        See the current API restrictions: https://openrouteservice.org/restrictions/
-        """
             
     def isochrone(
         self,
@@ -238,16 +497,17 @@ class Client:
 
         Examples
         --------
-        >>> client = Client(auth="your_api_key")
-        >>> locations = [[8.004, 48.013], [8.005, 48.014]]
-        >>> result = client.isochrone(
-        ...     locations=locations,
-        ...     segments=[600, 300],
-        ...     range_type="time",
-        ...     profile="driving-car",
-        ...     verbose=True
+        >>> ors_client = Client(auth = "5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f")
+        >>> x, y = 7.84117, 47.997697
+        >>> Freiburg_main_station_iso = ors_client.isochrone(
+        ...     locations = [[x,y]],
+        ...     segments = [900, 300, 600],
+        ...     save_output = True,
+        ...     output_filepath = "Freiburg_main_station_iso.shp",
+        ...     output_crs = "EPSG:4326",
+        ...     verbose = True
         ... )
-
+        >>> Freiburg_main_station_iso.summary(ors_info=False)
         """
 
         if segments is None:
@@ -280,7 +540,9 @@ class Client:
             config.ORS_ENDPOINTS["Isochrones"]["Parameters"]["unit"]["param"]: range_type,
             "save_output": save_output,
             "output_filepath" : output_filepath,
-            "output_crs": output_crs
+            "output_crs": output_crs,
+            "ors_url": ors_url,
+            "auth": auth
             }
 
         try:
@@ -360,7 +622,7 @@ class Client:
             metadata = {}
         
         if "timestamp" in metadata:
-            metadata["ors_metadata"] = metadata.pop("timestamp")
+            metadata["ors_timestamp"] = metadata.pop("timestamp")
 
         isochrone_output = Isochrone(
             isochrones_gdf, 
@@ -373,7 +635,7 @@ class Client:
         helper.add_timestamp(
             isochrone_output,
             function="ors.Client.isochrone",
-            process=f"Retrieved isochrones ({range_type}, {profile}) with {len(segments)} for {len(locations)} locations",
+            process=f"Retrieved isochrones ({range_type}, {profile}) with {len(segments)} segments for {len(locations)} locations",
             status = "OK" if error_message == "" else error_message
             )
         
@@ -413,7 +675,7 @@ class Client:
         id : str, optional
             Optional identifier for the request.
         range_type : str, optional
-            Type of range measurement: {"origins", "destinations"} (default: "time").
+            Type of range measurement: {"time", "distance"} (default: "time").
         profile : str, optional
             Mode of travel: "driving-car", "cycling-regular", etc. (default: "driving-car").
         resolve_locations : bool, optional
@@ -443,14 +705,19 @@ class Client:
 
         Examples
         --------
-        >>> client = Client(auth="your_api_key")
-        >>> locations = [[8.004, 48.013], [8.005, 48.014]]
-        >>> result = client.matrix(
-        ...     locations=locations,
-        ...     range_type="time",
-        ...     profile="driving-car",
+        >>> coords = [
+        ...     [7.84117, 47.997697],
+        ...     [7.945725, 48.476014],
+        ...     [8.400558, 48.993997],
+        ...     [8.41080, 49.01090] 
+        ... ]
+        >>> travel_time_matrix = ors_client.matrix(
+        ...     locations=coords,
+        ...     sources=[0,1],
+        ...     destinations=[2,3],
         ...     verbose=True
         ... )
+        >>> travel_time_matrix.summary(ors_info=False)
         """
 
         if sources is None:
@@ -488,7 +755,11 @@ class Client:
         save_config = {
             config.ORS_ENDPOINTS["Matrix"]["Parameters"]["unit"]["param"]: range_type,
             "save_output": save_output,
-            "output_filepath": output_filepath
+            "output_filepath": output_filepath,
+            "ors_url": ors_url,
+            "auth": auth,
+            "sources": len(sources) if len(sources) > 0 else None,
+            "destinations": len(destinations) if len(destinations) > 0 else None,
         }
 
         try:
@@ -520,21 +791,21 @@ class Client:
             response_json = response.json()
 
             metadata = response_json["metadata"]
-
+            
             matrix_df = pd.DataFrame(
-                columns=[
-                    config.MATRIX_COL_SOURCE,
-                    f"{config.MATRIX_COL_SOURCE}_lat",
-                    f"{config.MATRIX_COL_SOURCE}_lon",
-                    f"{config.MATRIX_COL_SOURCE}_snapped_distance",
-                    config.MATRIX_COL_DESTINATION,
-                    f"{config.MATRIX_COL_DESTINATION}_lat",
-                    f"{config.MATRIX_COL_DESTINATION}_lon", 
-                    f"{config.MATRIX_COL_DESTINATION}_snapped_distance",
-                    f"{config.MATRIX_COL_SOURCE}_{config.MATRIX_COL_DESTINATION}", 
-                    range_type
-                    ]
-                )
+                {
+                    config.MATRIX_COL_SOURCE: pd.Series(dtype="string"),
+                    f"{config.MATRIX_COL_SOURCE}_lat": pd.Series(dtype="float"),
+                    f"{config.MATRIX_COL_SOURCE}_lon": pd.Series(dtype="float"),
+                    f"{config.MATRIX_COL_SOURCE}_snapped_distance": pd.Series(dtype="float"),
+                    config.MATRIX_COL_DESTINATION: pd.Series(dtype="string"),
+                    f"{config.MATRIX_COL_DESTINATION}_lat": pd.Series(dtype="float"),
+                    f"{config.MATRIX_COL_DESTINATION}_lon": pd.Series(dtype="float"),
+                    f"{config.MATRIX_COL_DESTINATION}_snapped_distance": pd.Series(dtype="float"),
+                    f"{config.MATRIX_COL_SOURCE}_{config.MATRIX_COL_DESTINATION}": pd.Series(dtype="string"),
+                    range_type: pd.Series(dtype="string")
+                }
+            )
 
             for i, value in enumerate(response_json["durations"]):
 
@@ -548,24 +819,53 @@ class Client:
                     destination_lon = response_json["destinations"][j]["location"][0]
                     destination_snapped_distance = response_json["destinations"][j]["snapped_distance"]
 
-                    matrix_row = pd.Series(
-                        {
-                            config.MATRIX_COL_SOURCE: str(i),
-                            f"{config.MATRIX_COL_SOURCE}_lat": source_lat,
-                            f"{config.MATRIX_COL_SOURCE}_lon": source_lon,
-                            f"{config.MATRIX_COL_SOURCE}_snapped_distance": source_snapped_distance,
-                            config.MATRIX_COL_DESTINATION: str(j),
-                            f"{config.MATRIX_COL_DESTINATION}_lat": destination_lat,
-                            f"{config.MATRIX_COL_DESTINATION}_lon": destination_lon,
-                            f"{config.MATRIX_COL_DESTINATION}_snapped_distance": destination_snapped_distance,
-                            f"{config.MATRIX_COL_SOURCE}_{config.MATRIX_COL_DESTINATION}": str(i)+config.MATRIX_OD_SEPARATOR+str(j), 
-                            range_type: entry
-                            }
+                    matrix_row = pd.DataFrame(
+                        [
+                            {
+                                config.MATRIX_COL_SOURCE: str(i),
+                                f"{config.MATRIX_COL_SOURCE}_lat": source_lat,
+                                f"{config.MATRIX_COL_SOURCE}_lon": source_lon,
+                                f"{config.MATRIX_COL_SOURCE}_snapped_distance": source_snapped_distance,
+                                config.MATRIX_COL_DESTINATION: str(j),
+                                f"{config.MATRIX_COL_DESTINATION}_lat": destination_lat,
+                                f"{config.MATRIX_COL_DESTINATION}_lon": destination_lon,
+                                f"{config.MATRIX_COL_DESTINATION}_snapped_distance": destination_snapped_distance,
+                                f"{config.MATRIX_COL_SOURCE}_{config.MATRIX_COL_DESTINATION}": f"{i}{config.MATRIX_OD_SEPARATOR}{j}",
+                                range_type: entry
+                                }
+                            ],
+                        columns=matrix_df.columns
+                        )
+                    
+                    if matrix_df.empty:
+                        
+                        matrix_df = pd.DataFrame(
+                            [
+                                {
+                                    config.MATRIX_COL_SOURCE: str(i),
+                                    f"{config.MATRIX_COL_SOURCE}_lat": source_lat,
+                                    f"{config.MATRIX_COL_SOURCE}_lon": source_lon,
+                                    f"{config.MATRIX_COL_SOURCE}_snapped_distance": source_snapped_distance,
+                                    config.MATRIX_COL_DESTINATION: str(j),
+                                    f"{config.MATRIX_COL_DESTINATION}_lat": destination_lat,
+                                    f"{config.MATRIX_COL_DESTINATION}_lon": destination_lon,
+                                    f"{config.MATRIX_COL_DESTINATION}_snapped_distance": destination_snapped_distance,
+                                    f"{config.MATRIX_COL_SOURCE}_{config.MATRIX_COL_DESTINATION}": f"{i}{config.MATRIX_OD_SEPARATOR}{j}",
+                                    range_type: entry
+                                    }
+                                ], 
+                            columns=matrix_df.columns
                             )
-
-                    matrix_df = pd.concat([
-                        matrix_df, 
-                        pd.DataFrame([matrix_row])])
+                        
+                    else:
+                    
+                        matrix_df = pd.concat(
+                            [
+                                matrix_df, 
+                                matrix_row
+                                ], 
+                            ignore_index=True
+                            )
 
             if save_output:
                 
@@ -590,6 +890,9 @@ class Client:
             matrix_df = None
             metadata = {}
 
+        if "timestamp" in metadata:
+            metadata["ors_metadata"] = metadata.pop("timestamp")
+            
         matrix_output = TimeDistanceMatrix(
             matrix_df, 
             metadata,

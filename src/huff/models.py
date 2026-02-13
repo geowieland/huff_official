@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.8.0
-# Last update: 2026-02-08 12:59
+# Version:     1.8.1
+# Last update: 2026-02-13 20:33
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -127,9 +127,8 @@ class CustomerOrigins:
 
         Returns
         -------
-        geopandas.GeoDataFrame
-            The geospatial data of buffers contained in the CustomerOrigins object.
-            If no isochrones were retrieved, None is returned.
+        geopandas.GeoDataFrame or None
+            Buffers GeoDataFrame if available, otherwise None.
         """
 
         return self.buffers_gdf
@@ -155,7 +154,7 @@ class CustomerOrigins:
         metadata = self.metadata
 
         print(config.DEFAULT_NAME_CUSTOMER_ORIGINS)
-        print("--------------------------------------")
+        print("======================================")
 
         helper.print_summary_row(
             "No. locations",
@@ -168,14 +167,18 @@ class CustomerOrigins:
         )
         
         if metadata['weighting'][0]['param'] is not None:
+
             if isinstance(metadata['weighting'][0]['param'], list):
-                tc_params = ', '.join(str(x) for x in metadata['weighting'][0]['param'])
+                tc_params = ', '.join(str(round(x, config.FLOAT_ROUND)) for x in metadata['weighting'][0]['param'])
             elif isinstance(metadata['weighting'][0]['param'], (int, float)):
-                tc_params = ', '.join([str(metadata['weighting'][0]['param'])])
+                tc_params = round(metadata['weighting'][0]['param'], config.FLOAT_ROUND)
             else:
-                tc_params = metadata['weighting'][0]['param']
-            tc_function = config.PERMITTED_WEIGHTING_FUNCTIONS[metadata["weighting"][0]["func"]]["description"]
-            tc_weighting = f"{tc_params} ({tc_function})"
+                tc_params = "Invalid format"
+
+            func_description = config.PERMITTED_WEIGHTING_FUNCTIONS[metadata["weighting"][0]["func"]]["description"]
+
+            tc_weighting = f"{tc_params} ({func_description})"
+
         else:
             tc_weighting = None
 
@@ -313,7 +316,7 @@ class CustomerOrigins:
         TypeError
             If `param_lambda` is not of the expected type for the selected function.
 
-        Examples
+        Example
         --------
         >>> Haslach = load_geodata(
         ...     "data/Haslach.shp",
@@ -429,7 +432,7 @@ class CustomerOrigins:
         Exception
             For any other exceptions raised during isochrone retrieval.
 
-        Examples
+        Example
         --------
         >>> Haslach = load_geodata(
         ...     "data/Haslach.shp",
@@ -441,7 +444,7 @@ class CustomerOrigins:
         ...     range_type = "time",
         ...     profile = "foot-walking",
         ...     save_output=True,
-        ...     ors_auth="5b3ce3597851110001cf62480a15aafdb5a64f4d91805929f8af6abd",
+        ...     ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
         ...     output_filepath="Haslach_iso.shp",
         ...     output_crs="EPSG:31467",
         ...     delay=0.2
@@ -833,8 +836,8 @@ class SupplyLocations:
 
         metadata = self.metadata
 
-        print(config.DEFAULT_NAME_SUPPLY_LOCATIONS)
-        print("--------------------------------------")
+        print(config.DEFAULT_NAME_SUPPLY_LOCATIONS)        
+        print("======================================")
 
         helper.print_summary_row(
             "No. locations",
@@ -852,37 +855,42 @@ class SupplyLocations:
             attrac_cols = None
 
         helper.print_summary_row(
-            f"{config.DEFAULT_NAME_ATTRAC} column",
+            f"{config.DEFAULT_NAME_ATTRAC} column(s)",
             attrac_cols
         )
+        
+        if len(metadata["weighting"]) > 0 and metadata["weighting"][0]["func"] is not None:
+            print("Weightings")
 
         for key, value in metadata["weighting"].items():
 
-            attrac_weighting = ""
-            attrac_weighting_list = []
-
             if value['name'] is not None and value['func'] is not None and value['param'] is not None:
 
-                name = value['name']
+                if metadata["attraction_col"][key] is not None:
+                    name = metadata["attraction_col"][key]
+                else:
+                    if value['name'] is not None:
+                        name = value['name']
+                    else:
+                        name = f"Attraction variable {key}"
                 
                 if isinstance(value['param'], list):
-                    param = ', '.join(str(x) for x in value['param'])
+                    param = ', '.join(str(round(x, config.FLOAT_ROUND)) for x in value['param'])
+                elif isinstance(value['param'], (int, float)):
+                    param = round(value['param'], config.FLOAT_ROUND)
                 else:
-                    param = value['param']
+                    param = "Invalid format"
 
                 func_description = config.PERMITTED_WEIGHTING_FUNCTIONS[value['func']]['description']
 
-                attrac_weighting = f"{name}: {param} ({func_description})"
-                attrac_weighting_list.append(attrac_weighting)
+                helper.print_summary_row(
+                    name,
+                    f"{param} ({func_description})"
+                )
 
             else:
                 if key == 0:
                     break
-
-        helper.print_summary_row(
-            f"{config.DEFAULT_NAME_ATTRAC} weighting",
-            ', '.join(attrac_weighting_list )if attrac_weighting_list != [] else None
-        )
 
         helper.print_summary_row(
             "Unique ID column",
@@ -904,7 +912,7 @@ class SupplyLocations:
             "YES" if self.buffers_gdf is not None else "NO"
         )
 
-        print("--------------------------------------")
+        print("======================================")
 
         return metadata
 
@@ -1023,7 +1031,7 @@ class SupplyLocations:
         helper.add_timestamp(
             self,
             function="models.SupplyLocations.define_attraction_weighting",
-            process = f"Defined attraction weighting with {func} function"
+            process = f"Defined attraction weighting with {func} function with gamma = {param_gamma}"
             )
 
         return self
@@ -1331,7 +1339,7 @@ class SupplyLocations:
         Exception
             For any other exceptions raised during isochrone retrieval.
 
-        Examples
+        Example
         --------
         >>> Haslach_supermarkets = load_geodata(
         ...     "data/Haslach_supermarkets.shp",
@@ -1343,12 +1351,12 @@ class SupplyLocations:
         ...     range_type = "time",
         ...     profile = "foot-walking",
         ...     save_output=True,
-        ...     ors_auth="5b3ce3597851110001cf62480a15aafdb5a64f4d91805929f8af6abd",
+        ...     ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
         ...     output_filepath="Haslach_supermarkets_iso.shp",
         ...     output_crs="EPSG:31467",
         ...     delay=0.2
         ... )
-        """        
+        """
 
         if segments is None:
             segments = [5, 10, 15]
@@ -1754,96 +1762,45 @@ class InteractionMatrix:
         interaction_matrix_metadata = self.get_metadata()
 
         print(config.DEFAULT_NAME_INTERACTION_MATRIX)
-        print("--------------------------------------")
-        
-        print("Supply locations    " + str(supply_locations_metadata["no_points"]))
-        if supply_locations_metadata["attraction_col"][0] is None:
-            print(f"{config.DEFAULT_NAME_ATTRAC} column   not defined")
-        else:
-            print(f"{config.DEFAULT_NAME_ATTRAC} column   " + supply_locations_metadata["attraction_col"][0])
-        print("Customer origins    " + str(customer_origins_metadata["no_points"]))
-        if customer_origins_metadata["marketsize_col"] is None:
-            print(f"{config.DEFAULT_NAME_MARKETSIZE} column not defined")
-        else:
-            print(f"{config.DEFAULT_NAME_MARKETSIZE} column  " + customer_origins_metadata["marketsize_col"])
-
-        if interaction_matrix_metadata != {} and "transport_costs" in interaction_matrix_metadata:
-            print("--------------------------------------")
-            if interaction_matrix_metadata["transport_costs"]["network"]:
-                print(f"{config.DEFAULT_NAME_TC} type Time")
-                print(f"{config.DEFAULT_NAME_TC} unit " + interaction_matrix_metadata["transport_costs"]["time_unit"])
-            else:
-                print(f"{config.DEFAULT_NAME_TC} type Distance")
-                print(f"{config.DEFAULT_NAME_TC} unit " + interaction_matrix_metadata["transport_costs"]["distance_unit"])
-
-        print("--------------------------------------")
-        print("Partial utilities")
-        print("                    Weights")
-
-        if supply_locations_metadata["weighting"][0]["func"] is None and supply_locations_metadata["weighting"][0]["param"] is None:
-            print(f"{config.DEFAULT_NAME_ATTRAC}          not defined")
-        else:
-            if supply_locations_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_ATTRAC}          " + str(round(supply_locations_metadata["weighting"][0]["param"],3)) + " (" + supply_locations_metadata["weighting"][0]["func"] + ")")
-            else:
-                print(f"{config.DEFAULT_NAME_ATTRAC}          NA" + " (" + supply_locations_metadata["weighting"][0]["func"] + ")")   
-
-        if customer_origins_metadata["weighting"][0]["func"] is None and customer_origins_metadata["weighting"][0]["param"] is None:
-            print(f"{config.DEFAULT_NAME_TC}     not defined")
-        elif customer_origins_metadata["weighting"][0]["func"] in [config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0], config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[1]]:
-            if customer_origins_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_TC}     " + str(round(customer_origins_metadata["weighting"][0]["param"],3)) + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-            else:
-                print(f"{config.DEFAULT_NAME_TC}     NA" + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-        elif customer_origins_metadata["weighting"][0]["func"] == config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[2]:
-            if customer_origins_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_TC}    " + str(round(customer_origins_metadata["weighting"][0]["param"][0],3)) + ", " + str(round(customer_origins_metadata["weighting"][0]["param"][1],3)) + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-            else:
-                print(f"{config.DEFAULT_NAME_TC}     NA" + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-
-        attrac_vars = supply_locations_metadata["attraction_col"]
-        attrac_vars_no = len(attrac_vars)
-        
-        if attrac_vars_no > 1:
-                        
-            for key, attrac_var in enumerate(attrac_vars):
+        print("======================================")
                 
-                if key == 0:
-                    continue
-                
-                if key not in supply_locations_metadata["weighting"].keys():
-                    
-                    print(f"{attrac_vars[key][:16]:16}    not defined")
-                    
-                else:
-                    
-                    if supply_locations_metadata["weighting"][key]["func"] is None and supply_locations_metadata["weighting"][key]["param"]:
-                        
-                        print(f"{attrac_vars[key][:16]:16}    not defined")
+        helper.print_summary_row(
+            config.DEFAULT_NAME_SUPPLY_LOCATIONS,
+            supply_locations_metadata["no_points"]
+        )
 
-                    else:
+        if supply_locations_metadata["attraction_col"][0] is not None:
+            if isinstance(supply_locations_metadata["attraction_col"], list):
+                attrac_cols = ', '.join(str(x) for x in supply_locations_metadata["attraction_col"])
+            elif isinstance(supply_locations_metadata["attraction_col"], str):
+                attrac_cols = ', '.join([supply_locations_metadata["attraction_col"]])
+            else:
+                attrac_cols = supply_locations_metadata["attraction_col"]
+        else:
+            attrac_cols = None
 
-                        if supply_locations_metadata["weighting"][key]["param"] is not None:
-
-                            name = supply_locations_metadata["weighting"][key]["name"]
-                            param = supply_locations_metadata["weighting"][key]["param"]
-                            func = supply_locations_metadata["weighting"][key]["func"]
-                            
-                            print(f"{name[:16]:16}    {round(param, 3)} ({func})")
-
-                        else:
-
-                            print(f"{attrac_vars[key][:16]:16}    NA" + " (" + supply_locations_metadata["weighting"][0]["func"] + ")") 
-
+        helper.print_summary_row(
+            f"{config.DEFAULT_NAME_ATTRAC} column(s)",
+            attrac_cols
+        )
 
         print("--------------------------------------")
 
-        if interaction_matrix_metadata != {} and "fit" in interaction_matrix_metadata and interaction_matrix_metadata["fit"]["function"] is not None:
-            print("Parameter estimation")
-            print("Fit function        " + interaction_matrix_metadata["fit"]["function"])
-            print("Fit by              " + interaction_matrix_metadata["fit"]["fit_by"])
-            if interaction_matrix_metadata["fit"]["function"] == "huff_ml_fit":
-                print("Fit method          " + interaction_matrix_metadata["fit"]["method"] + " (Converged: " + str(interaction_matrix_metadata["fit"]["minimize_success"]) + ")")
+        helper.print_summary_row(
+            config.DEFAULT_NAME_CUSTOMER_ORIGINS,
+            customer_origins_metadata["no_points"]
+        )
+
+        helper.print_summary_row(
+            f"{config.DEFAULT_NAME_MARKETSIZE} column",
+            customer_origins_metadata["marketsize_col"]
+        )
+        
+        helper.print_interaction_matrix_info(self)
+
+        helper.print_weightings(self)
+
+        print("======================================")
 
         return [
             customer_origins_metadata,
@@ -1864,6 +1821,7 @@ class InteractionMatrix:
         self,
         network: bool = True,
         range_type: str = "time",
+        profile: str = "driving-car",
         time_unit: str = "minutes",
         distance_unit: str = "kilometers",
         ors_server: str = "https://api.openrouteservice.org/v2/",
@@ -1883,6 +1841,11 @@ class InteractionMatrix:
         Transport costs are calculated either using the OpenRouteService (network-based)
         or as Euclidean distances. Results are added to the interaction matrix as a
         numeric transport cost column.
+        
+        If using ORS:
+        See the ORS API documentation: https://openrouteservice.org/dev/#/api-docs
+        See the current API restrictions: https://openrouteservice.org/restrictions/
+                
 
         Parameters
         ----------
@@ -1891,14 +1854,18 @@ class InteractionMatrix:
             If False, compute Euclidean distances.
         range_type : str, optional
             Cost type to compute ("time" or "distance").
+        profile : str, optional
+            Mode of travel: "driving-car", "cycling-regular", etc. (default: "driving-car").
         time_unit : str, optional
             Unit for time-based costs ("minutes" or "hours").
         distance_unit : str, optional
-            Unit for distance-based costs ("kilometers" or meters).
+            Unit for distance-based costs ("kilometers" or "meters").
         ors_server : str, optional
             OpenRouteService API endpoint.
+            Necessary if network-based transport costs are desired (network = True).
         ors_auth : str, optional
             API key for OpenRouteService.
+            Necessary if network-based transport costs are desired (network = True).
         save_output : bool, optional
             If True, save the transport cost matrix to file.
         remove_duplicates : bool, optional
@@ -1996,12 +1963,13 @@ class InteractionMatrix:
                 auth = ors_auth
                 )
             time_distance_matrix = ors_client.matrix(
-                locations = locations_coords,
-                save_output = save_output,
-                output_filepath = output_filepath, 
+                locations = locations_coords,                
                 sources = customer_origins_index,
                 destinations = locations_coords_index,
                 range_type = range_type,
+                profile = profile,
+                save_output = save_output,
+                output_filepath = output_filepath,
                 verbose = verbose
                 )
             
@@ -2070,6 +2038,8 @@ class InteractionMatrix:
             "ors_server": ors_server,
             "ors_auth": ors_auth
             }
+
+        interaction_matrix_metadata["transport_costs_col"] = config.DEFAULT_COLNAME_TC
         
         self.interaction_matrix_df = interaction_matrix_df
         self.metadata = interaction_matrix_metadata
@@ -2339,7 +2309,7 @@ class InteractionMatrix:
         InteractionMatrixError
             If relevant variables are not defined or NaN.
 
-        Examples
+        Example
         --------
         >>> Haslach = load_geodata(
         ...     "data/Haslach.shp",
@@ -2511,7 +2481,7 @@ class InteractionMatrix:
         InteractionMatrixError
             If relevant variables are not defined or NaN.
 
-        Examples
+        Example
         --------
         >>> Haslach = load_geodata(
         ...     "data/Haslach.shp",
@@ -2616,7 +2586,7 @@ class InteractionMatrix:
         InteractionMatrixError
             If no market size variable is defined or all values are NaN.
 
-        Examples
+        Example
         --------
         >>> Haslach = load_geodata(
         ...     "data/Haslach.shp",
@@ -2714,7 +2684,7 @@ class InteractionMatrix:
         Exception
             If market size variable column does not meet processing criteria.
 
-        Examples
+        Example
         --------
         >>> Haslach = load_geodata(
         ...     "data/Haslach.shp",
@@ -2760,12 +2730,10 @@ class InteractionMatrix:
         market_areas_df = market_areas_df.reset_index(drop=False)
         market_areas_df = market_areas_df.rename(columns={config.DEFAULT_COLNAME_FLOWS: config.DEFAULT_COLNAME_TOTAL_MARKETAREA})
 
-        metadata = {
-            "fit": {
-                "function": None,
-                "fit_by": None
-            },
-        } 
+        metadata = {}
+        
+        if "fit" in self.metadata:
+            metadata["fit"] = self.metadata["fit"]
 
         huff_model = HuffModel(
             self,
@@ -2828,7 +2796,7 @@ class InteractionMatrix:
             If required variables (e.g., market size or transport cost weighting)
             are missing or undefined for destination-based accessibility.
 
-        Examples
+        Example
         --------
         >>> Haslach = load_geodata(
         ...     "data/Haslach.shp",
@@ -2905,7 +2873,7 @@ class InteractionMatrix:
             
             helper.add_timestamp(
                 self,
-                function = "InteractionMatrix.hansen",
+                function = "models.InteractionMatrix.hansen",
                 process = f"Calculated utilities from destinations in column '{config.DEFAULT_COLNAME_UTILITY_SUPPLY}'"
                 )
 
@@ -2924,7 +2892,7 @@ class InteractionMatrix:
         
         helper.add_timestamp(
             hansen_accessibility,
-            function = "InteractionMatrix.hansen",
+            function = "models.InteractionMatrix.hansen",
             process = f"Creation and calculation of {config.MODELS['Hansen']['description']} from customer origins" if from_origins else f"Creation and calculation of {config.MODELS['Hansen']['description']} from supply locations"
             )
 
@@ -2988,7 +2956,7 @@ class InteractionMatrix:
             If required variables such as market size or attraction are missing
             or undefined in the interaction matrix.
 
-        Examples
+        Example
         --------
         >>> Freiburg_Stadtbezirke_SHP = gp.read_file("data/Freiburg_Stadtbezirke_Point.shp")
         >>> Freiburg_Stadtbezirke_Einwohner = pd.read_excel("data/Freiburg_Stadtbezirke_Einwohner.xlsx")
@@ -3264,7 +3232,7 @@ class InteractionMatrix:
             If required variables such as market size or attraction are missing
             or undefined in the interaction matrix.
 
-        Examples
+        Example
         --------
         >>> Freiburg_Stadtbezirke_SHP = gp.read_file("data/Freiburg_Stadtbezirke_Point.shp")
         >>> Freiburg_Stadtbezirke_Einwohner = pd.read_excel("data/Freiburg_Stadtbezirke_Einwohner.xlsx")
@@ -3433,10 +3401,31 @@ class InteractionMatrix:
         KeyError
             If any stated column is not in the interaction matrix DataFrame.
 
-        Examples
+        Example
         --------
-        >>> # Example: apply log-centering to the interaction matrix (from tests)
-        >>> haslach_interactionmatrix.mci_transformation()
+        >>> Wieland2015_interaction_matrix = load_interaction_matrix(
+        ...     data="data/Wieland2015.xlsx",
+        ...     customer_origins_col="Quellort",
+        ...     supply_locations_col="Zielort",
+        ...     attraction_col=[
+        ...         "VF", 
+        ...         "K", 
+        ...         "K_KKr"
+        ...         ],
+        ...     market_size_col="Sum_Ek1",
+        ...     flows_col="Anb_Eink1",
+        ...     transport_costs_col="Dist_Min2",
+        ...     probabilities_col="MA_Anb1",
+        ...     data_type="xlsx"
+        ... )
+        >>> Wieland2015_interaction_matrix.mci_transformation(
+        ...     cols = [
+        ...         "VF", 
+        ...         "K", 
+        ...         "K_KKr",
+        ...         "Dist_Min2"
+        ...     ]
+        ... )
         """
 
         if verbose:
@@ -3501,10 +3490,31 @@ class InteractionMatrix:
             confidence intervals, and the updated interaction matrix with
             associated metadata.
 
-        Examples
+        Example
         --------
-        >>> # Example from tests: fit MCI with multiple explanatory variables
-        >>> mci_fit = Wieland2015_interaction_matrix.mci_fit(cols=["A_j", "t_ij", "K", "K_KKr"])
+        >>> Wieland2015_interaction_matrix = load_interaction_matrix(
+        ...     data="data/Wieland2015.xlsx",
+        ...     customer_origins_col="Quellort",
+        ...     supply_locations_col="Zielort",
+        ...     attraction_col=[
+        ...         "VF", 
+        ...         "K", 
+        ...         "K_KKr"
+        ...         ],
+        ...     market_size_col="Sum_Ek1",
+        ...     flows_col="Anb_Eink1",
+        ...     transport_costs_col="Dist_Min2",
+        ...     probabilities_col="MA_Anb1",
+        ...     data_type="xlsx"
+        ... )
+        >>> mci_fit = Wieland2015_interaction_matrix.mci_fit(
+        ...     cols=[
+        ...         "A_j", 
+        ...         "t_ij", 
+        ...         "K", 
+        ...         "K_KKr"
+        ...         ]
+        ...     )
         >>> mci_fit.summary()
         """
 
@@ -3589,6 +3599,12 @@ class InteractionMatrix:
         else:
             
             interaction_matrix_metadata = self.metadata
+
+            interaction_matrix_metadata["fit"] = {
+                "function": "mci_fit",
+                "fit_by": "probabilities",
+                "method": "OLS"
+                }
                
         interaction_matrix = InteractionMatrix(
             interaction_matrix_df,
@@ -3671,9 +3687,8 @@ class InteractionMatrix:
         TypeError
             If `params` is not provided as a list or NumPy array.
 
-        Examples
+        Example
         --------
-        >>> # Example: evaluate negative log-likelihood for given parameters
         >>> ll = haslach_interactionmatrix.loglik([1, -2], fit_by="probabilities")
         >>> print(ll)
         """
@@ -3866,14 +3881,52 @@ class InteractionMatrix:
             If the length of ``initial_params`` or ``bounds`` does not match the
             number of parameters implied by the model specification.
 
-        Examples
+        Example
         --------
-        >>> # Example from tests: Maximum Likelihood fit via interaction matrix
-        >>> haslach_interactionmatrix.huff_ml_fit(
-        ...     initial_params=[1, -2],
-        ...     method="trust-constr",
-        ...     bounds=[(0.8, 0.9999), (-2.5, -1.5)]
+        >>> Wieland2015_interaction_matrix2 = load_interaction_matrix(
+        ...     data="data/Wieland2015.xlsx",
+        ...     customer_origins_col="Quellort",
+        ...     supply_locations_col="Zielort",
+        ...     attraction_col=[
+        ...         "VF", 
+        ...         "K", 
+        ...         "K_KKr"
+        ...         ],
+        ...     market_size_col="Sum_Ek",
+        ...     flows_col="Anb_Eink",
+        ...     transport_costs_col="Dist_Min2",
+        ...     probabilities_col="MA_Anb",
+        ...     data_type="xlsx",
+        ...     xlsx_sheet="interactionmatrix",
+        ...     check_df_vars=False
+        ...     )
+        >>> Wieland2015_interaction_matrix2.define_weightings(
+        ...     vars_funcs = {
+        ...         0: {
+        ...             "name": "A_j",
+        ...             "func": "power"
+        ...         },
+        ...         1: {
+        ...             "name": "t_ij",
+        ...             "func": "power",              
+        ...         },
+        ...         2: {
+        ...             "name": "K",
+        ...             "func": "power"
+        ...         },
+        ...         3: {
+        ...             "name": "K_KKr",
+        ...             "func": "power"
+        ...         }
+        ...         }
+        ...     )
+        >>> Wieland2015_interaction_matrix2.huff_ml_fit(
+        ...     initial_params=[0.9, -1.5, 0.5, 0.3],
+        ...     bounds=[(0.5, 1), (-2, -1), (0.2, 0.7), (0.2, 0.7)],
+        ...     fit_by="probabilities",
+        ...     method="trust-constr",        
         ... )
+        >>> Wieland2015_interaction_matrix2.summary()
         """
         
         if verbose:
@@ -4051,6 +4104,7 @@ class InteractionMatrix:
                 helper.add_timestamp(
                     self,
                     function="models.InteractionMatrix.huff_ml_fit",
+                    process="Calculcated utilities, probabilities, expected customer flows"
                     )
         
         self.metadata["fit"] = {
@@ -4108,11 +4162,14 @@ class InteractionMatrix:
             or if the specified attraction column does not exist in the
             interaction matrix.
 
-        Examples
+        Example
         --------
-        >>> # Example: change attraction values for selected locations
         >>> updates = {
-        ...     "new_val": {"location": "LFDNR", "attraction_col": "VKF_qm", "new_value": 12345}
+        ...     "new_val": {
+        ...         "location": "LFDNR", 
+        ...         "attraction_col": "VKF_qm", 
+        ...         "new_value": 12345
+        ...         }
         ... }
         >>> haslach_interactionmatrix.change_attraction_values(updates)
         """
@@ -4348,7 +4405,7 @@ class InteractionMatrix:
         ValueError
             If `line_size_by` is not one of `"probabilities"` or `"flows"`.
 
-        Examples
+        Example
         --------
         >>> Haslach = load_geodata(
         ...     "data/Haslach.shp",
@@ -4607,14 +4664,20 @@ class MarketAreas:
         ValueError
             If output_model is not "Huff" or "MCI" when input is InteractionMatrix.
         
-        Examples
+        Example
         --------
-        >>> # Example from tests: add total market areas to an existing HuffModel
-        >>> huff_model_fit2 = wieland2015_totalmarketareas.add_to_model(huff_model_fit2)
+        >>> wieland2015_totalmarketareas = load_marketareas(
+        ...     data="data/Wieland2015.xlsx",
+        ...     supply_locations_col="Zielort",
+        ...     total_col="Anb_Eink",
+        ...     data_type="xlsx",
+        ...     xlsx_sheet="total_marketareas"
+        ... )
+        >>> huff_model_fit2 = wieland2015_totalmarketareas.add_to_model(huff_model_fit2) 
         """
         
         if not isinstance(model_object, (HuffModel, MCIModel, InteractionMatrix)):
-            raise TypeError("Error while adding MarketAreas to model: Parameter 'interaction_matrix' must be of class HuffModel,  MCIModel, or InteractionMatrix")
+            raise TypeError("Error while adding market areas to model: Parameter 'interaction_matrix' must be of class HuffModel, MCIModel, or InteractionMatrix")
         
         if isinstance(model_object, MCIModel):
             
@@ -4791,100 +4854,79 @@ class HuffModel:
         """
 
         interaction_matrix = self.interaction_matrix
+        customer_origins = self.interaction_matrix.get_customer_origins()
+        supply_locations = self.interaction_matrix.get_supply_locations()
 
-        customer_origins_metadata = interaction_matrix.get_customer_origins().get_metadata()
-        supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
+        customer_origins_metadata = customer_origins.get_metadata()
+        supply_locations_metadata = supply_locations.get_metadata()
         interaction_matrix_metadata = interaction_matrix.get_metadata()
 
-        print(config.MODELS["Huff"]["description"])
-        print("--------------------------------------")
-        print("Supply locations    " + str(supply_locations_metadata["no_points"]))
-        if supply_locations_metadata["attraction_col"][0] is None:
-            print(f"{config.DEFAULT_NAME_ATTRAC} column   not defined")
-        else:
-            print(f"{config.DEFAULT_NAME_ATTRAC} column   " + supply_locations_metadata["attraction_col"][0])
-        print("Customer origins    " + str(customer_origins_metadata["no_points"]))
-        if customer_origins_metadata["marketsize_col"] is None:
-            print(f"{config.DEFAULT_NAME_MARKETSIZE} column  not defined")
-        else:
-            print(f"{config.DEFAULT_NAME_MARKETSIZE} column  " + customer_origins_metadata["marketsize_col"])
-        print("--------------------------------------")
+        print(config.MODELS["Huff"]["description"])        
+        print("======================================")
 
-        print("Partial utilities")
-        print("                    Weights")
+        helper.print_summary_row(
+            config.DEFAULT_NAME_SUPPLY_LOCATIONS,
+            supply_locations_metadata["no_points"]
+        )
 
-        if supply_locations_metadata["weighting"][0]["func"] is None and supply_locations_metadata["weighting"][0]["param"] is None:
-            print(f"{config.DEFAULT_NAME_ATTRAC}          not defined")
-        else:
-            if supply_locations_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_ATTRAC}          " + str(round(supply_locations_metadata["weighting"][0]["param"],3)) + " (" + supply_locations_metadata["weighting"][0]["func"] + ")")
+        if supply_locations_metadata["attraction_col"][0] is not None:
+            if isinstance(supply_locations_metadata["attraction_col"], list):
+                attrac_cols = ', '.join(str(x) for x in supply_locations_metadata["attraction_col"])
+            elif isinstance(supply_locations_metadata["attraction_col"], str):
+                attrac_cols = ', '.join([supply_locations_metadata["attraction_col"]])
             else:
-                print(f"{config.DEFAULT_NAME_ATTRAC}          NA" + " (" + supply_locations_metadata["weighting"][0]["func"] + ")")   
+                attrac_cols = supply_locations_metadata["attraction_col"]
+        else:
+            attrac_cols = None
 
-        if customer_origins_metadata["weighting"][0]["func"] is None and customer_origins_metadata["weighting"][0]["param"] is None:
-            print(f"{config.DEFAULT_NAME_TC}     not defined")
-        elif customer_origins_metadata["weighting"][0]["func"] in [config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0], config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[1]]:
-            if customer_origins_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_TC}     " + str(round(customer_origins_metadata["weighting"][0]["param"],3)) + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-            else:
-                print(f"{config.DEFAULT_NAME_TC}     NA" + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-        elif customer_origins_metadata["weighting"][0]["func"] == config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[2]:
-            if customer_origins_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_TC}    " + str(round(customer_origins_metadata["weighting"][0]["param"][0],3)) + ", " + str(round(customer_origins_metadata["weighting"][0]["param"][1],3)) + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-            else:
-                print(f"{config.DEFAULT_NAME_TC}     NA" + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
+        helper.print_summary_row(
+            f"{config.DEFAULT_NAME_ATTRAC} column(s)",
+            attrac_cols
+        )
 
-        attrac_vars = supply_locations_metadata["attraction_col"]
-        attrac_vars_no = len(attrac_vars)
+        helper.print_interaction_matrix_info(interaction_matrix)
         
-        if attrac_vars_no > 1:
-                        
-            for key, attrac_var in enumerate(attrac_vars):
-                
-                if key == 0:
-                    continue
-                
-                if key not in supply_locations_metadata["weighting"].keys():
-                    
-                    print(f"{attrac_vars[key][:16]:16}    not defined")
-                    
-                else:
-
-                    name = supply_locations_metadata["weighting"][key]["name"]
-                    func = supply_locations_metadata["weighting"][key]["func"]
-
-                    if "param" in supply_locations_metadata["weighting"][key]: 
-                    
-                        param = supply_locations_metadata["weighting"][key]["param"]
-                        
-                        if param is not None:
-
-                            print(f"{name[:16]:16}    {round(param, 3)} ({func})")
-
-                        else:
-
-                            print(f"{attrac_vars[key][:16]:16}    NA ({func})")
-                    
-        print("--------------------------------------")
-
+        helper.print_weightings(interaction_matrix)
+        
         huff_modelfit = None
 
         if interaction_matrix_metadata != {} and "fit" in interaction_matrix_metadata and interaction_matrix_metadata["fit"]["function"] is not None:
-            print("Parameter estimation")
-            print("Fit function        " + interaction_matrix_metadata["fit"]["function"])
-            print("Fit by              " + interaction_matrix_metadata["fit"]["fit_by"])
-            if interaction_matrix_metadata["fit"]["function"] == "huff_ml_fit":
-                print("Fit method          " + interaction_matrix_metadata["fit"]["method"] + " (Converged: " + str(interaction_matrix_metadata["fit"]["minimize_success"]) + ")")
 
-            huff_modelfit = self.modelfit(by = interaction_matrix_metadata["fit"]["fit_by"])
+            print("--------------------------------------")
+
+            print("Parameter estimation")
+
+            helper.print_summary_row(
+                "Fit function",
+                interaction_matrix_metadata["fit"]["function"]
+            )
+            helper.print_summary_row(
+                "Fit by",
+                interaction_matrix_metadata["fit"]["fit_by"]
+            )
+            if interaction_matrix_metadata["fit"]["function"] == "huff_ml_fit":
+                helper.print_summary_row(
+                    "Fit method",
+                    f"{interaction_matrix_metadata['fit']['method']} (Converged: {interaction_matrix_metadata['fit']['minimize_success']})"
+                    )
+            if interaction_matrix_metadata["fit"]["function"] == "mci_fit":
+                helper.print_summary_row(
+                    "Fit method",
+                    interaction_matrix_metadata['fit']['method']
+                    )
+
+            print("--------------------------------------")            
+
+            if "fit" in interaction_matrix_metadata:
+                huff_modelfit = self.modelfit(by = interaction_matrix_metadata["fit"]["fit_by"])
             
             if huff_modelfit is not None:
                                 
                 print (f"Goodness-of-fit for {interaction_matrix_metadata['fit']['fit_by']}")
 
-                gof.modelfit_print(huff_modelfit)
-                    
-                print("--------------------------------------")
+                helper.print_modelfit(huff_modelfit)
+                
+        print("======================================")
 
         return [
             customer_origins_metadata,
@@ -4904,8 +4946,8 @@ class HuffModel:
 
     def plot(
         self,
-        origin_point_style: dict = {},
-        location_point_style: dict = {},
+        origin_point_style: dict = None,
+        location_point_style: dict = None,
         line_color: str = "black",
         line_alpha: float = 0.7,
         line_size_by: str = "flows",
@@ -4932,13 +4974,30 @@ class HuffModel:
             The return value from `InteractionMatrix.plot()`:
             `[map_osm, layers_to_plot, layer_styles]`.
 
-        Examples
+        Example
         --------
         >>> huff_model.plot(
-        ...     origin_point_style={"name": "Districts", "color": "black", "size": 100},
-        ...     location_point_style={"name": "Supermarket chains", "color": {"Name": {"Aldi Süd": "blue"}}, "size": 100}
+        ...     origin_point_style={
+        ...         "name": "Districts", 
+        ...         "color": "black", 
+        ...         "size": 100
+        ...         },
+        ...     location_point_style={
+        ...         "name": "Supermarket chains", 
+        ...         "color": {
+        ...             "Name": {
+        ...                 "Aldi Süd": "blue"
+        ...                 }
+        ...             }, 
+        ...             "size": 100
+        ...         }
         ... )
         """
+        
+        if origin_point_style is None:
+            origin_point_style = {}
+        if location_point_style is None:
+            location_point_style = {}
 
         interaction_matrix = self.interaction_matrix        
 
@@ -4962,17 +5021,20 @@ class HuffModel:
 
     def mci_fit(
         self,
-        cols: list = [config.DEFAULT_COLNAME_ATTRAC, config.DEFAULT_COLNAME_TC],
+        cols: list = None,
         alpha = 0.05,
         verbose: bool = config.VERBOSE
         ):
+        
         """
         Fit a Multiplicative Competitive Interaction (MCI) model for this Huff model.
 
         This convenience method delegates to the underlying interaction matrix
         to perform the log-centering transformation (if needed) and to estimate
         the MCI model via OLS. Returns an `MCIModel` object containing the
-        fitted coefficients and diagnostics.
+        fitted coefficients and diagnostics. See Nakanishi and Cooper (1974, 1982),
+        Huff and McCallum (2008), or Wieland (2017) for the steps of
+        fitting the MCI model.
 
         Parameters
         ----------
@@ -4988,10 +5050,16 @@ class HuffModel:
         MCIModel
             A fitted MCIModel instance.
 
-        Examples
+        Example
         --------
         >>> huff_model.mci_fit(cols=["A_j", "t_ij"])
         """
+
+        if cols is None:
+            cols = [
+                config.DEFAULT_COLNAME_ATTRAC, 
+                config.DEFAULT_COLNAME_TC
+                ]
 
         if verbose:
             print(f"Processing estimation of {config.MODELS['MCI']['description']}", end = " ... ")
@@ -5444,13 +5512,13 @@ class HuffModel:
                     
                     helper.add_timestamp(
                         self.interaction_matrix,
-                        function="ml_fit",
+                        function="models.HuffModel.ml_fit",
                         status = "Error: No update of estimates because fit parameters contain NaN"
                         )
                     
                     helper.add_timestamp(
                         self,
-                        function="ml_fit",
+                        function="models.HuffModel.ml_fit",
                         status = "Error: No update of estimates because fit parameters contain NaN"
                         )            
 
@@ -5609,6 +5677,7 @@ class HuffModel:
         helper.add_timestamp(
             self,
             function="models.HuffModel.update",
+            process="Update of interaction matrix and market areas"
             )
         
         return self
@@ -5876,45 +5945,60 @@ class MCIModel:
         interaction_matrix_metadata = interaction_matrix.get_metadata()
 
         print(config.MODELS["MCI"]["description"])
+        print("============================================")
+
+        helper.print_summary_row(
+            config.DEFAULT_NAME_SUPPLY_LOCATIONS,
+            supply_locations_metadata["no_points"]
+        )
+        helper.print_summary_row(
+            config.DEFAULT_NAME_CUSTOMER_ORIGINS,
+            customer_origins_metadata["no_points"]
+        )
+
+        helper.print_interaction_matrix_info(interaction_matrix)
+        
         print("--------------------------------------------")
-        print("Supply locations   " + str(supply_locations_metadata["no_points"]))
-        print("Customer origins   " + str(customer_origins_metadata["no_points"]))
-        print("--------------------------------------------")
-        print("Partial utilities")
+        
+        print("Weighting estimates")
  
         coefficients_rows = []
+
         for key, value in coefs.items():
+
             coefficient_name = value["Coefficient"]
             if coefficient_name == config.DEFAULT_COLNAME_ATTRAC:
                 coefficient_name = config.DEFAULT_NAME_ATTRAC
             if coefficient_name == config.DEFAULT_COLNAME_TC:
                 coefficient_name = config.DEFAULT_NAME_TC
+
             coefficients_rows.append({
                 "": coefficient_name,
-                "Estimate": round(value["Estimate"], 3),
-                "SE": round(value["SE"], 3),
-                "t": round(value["t"], 3),
-                "p": round(value["p"], 3),
-                "CI lower": round(value["CI_lower"], 3),
-                "CI upper": round(value["CI_upper"], 3)
+                "Estimate": round(value["Estimate"], config.FLOAT_ROUND),
+                "SE": round(value["SE"], config.FLOAT_ROUND),
+                "t": round(value["t"], config.FLOAT_ROUND),
+                "p": round(value["p"], config.FLOAT_ROUND),
+                "CI lower": round(value["CI_lower"], config.FLOAT_ROUND),
+                "CI upper": round(value["CI_upper"], config.FLOAT_ROUND)
             })
+
         coefficients_df = pd.DataFrame(coefficients_rows)
         
-        print (coefficients_df)
-
-        print("--------------------------------------------")
+        print(coefficients_df.to_string(index=False))
         
         mci_modelfit = None
 
         mci_modelfit = self.modelfit()
 
         if mci_modelfit is not None:
+
+            print("--------------------------------------------")
             
             print ("Goodness-of-fit for probabilities")
 
-            gof.modelfit_print(mci_modelfit)            
-            
-            print("--------------------------------------------")
+            helper.print_modelfit(mci_modelfit)            
+
+        print("============================================")
 
         return [
             customer_origins_metadata,
@@ -6060,12 +6144,7 @@ class MCIModel:
         interaction_matrix_metadata["model"] = {
             "model_type": config.MODELS_LIST[1],
             "transformation": transformation
-            }
-        
-        # interaction_matrix_metadata = helper.add_timestamp(
-        #     function = "utility",
-        #     metadata = interaction_matrix_metadata
-        #     )            
+            }         
 
         interaction_matrix = InteractionMatrix(
             interaction_matrix_df,
@@ -6077,7 +6156,8 @@ class MCIModel:
 
         helper.add_timestamp(
             self,
-            function="utility",
+            function="models.MCIModel.utility",
+            process="Calculated utilities"
             )
 
         return self
@@ -6107,17 +6187,26 @@ class MCIModel:
         interaction_matrix = self.interaction_matrix        
         interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()        
        
-        if config.DEFAULT_COLNAME_PROBABILITY in interaction_matrix_df.columns and config.DEFAULT_COLNAME_PROBABILITY_OBSERVED not in interaction_matrix_df.columns:
+        if config.DEFAULT_COLNAME_PROBABILITY in interaction_matrix_df.columns:
             
-            if verbose:
-                print("NOTE: Probabilities in interaction matrix are treated as empirical probabilities")
+            if config.DEFAULT_COLNAME_PROBABILITY_OBSERVED not in interaction_matrix_df.columns:
             
-            interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY_OBSERVED] = interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY]
-        
-        else:
-            
-            if verbose:
-                print("NOTE: Interaction matrix contains empirical probabilities")
+                if verbose:
+                    print("NOTE: Probabilities in interaction matrix are treated as empirical probabilities")
+                
+                interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY_OBSERVED] = interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY]
+                
+                self.interaction_matrix.interaction_matrix_df = interaction_matrix_df
+                
+                helper.add_timestamp(
+                    self.interaction_matrix,
+                    function="models.MCIModel.probabilities",
+                    process=f"Saved observed market shares in column '{config.DEFAULT_COLNAME_PROBABILITY_OBSERVED}'"
+                    )
+                
+            else:
+                
+                raise InteractionMatrixError(f"Error in {config.MODELS['MCI']['description']} analysis: Interaction matrix does not contain probabilities.")
 
         if config.DEFAULT_COLNAME_UTILITY not in interaction_matrix_df.columns:
             self.utility(transformation = transformation)
@@ -6145,15 +6234,11 @@ class MCIModel:
 
         interaction_matrix.interaction_matrix_df = interaction_matrix_df
         self.interaction_matrix = interaction_matrix
-        
-        # self.metadata = helper.add_timestamp(
-        #     function = "probabilities",
-        #     metadata = self.metadata
-        #     )
 
         helper.add_timestamp(
-            self,
-            function="probabilities",
+            self.interaction_matrix,
+            function="models.MCIModel.probabilities",
+            process="Calculated probabilities"
             )
 
         return self
@@ -6203,15 +6288,11 @@ class MCIModel:
         interaction_matrix_df[config.DEFAULT_COLNAME_FLOWS] = interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY] * interaction_matrix_df[config.DEFAULT_COLNAME_MARKETSIZE]
 
         self.interaction_matrix_df = interaction_matrix_df
-        
-        # self.metadata = helper.add_timestamp(
-        #     function = "flows",
-        #     metadata = self.metadata
-        #     )
 
         helper.add_timestamp(
             self,
-            function="flows",
+            function="models.MCIModel.flows",
+            process="Calculated expected customer flows"
             )
 
         return self
@@ -6257,7 +6338,8 @@ class MCIModel:
         
         helper.add_timestamp(
             mci_model,
-            function="marketareas",
+            function="models.MCIModel.marketareas",
+            process="Calculated total market areas"
             )
 
         return mci_model
@@ -6321,89 +6403,73 @@ class HansenAccessibility:
         """
 
         interaction_matrix = self.interaction_matrix
+        customer_origins = self.get_customer_origins()
+        supply_locations = self.get_supply_locations()
 
-        customer_origins_metadata = interaction_matrix.get_customer_origins().get_metadata()
-        supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
+        customer_origins_metadata = customer_origins.get_metadata()
+        supply_locations_metadata = supply_locations.get_metadata()
         interaction_matrix_metadata = interaction_matrix.get_metadata()
         metadata = self.metadata
 
         print(config.MODELS["Hansen"]["description"])
+        print("======================================")
+
+        helper.print_summary_row(
+            config.DEFAULT_NAME_SUPPLY_LOCATIONS,
+            supply_locations_metadata["no_points"]
+        )
+
+        if supply_locations_metadata["attraction_col"][0] is not None:
+
+            if isinstance(supply_locations_metadata["attraction_col"], list):
+                attrac_cols = ', '.join(str(x) for x in supply_locations_metadata["attraction_col"])
+            elif isinstance(supply_locations_metadata["attraction_col"], str):
+                attrac_cols = ', '.join([supply_locations_metadata["attraction_col"]])
+            else:
+                attrac_cols = supply_locations_metadata["attraction_col"]
+
+        else:
+
+            attrac_cols = None
+
+        helper.print_summary_row(
+            f"{config.DEFAULT_NAME_ATTRAC} column(s)",
+            attrac_cols
+        )
+
         print("--------------------------------------")
-        print("Supply locations    " + str(supply_locations_metadata["no_points"]))
-        if supply_locations_metadata["attraction_col"][0] is None:
-            print(f"{config.DEFAULT_NAME_ATTRAC} column   not defined")
-        else:
-            print(f"{config.DEFAULT_NAME_ATTRAC} column   " + supply_locations_metadata["attraction_col"][0])
-        print("Customer origins    " + str(customer_origins_metadata["no_points"]))
-        if customer_origins_metadata["marketsize_col"] is None:
-            print(f"{config.DEFAULT_NAME_MARKETSIZE} column  not defined")
-        else:
-            print(f"{config.DEFAULT_NAME_MARKETSIZE} column  " + customer_origins_metadata["marketsize_col"])
-        print("--------------------------------------")
 
-        print("Partial utilities")
-        print("                    Weights")
+        helper.print_summary_row(
+            config.DEFAULT_NAME_CUSTOMER_ORIGINS,
+            customer_origins_metadata["no_points"]
+        )
 
-        if supply_locations_metadata["weighting"][0]["func"] is None and supply_locations_metadata["weighting"][0]["param"] is None:
-            print(f"{config.DEFAULT_NAME_ATTRAC}          not defined")
-        else:
-            if supply_locations_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_ATTRAC}          " + str(round(supply_locations_metadata["weighting"][0]["param"],3)) + " (" + supply_locations_metadata["weighting"][0]["func"] + ")")
-            else:
-                print(f"{config.DEFAULT_NAME_ATTRAC}          NA" + " (" + supply_locations_metadata["weighting"][0]["func"] + ")")   
+        helper.print_summary_row(
+            f"{config.DEFAULT_NAME_MARKETSIZE} column",
+            customer_origins_metadata["marketsize_col"]
+        )
 
-        if customer_origins_metadata["weighting"][0]["func"] is None and customer_origins_metadata["weighting"][0]["param"] is None:
-            print(f"{config.DEFAULT_NAME_TC}     not defined")
-        elif customer_origins_metadata["weighting"][0]["func"] in [config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0], config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[1]]:
-            if customer_origins_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_TC}     " + str(round(customer_origins_metadata["weighting"][0]["param"],3)) + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-            else:
-                print(f"{config.DEFAULT_NAME_TC}     NA" + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-        elif customer_origins_metadata["weighting"][0]["func"] == config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[2]:
-            if customer_origins_metadata["weighting"][0]["param"] is not None:
-                print(f"{config.DEFAULT_NAME_TC}    " + str(round(customer_origins_metadata["weighting"][0]["param"][0],3)) + ", " + str(round(customer_origins_metadata["weighting"][0]["param"][1],3)) + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-            else:
-                print(f"{config.DEFAULT_NAME_TC}     NA" + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
+        helper.print_interaction_matrix_info(interaction_matrix)
 
-        attrac_vars = supply_locations_metadata["attraction_col"]
-        attrac_vars_no = len(attrac_vars)
-        
-        if attrac_vars_no > 1:
-                        
-            for key, attrac_var in enumerate(attrac_vars):
-                
-                if key == 0:
-                    continue
-                
-                if key not in supply_locations_metadata["weighting"].keys():
-                    
-                    print(f"{attrac_vars[key][:16]:16}    not defined")
-                    
-                else:
+        helper.print_weightings(interaction_matrix)
 
-                    name = supply_locations_metadata["weighting"][key]["name"]
-                    func = supply_locations_metadata["weighting"][key]["func"]
-
-                    if "param" in supply_locations_metadata["weighting"][key]: 
-                    
-                        param = supply_locations_metadata["weighting"][key]["param"]
-                        
-                        if param is not None:
-
-                            print(f"{name[:16]:16}    {round(param, 3)} ({func})")
-
-                        else:
-
-                            print(f"{attrac_vars[key][:16]:16}    NA ({func})")
-                    
         print("--------------------------------------")
         
         if metadata["calculation"]["from_origins"]:
-            print("Calculated from      Customer origins")
-        else:
-            print("Calculated from      Supply locations")
+
+            helper.print_summary_row(
+                "Calculated from",
+                config.DEFAULT_NAME_CUSTOMER_ORIGINS
+                )
             
-        print("--------------------------------------")
+        else:
+            
+            helper.print_summary_row(
+                "Calculated from",
+                config.DEFAULT_NAME_SUPPLY_LOCATIONS
+                )
+            
+        print("======================================")
 
         return [
             customer_origins_metadata,
@@ -6481,92 +6547,70 @@ class FloatingCatchment:
         """
 
         interaction_matrix = self.interaction_matrix
+        customer_origins = self.get_customer_origins()
+        supply_locations = self.get_supply_locations()
 
-        customer_origins_metadata = interaction_matrix.get_customer_origins().get_metadata()
-        supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
+        customer_origins_metadata = customer_origins.get_metadata()
+        supply_locations_metadata = supply_locations.get_metadata()
         interaction_matrix_metadata = interaction_matrix.get_metadata()
         metadata = self.metadata
 
         print(config.MODELS["2SFCA"]["description"])
-        print("--------------------------------------")
-        print("Supply locations    " + str(supply_locations_metadata["no_points"]))
-        if supply_locations_metadata["attraction_col"][0] is None:
-            print(f"{config.DEFAULT_NAME_ATTRAC} column   not defined")
+        print("======================================")
+ 
+        helper.print_summary_row(
+            config.DEFAULT_NAME_SUPPLY_LOCATIONS,
+            supply_locations_metadata["no_points"]
+        )
+
+        if supply_locations_metadata["attraction_col"][0] is not None:
+
+            if isinstance(supply_locations_metadata["attraction_col"], list):
+                attrac_cols = ', '.join(str(x) for x in supply_locations_metadata["attraction_col"])
+            elif isinstance(supply_locations_metadata["attraction_col"], str):
+                attrac_cols = ', '.join([supply_locations_metadata["attraction_col"]])
+            else:
+                attrac_cols = supply_locations_metadata["attraction_col"]
+
         else:
-            print(f"{config.DEFAULT_NAME_ATTRAC} column   " + supply_locations_metadata["attraction_col"][0])
-        print("Customer origins    " + str(customer_origins_metadata["no_points"]))
-        if customer_origins_metadata["marketsize_col"] is None:
-            print(f"{config.DEFAULT_NAME_MARKETSIZE} column  not defined")
-        else:
-            print(f"{config.DEFAULT_NAME_MARKETSIZE} column  " + customer_origins_metadata["marketsize_col"])
+
+            attrac_cols = None
+
+        helper.print_summary_row(
+            f"{config.DEFAULT_NAME_ATTRAC} column(s)",
+            attrac_cols
+        )
+
         print("--------------------------------------")
+
+        helper.print_summary_row(
+            config.DEFAULT_NAME_CUSTOMER_ORIGINS,
+            customer_origins_metadata["no_points"]
+        )
+
+        helper.print_summary_row(
+            f"{config.DEFAULT_NAME_MARKETSIZE} column",
+            customer_origins_metadata["marketsize_col"]
+        )
+
+        helper.print_interaction_matrix_info(interaction_matrix)
 
         if metadata["calculation"]["use_weightings"]:
-        
-            print("Partial utilities")
-            print("                    Weights")
 
-            if supply_locations_metadata["weighting"][0]["func"] is None and supply_locations_metadata["weighting"][0]["param"] is None:
-                print(f"{config.DEFAULT_NAME_ATTRAC}          not defined")
-            else:
-                if supply_locations_metadata["weighting"][0]["param"] is not None:
-                    print(f"{config.DEFAULT_NAME_ATTRAC}          " + str(round(supply_locations_metadata["weighting"][0]["param"],3)) + " (" + supply_locations_metadata["weighting"][0]["func"] + ")")
-                else:
-                    print(f"{config.DEFAULT_NAME_ATTRAC}          NA" + " (" + supply_locations_metadata["weighting"][0]["func"] + ")")   
-
-            if customer_origins_metadata["weighting"][0]["func"] is None and customer_origins_metadata["weighting"][0]["param"] is None:
-                print(f"{config.DEFAULT_NAME_TC}     not defined")
-            elif customer_origins_metadata["weighting"][0]["func"] in [config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0], config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[1]]:
-                if customer_origins_metadata["weighting"][0]["param"] is not None:
-                    print(f"{config.DEFAULT_NAME_TC}     " + str(round(customer_origins_metadata["weighting"][0]["param"],3)) + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-                else:
-                    print(f"{config.DEFAULT_NAME_TC}     NA" + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-            elif customer_origins_metadata["weighting"][0]["func"] == config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[2]:
-                if customer_origins_metadata["weighting"][0]["param"] is not None:
-                    print(f"{config.DEFAULT_NAME_TC}    " + str(round(customer_origins_metadata["weighting"][0]["param"][0],3)) + ", " + str(round(customer_origins_metadata["weighting"][0]["param"][1],3)) + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-                else:
-                    print(f"{config.DEFAULT_NAME_TC}     NA" + " (" + customer_origins_metadata["weighting"][0]["func"] + ")")
-
-            attrac_vars = supply_locations_metadata["attraction_col"]
-            attrac_vars_no = len(attrac_vars)
-            
-            if attrac_vars_no > 1:
-                            
-                for key, attrac_var in enumerate(attrac_vars):
-                    
-                    if key == 0:
-                        continue
-                    
-                    if key not in supply_locations_metadata["weighting"].keys():
-                        
-                        print(f"{attrac_vars[key][:16]:16}    not defined")
-                        
-                    else:
-
-                        name = supply_locations_metadata["weighting"][key]["name"]
-                        func = supply_locations_metadata["weighting"][key]["func"]
-
-                        if "param" in supply_locations_metadata["weighting"][key]: 
-                        
-                            param = supply_locations_metadata["weighting"][key]["param"]
-                            
-                            if param is not None:
-
-                                print(f"{name[:16]:16}    {round(param, 3)} ({func})")
-
-                            else:
-
-                                print(f"{attrac_vars[key][:16]:16}    NA ({func})")
-                        
-            print("--------------------------------------")
+            helper.print_weightings(interaction_matrix)
         
         else:
             
             print("Calculation without weightings")
-        
-        print(f"Threshold      {metadata['calculation']['threshold']}")
-            
+
         print("--------------------------------------")
+
+        helper.print_summary_row(
+            "Threshold",
+            metadata['calculation']['threshold']
+        )
+        
+        print("======================================")
 
         return [
             customer_origins_metadata,
@@ -6624,14 +6668,22 @@ def create_interaction_matrix(
         If `customer_origins` is not a :class:`CustomerOrigins` or
         `supply_locations` is not a :class:`SupplyLocations`.
 
-    Examples
+    Example
     --------
-    >>> from huff.data_management import load_geodata
-    >>> from huff.models import create_interaction_matrix
-    >>> Haslach = load_geodata("data/Haslach.shp", location_type="origins", unique_id="BEZEICHN")
-    >>> Haslach_supermarkets = load_geodata("data/Haslach_supermarkets.shp", location_type="destinations", unique_id="LFDNR")
-    >>> im = create_interaction_matrix(Haslach, Haslach_supermarkets)
-
+    >>> Haslach = load_geodata(
+    ...     "data/Haslach.shp", 
+    ...     location_type="origins", 
+    ...     unique_id="BEZEICHN"
+    ... )
+    >>> Haslach_supermarkets = load_geodata(
+    ...     "data/Haslach_supermarkets.shp", 
+    ...     location_type="destinations", 
+    ...     unique_id="LFDNR"
+    ... )
+    >>> Haslach_interaction_matrix = create_interaction_matrix(
+    ...     Haslach, 
+    ...     Haslach_supermarkets
+    ... )
     """
 
     if not isinstance(customer_origins, CustomerOrigins):
@@ -6654,7 +6706,6 @@ def create_interaction_matrix(
     if verbose:
         print("OK")
 
-    #if customer_origins_metadata["marketsize_col"] is None and requiring_attributes:
     if customer_origins_marketsize is None and requiring_attributes:
         print(f"WARNING: {config.DEFAULT_NAME_MARKETSIZE} column in customer origins not defined and is set to {config.DEFAULT_COLNAME_MARKETSIZE} = np.nan. Use CustomerOrigins.define_marketsize().")  
     
@@ -6668,7 +6719,6 @@ def create_interaction_matrix(
         customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop_duplicates(subset=customer_origins_unique_id)
         customer_origins_geodata_gpd_original = customer_origins_geodata_gpd_original.drop_duplicates(subset=customer_origins_unique_id)
     
-    #if customer_origins_metadata["marketsize_col"] is None:
     if customer_origins_marketsize is None:
         customer_origins_marketsize = config.DEFAULT_COLNAME_MARKETSIZE
         customer_origins_geodata_gpd_original[customer_origins_marketsize] = np.nan    
@@ -6700,7 +6750,6 @@ def create_interaction_matrix(
             
     if supply_locations_attraction is None and requiring_attributes:
         print(f"WARNING: {config.DEFAULT_NAME_ATTRAC} column in supply locations not defined and is set to {config.DEFAULT_COLNAME_ATTRAC} = np.nan. Use SupplyLocations.define_attraction().")
-        #raise ValueError(f"Error while creating interaction matrix: {config.DEFAULT_NAME_ATTRAC} column in supply locations not defined. Use SupplyLocations.define_attraction()")
 
     if verbose:
         print("Arranging supply locations data", end = " ... ")
@@ -6715,7 +6764,6 @@ def create_interaction_matrix(
     if supply_locations_metadata["attraction_col"][0] is None:
         supply_locations_attraction = config.DEFAULT_COLNAME_ATTRAC
         supply_locations_geodata_gpd_original[supply_locations_attraction] = np.nan
-        #supply_locations_geodata_gpd_original[supply_locations_attraction] = np.nan
     
     supply_locations_data = pd.merge(
         supply_locations_geodata_gpd,
@@ -6746,11 +6794,6 @@ def create_interaction_matrix(
 
     metadata = {}
     
-    # metadata = helper.add_timestamp(
-    #     function = "create_interaction_matrix",
-    #     metadata = metadata
-    # )
-
     interaction_matrix = InteractionMatrix(
         interaction_matrix_df,
         customer_origins,
@@ -6761,7 +6804,7 @@ def create_interaction_matrix(
     helper.add_timestamp(
         interaction_matrix,
         function="models.create_interaction_matrix",
-        process="Created interaction matrix"
+        process="Created interaction matrix" if requiring_attributes else "Created interaction matrix without attributes required"
         )
     
     if verbose:
@@ -6811,7 +6854,7 @@ def market_shares(
     KeyError
         If `ref_col` is provided but not present in `df`.
 
-    Examples
+    Example
     --------
     >>> df = market_shares(df, turnover_col="turnover", ref_col="region")
 
@@ -6931,7 +6974,7 @@ def get_isochrones(
     ValueError
         If no isochrones were retrieved from ORS (likely server error).
 
-    Examples
+    Example
     --------
     >>> isos = get_isochrones(Haslach.get_geodata_gpd(), unique_id_col='BEZEICHN', segments=[5,10])
 
@@ -7060,7 +7103,7 @@ def log_centering_transformation(
     KeyError
         If `ref_col` is not present in `df`.
 
-    Examples
+    Example
     --------
     >>> df2 = log_centering_transformation(df, ref_col='region', cols=['pop','income'])
 
@@ -7151,7 +7194,7 @@ def weighting(
     ValueError
         If a required parameter `c` is missing for the chosen function.
 
-    Examples
+    Example
     --------
     >>> w = weighting(df['t_ij'], func='power', b=-2.2)
 

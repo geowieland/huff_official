@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.0
-# Last update: 2026-02-04 18:58
+# Version:     1.0.1
+# Last update: 2026-02-13 18:44
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -27,6 +27,7 @@ Freiburg_Stadtbezirke = Freiburg_Stadtbezirke_SHP.merge(
     right_on="nr"
 )
 # Merging with population data
+# column "EWU18" = inhabitants < 18 years
 
 Freiburg_Stadtbezirke = load_geodata(
     Freiburg_Stadtbezirke,
@@ -59,10 +60,13 @@ pediatricians_interactionmatrix = create_interaction_matrix(
 # Creating interaction matrix
 
 pediatricians_interactionmatrix.transport_costs(
-    network=False,
+    network=True,
+    ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
     verbose=True
     )
-# Calculate distances between districts and pediatricians
+# Calculate car travel times between districts and pediatricians
+# Isochrones are retrieved from OpenRouteService
+# REQUIRES INTERNET ACCESS AND VALID API TOKEN
 
 pediatricians_interactionmatrix.define_weightings(
     vars_funcs={
@@ -87,10 +91,10 @@ pediatricians_interactionmatrix.summary()
 # Summary of interaction matrix
 
 accessibility_2SFCA_calculation = pediatricians_interactionmatrix.floating_catchment(
-    threshold=1,
+    threshold=10,
     demand_factor=1000
 )
-# Two-step floating catchment areas analysis with threshold = 1 (km)
+# Two-step floating catchment areas analysis with threshold = 10 (min)
 # and pediatricians per 1000 inhabitants < 18y
 
 pediatricians_interactionmatrix.get_interaction_matrix_df().to_excel("pediatricians_interactionmatrix.xlsx")

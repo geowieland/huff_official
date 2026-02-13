@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.22
-# Last update: 2026-02-02 21:07
+# Version:     1.4.24
+# Last update: 2026-02-13 17:59
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -194,13 +194,12 @@ def distance_matrix(
     -------
     result : list
         A list containing four elements:
-
         1. matrix : list of list of float  
            Distance matrix with shape
            ``(len(sources), len(destinations))``.
         2. line_data_gdf : geopandas.GeoDataFrame  
            GeoDataFrame containing line geometries for each
-           source–destination pair and their associated distances.
+           source-destination pair and their associated distances.
         3. sources_point_gpd : geopandas.GeoDataFrame  
            GeoDataFrame of source points.
         4. destinations_point_gpd : geopandas.GeoDataFrame  
@@ -210,6 +209,20 @@ def distance_matrix(
     ------
     ValueError
         If ``distance_type`` is not supported.
+        
+    Examples
+    --------
+    >>> distance_matrix_result = distance_matrix(
+    ...     sources = customer_origins_coords,
+    ...     destinations = supply_locations_coords,
+    ...     sources_uid = customer_origins_ids,
+    ...     destinations_uid = supply_locations_ids,
+    ...     unit = "m",                
+    ...     save_output = shp_save_output,
+    ...     output_filepath = shp_output_filepath,
+    ...     output_crs = shp_output_crs,
+    ...     verbose = verbose
+    ... )
     """
     
     if distance_type not in config.DISTANCE_TYPES_LIST_FUNC:
@@ -390,7 +403,12 @@ def distance_matrix_from_gdf(
 
     Examples
     --------
-    >>> distance_matrix_from_gdf(sources_gdf, "id", destinations_gdf, "id")
+    >>> distance_matrix_from_gdf(
+    ...     sources_gdf, 
+    ...     "id", 
+    ...     destinations_gdf, 
+    ...     "id"
+    ... )
     """
 
     if sources_points_gdf.crs != destinations_points_gdf.crs:        
@@ -442,6 +460,53 @@ def buffers(
     output_crs: str = "EPSG:4326",    
     verbose: bool = False   
     ):    
+    
+    """
+    Compute a buffer from a geopandas.GeoDataFrame containing points.
+
+    Parameters
+    ----------
+    point_gdf : geopandas.GeoDataFrame
+        GeoDataFrame containing points.
+    unique_id_col : str
+        Column name in `point_gdf` containing unique identifiers for the features.
+    distances : list
+        List with distances (int, float) for the buffer segments
+    donut : bool, default=True
+        If True, returns donut-shaped buffers (rings instead of cumulative areas).
+    merge_buffers : bool, default = False
+        Whether to merge the buffers
+    save_output : bool, default True
+        Whether to save the resulting buffers as a shapefile.
+    output_filepath : str, default "buffers.shp"
+        File path for saving the buffers shapefile.
+    output_crs : str, default "EPSG:4326"
+        Coordinate Reference System for the output shapefile.
+    verbose : bool, optional
+        Whether to print progress messages (Default: False).
+
+    Returns
+    -------
+    GeoDataFrame
+        GeoDataFrame containing buffers with geometry and ID column in the specified CRS.
+
+    Raises
+    ------
+    KeyError
+        If ``unique_id_col`` is not in point_gdf.
+    
+    Examples
+    --------
+    buffers_gdf = buffers(
+        point_gdf = geodata_gpd_original,
+        unique_id_col = metadata["unique_id"],
+        distances = segments_distance,
+        donut = donut,
+        save_output = save_output,
+        output_filepath = output_filepath,
+        output_crs = output_crs
+        )
+    """
     
     if point_gdf.crs.is_geographic:
         print(f"WARNING: Point GeoDataFrame has geographic coordinate system {point_gdf.crs}. Results may be invalid.")
@@ -582,7 +647,13 @@ def polygon_select(
 
     Examples
     --------
-    >>> polygon_select(gdf, "id", polygons_gdf, "poly_id", distance=100)
+    >>> polygon_select(
+    ...     gdf, 
+    ...     "id", 
+    ...     polygons_gdf, 
+    ...     "poly_id", 
+    ...     distance=100
+    ... )
     """
     
     if gdf.crs != gdf_polygon_select.crs:
@@ -644,7 +715,7 @@ def polygon_select(
 
 def overlay_difference(
     polygon_gdf: gp.GeoDataFrame, 
-    sort_col: str = None,
+    sort_col: str | None = None,
     verbose: bool = False
     ):
 
@@ -673,7 +744,11 @@ def overlay_difference(
 
     Examples
     --------
-    >>> overlay_difference(polygons_gdf, sort_col="area", verbose=True)
+    >>> overlay_difference(
+    ...     polygons_gdf, 
+    ...     sort_col="area", 
+    ...     verbose=True
+    ... )
     """
 
     if verbose:
@@ -720,7 +795,7 @@ def point_spatial_join(
     point_gdf: gp.GeoDataFrame,
     join_type: str = "inner",
     polygon_ref_cols: list = [],
-    point_stat_col: str = None,
+    point_stat_col: str | None = None,
     check_polygon_ref_cols: bool = False,
     save_output: bool = True,
     output_filepath_join: str = "shp_points_gdf_join.shp",
@@ -772,8 +847,14 @@ def point_spatial_join(
 
     Examples
     --------
-    >>> point_spatial_join(polygons_gdf, points_gdf, join_type="inner", 
-    ...     polygon_ref_cols=["region"], point_stat_col="value", verbose=True)
+    >>> point_spatial_join(
+    ...     polygons_gdf, 
+    ...     points_gdf, 
+    ...     join_type="inner", 
+    ...     polygon_ref_cols=["region"], 
+    ...     point_stat_col="value", 
+    ...     verbose=True
+    ... )
     """
     
     if polygon_gdf is None:
@@ -926,7 +1007,47 @@ def map_with_basemap(
 
     Examples
     --------
-    >>> fig = map_with_basemap([gdf1, gdf2], zoom=14, styles={0: {"color":"red", "alpha":0.5, "name":"Layer1", "size":10}})
+    >>> map_with_basemap(
+    ...     layers = [
+    ...         Haslach_supermarkets_gdf_iso,
+    ...         Haslach_gdf, 
+    ...         Haslach_supermarkets_gdf
+    ...         ],
+    ...     styles={
+    ...         0: {
+    ...             "name": "Isochrones",
+    ...             "color": {
+    ...                 "segm_min": {
+    ...                     5: "midnightblue", 
+    ...                     10: "blue",
+    ...                     }
+    ...                 },            
+    ...             "alpha": 0.3
+    ...         },
+    ...         1: {
+    ...             "name": "Districts",
+    ...             "color": "black",
+    ...             "alpha": 1,
+    ...             "size": 15,
+    ...         },
+    ...         2: {
+    ...             "name": "Supermarket chains",
+    ...             "color": {
+    ...                 "Name": {
+    ...                     "Aldi Süd": "blue",
+    ...                     "Edeka": "yellow",
+    ...                     "Lidl": "red",
+    ...                     "Netto": "orange",
+    ...                     "Real": "darkblue",
+    ...                     "Treff 3000": "fuchsia"
+    ...                     }
+    ...                 },
+    ...             "alpha": 1,
+    ...             "size": 30
+    ...         }
+    ...     },
+    ...     output_filepath = "Haslach_map.png"
+    ... )
     """
     
     if not isinstance(layers, list):
@@ -1285,7 +1406,7 @@ def point_gpd_from_list(
     input_id: list | None = None,
     input_crs: str = "EPSG:4326",
     output_crs: str = "EPSG:4326",
-    save_shapefile: str = None,
+    save_shapefile: str | None = None,
     verbose: bool = False
     ):
 
@@ -1316,7 +1437,11 @@ def point_gpd_from_list(
     Examples
     --------
     >>> points = [[13.405, 52.52], [2.3522, 48.8566]]
-    >>> gdf = point_gpd_from_list(points, input_id=["Berlin","Paris"], verbose=True)
+    >>> gdf = point_gpd_from_list(
+    ...     points, 
+    ...     input_id=["Berlin","Paris"], 
+    ...     verbose=True
+    ... )
     """
 
     if verbose:

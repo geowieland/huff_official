@@ -5,7 +5,7 @@
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
 # Version:     1.6.1
-# Last update: 2026-02-04 19:00
+# Last update: 2026-02-13 18:37
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -99,9 +99,9 @@ Haslach_supermarkets.isochrones(
     # minutes or kilometers
     range_type = "time",
     # "time" or "distance" (default: "time")
-    profile = "foot-walking",
+    profile = "driving-car",
     save_output=True,
-    ors_auth="5b3ce3597851110001cf62480a15aafdb5a64f4d91805929f8af6abd",
+    ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
     # Authentification token FOR TESTING
     output_filepath="Haslach_supermarkets_iso.shp",
     output_crs="EPSG:31467",
@@ -161,7 +161,7 @@ haslach_interactionmatrix = create_interaction_matrix(
 # Creating interaction matrix
 
 haslach_interactionmatrix.transport_costs(
-    ors_auth="5b3ce3597851110001cf62480a15aafdb5a64f4d91805929f8af6abd",
+    ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
     network=False,
     #distance_unit="meters",
     # set network = True to calculate transport costs matrix via ORS API (default)
@@ -171,9 +171,6 @@ haslach_interactionmatrix.transport_costs(
 
 haslach_interactionmatrix.summary()
 # Summary of interaction matrix
-
-print(haslach_interactionmatrix.hansen())
-# Hansen accessibility for interaction matrix
 
 haslach_interactionmatrix.flows()
 # Calculating spatial flows for interaction matrix
@@ -317,6 +314,8 @@ Wieland2015_interaction_matrix = load_interaction_matrix(
     market_size_col="Sum_Ek1",
     flows_col="Anb_Eink1",
     transport_costs_col="Dist_Min2",
+    transport_costs_metrics="time",
+    transport_costs_time_unit="minutes",
     probabilities_col="MA_Anb1",
     data_type="xlsx"
     )
@@ -390,6 +389,8 @@ Wieland2015_interaction_matrix2 = load_interaction_matrix(
     market_size_col="Sum_Ek",
     flows_col="Anb_Eink",
     transport_costs_col="Dist_Min2",
+    transport_costs_metrics="time",
+    transport_costs_time_unit="minutes",
     probabilities_col="MA_Anb",
     data_type="xlsx",
     xlsx_sheet="interactionmatrix",
@@ -399,25 +400,25 @@ Wieland2015_interaction_matrix2 = load_interaction_matrix(
 
 Wieland2015_interaction_matrix2.define_weightings(
     vars_funcs = {
-            0: {
-                "name": "A_j",
-                "func": "power"
-            },
-            1: {
-                "name": "t_ij",
-                "func": "power",
-                #"func": "exponential"
-                #"func": "logistic"                
-            },
-            2: {
-                "name": "K",
-                "func": "power"
-            },
-            3: {
-                "name": "K_KKr",
-                "func": "power"
-            }
-            }
+        0: {
+            "name": "A_j",
+            "func": "power"
+        },
+        1: {
+            "name": "t_ij",
+            "func": "power",
+            #"func": "exponential"
+            #"func": "logistic"                
+        },
+        2: {
+            "name": "K",
+            "func": "power"
+        },
+        3: {
+            "name": "K_KKr",
+            "func": "power"
+        }
+        }
     )
 # Defining weighting functions
 
@@ -437,9 +438,6 @@ Wieland2015_interaction_matrix2.huff_ml_fit(
 Wieland2015_interaction_matrix2.summary()
 # Summary of interaction matrix
 
-print(Wieland2015_interaction_matrix2.get_metadata()["timestamp"])
-# Show timestamp(s) from metadata
-
 huff_model_fit2 = Wieland2015_interaction_matrix2.marketareas()
 # Calculation of market areas
 
@@ -457,7 +455,7 @@ huff_model_fit2 = huff_model_fit2.ml_fit(
 # from HuffModel object
 
 huff_model_fit2.summary()
-# Summary of Hudd model
+# Summary of Huff model
 
 
 # Loading and including total market areas
