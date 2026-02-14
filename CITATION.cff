@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: Please cite the following works when using this software.
+type: software
+authors:
+  - family-names: Wieland
+    given-names: Thomas
+    orcid: "https://orcid.org/0000-0001-5168-9846"
+doi: 10.5281/zenodo.18639560
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.18639560
+  - type: url
+    value: https://doi.org/10.5281/zenodo.18639560
+title: huff: Market Area Analysis in Python
+url: https://pypi.org/project/huff/
+preferred-citation:
+  authors:
+    - family-names: Wieland
+      given-names: Thomas
+  keywords:
+    - Market area models
+    - Huff model
+    - Multiplicative competitive interaction model
+  title: >-
+    huff: Market Area Analysis in Python
+  date-published: 2026-02-14
+  year: 2026
+  month: 2
+  type: software
+  url: https://pypi.org/project/huff/
+  doi: 10.5281/zenodo.18639560
