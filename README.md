@@ -12,16 +12,16 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 
 ## Availability
 
-- 📦 PyPI: https://pypi.org/project/huff/
-- 💻 GitHub Repository: https://github.com/geowieland/huff_official
-- 📄 DOI (Zenodo): https://doi.org/10.5281/zenodo.18639559
+- 📦 PyPI: [huff](https://pypi.org/project/huff/)
+- 💻 GitHub Repository: [huff_official](https://github.com/geowieland/huff_official)
+- 📄 DOI (Zenodo): [10.5281/zenodo.18639559](https://doi.org/10.5281/zenodo.18639559)
 
 
 ## Citation
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.2) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -202,15 +202,6 @@ See the /tests directory for usage examples of most of the included functions.
   - Wieland T (2018) Competitive locations of grocery stores in the local supply context - The case of the urban district Freiburg-Haslach. *European Journal of Geography* 9(3): 98-115. https://www.eurogeojournal.eu/index.php/egj/article/view/41
 
 
-## What's new (v1.8.1)
-- Bugfixes:
-  - Added 'profile' parameter to models.InteractionMatrix.transport_costs()
-  - Fixed conflict of ORS metadata and instance metadata in ors.Client.matrix()  
-  - Avoid pandas FutureWarning with respect to pandas.concat() operation in ors.Client.matrix()
-  - Saving empirical market shares in any case in models.MCIModel.probabilities()
-  - Correct transport costs type/unit in models.InteractionMatrix.summary()
-  - Corrections in docstrings
-- Other:
-  - Define transport costs metrics and unit in data_management.load_interaction_matrix()
-  - Several standardization and bugfixes within summary outputs
-  - Added huff.tests_accessbility and huff.tests_ors to setup.setup()
+## What's new (v1.8.2)
+- Extensions:
+  - Zeta-squared transformation of variables in an interaction matrix via InteractionMatrix.zeta_squared_transformation()

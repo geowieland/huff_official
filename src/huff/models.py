@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.8.1
-# Last update: 2026-02-13 20:33
+# Version:     1.8.2
+# Last update: 2026-02-16 11:58
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -3447,6 +3447,92 @@ class InteractionMatrix:
             self,
             function="models.InteractionMatrix.mci_transformation",
             process=f"Log-centering transformation of columns: {', '.join(cols)}"
+            )
+
+        if verbose:
+            print("OK")
+            
+        return self
+
+    def zeta_squared_transformation(
+        self,
+        cols: list = None,
+        verbose: bool = config.VERBOSE
+        ):
+
+        """
+        Apply a zeta-squared transformation to selected columns of the interaction
+        matrix.
+
+        This method performs a zeta-squared transformation on the specified metric
+        columns. See Cooper and Nakanishi (1983) for the utility of zeta-squared 
+        transformations. Internally, the method uses the 
+        `models.zeta_squared_transformation()` function.
+
+        Parameters
+        ----------
+        cols : list of str, optional
+            Names of the columns to which the zeta-squared transformation is
+            applied. 
+        verbose : bool, optional
+            If True, print progress information during the calculation.
+
+        Returns
+        -------
+        InteractionMatrix
+            The current instance with the updated interaction matrix.
+
+        Raises
+        ------
+        KeyError
+            If any stated column is not in the interaction matrix DataFrame.
+
+        Example
+        --------
+        >>> Wieland2015_interaction_matrix = load_interaction_matrix(
+        ...     data="data/Wieland2015.xlsx",
+        ...     customer_origins_col="Quellort",
+        ...     supply_locations_col="Zielort",
+        ...     attraction_col=[
+        ...         "VF", 
+        ...         "K", 
+        ...         "K_KKr"
+        ...         ],
+        ...     market_size_col="Sum_Ek1",
+        ...     flows_col="Anb_Eink1",
+        ...     transport_costs_col="Dist_Min2",
+        ...     probabilities_col="MA_Anb1",
+        ...     data_type="xlsx"
+        ... )
+        >>> Wieland2015_interaction_matrix.zeta_squared_transformation(
+        ...     cols = [
+        ...         "K", 
+        ...         "K_KKr",
+        ...     ]
+        ... )
+        """
+
+        if cols is None:
+            cols = []
+        if len(cols) == 0:
+            raise ValueError("Error in zeta-squared transformation: No interaction matrix columns specified for transformation.")
+
+        if verbose:
+            print(f"Processing zeta-squared transformation of columns: {', '.join(cols)}", end = " ... ")
+
+        interaction_matrix_df = self.interaction_matrix_df
+
+        interaction_matrix_df = zeta_squared_transformation(
+            df = interaction_matrix_df,
+            cols = cols
+            )
+        
+        self.interaction_matrix_df = interaction_matrix_df       
+
+        helper.add_timestamp(
+            self,
+            function="models.InteractionMatrix.zeta_squared_transformation",
+            process=f"Zeta-squared transformation of columns: {', '.join(cols)}"
             )
 
         if verbose:
@@ -7067,6 +7153,64 @@ def get_isochrones(
 
     return isochrones_gdf
 
+def zeta_squared_transformation(
+    df: pd.DataFrame,
+    cols: list,
+    suffix: str = config.DEFAULT_ZST_SUFFIX
+    ):
+
+    """
+    Apply a zeta-squared transformation to specified columns.
+
+    The transformation computes log(x) minus the group geometric mean log, which
+    is suitable for multiplicative modelling approaches.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input dataframe containing the columns to transform.
+    cols : list
+        List of column names to transform.
+    suffix : str, optional
+        Suffix appended to column names for the transformed variables
+        (default `config.DEFAULT_ZST_SUFFIX`).
+
+    Returns
+    -------
+    pandas.DataFrame
+        The dataframe extended with new columns named `<col><suffix>`
+        containing the transformed values.
+
+    Example
+    --------
+    >>> df2 = zeta_squared_transformation(df, cols=['item1','item2'])
+    """
+
+    helper.check_vars(
+        df = df,
+        cols = cols
+        )
+    
+    def zst(
+        x, 
+        mean, 
+        std
+        ):
+
+        z = (x-mean)/std
+        if z <= 0:
+            return 1 + z**2
+        else:
+            return 1 / (1 + z**2)
+    
+    for var in cols:
+
+        col_mean = df[var].mean()
+        col_std = df[var].std()
+        df[var + suffix] = df[var].apply(lambda x: zst(x, col_mean, col_std))
+
+    return df
+
 def log_centering_transformation(
     df: pd.DataFrame,
     ref_col: str,
@@ -7076,9 +7220,7 @@ def log_centering_transformation(
    
     """
     Apply a log-centering transformation to specified columns grouped by a reference column.
-
-    The transformation computes log(x) minus the group geometric mean log, which
-    is suitable for multiplicative modelling approaches.
+    See Nakanishi and Cooper (1974) for the original derivation of the log-centering transformation.
 
     Parameters
     ----------
@@ -7106,7 +7248,6 @@ def log_centering_transformation(
     Example
     --------
     >>> df2 = log_centering_transformation(df, ref_col='region', cols=['pop','income'])
-
     """
 
     helper.check_vars(
