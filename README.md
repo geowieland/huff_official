@@ -10,6 +10,35 @@ This Python library is designed for performing market area analyses with the *Hu
 Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geowieland@googlemail.com) 
 
 
+## Availability
+
+- 📦 PyPI: https://pypi.org/project/huff/
+- 💻 GitHub Repository: https://github.com/geowieland/huff_official
+- 📄 DOI (Zenodo): https://doi.org/10.5281/zenodo.18639559
+
+
+## Citation
+
+If you use this software, please cite:
+
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+
+
+## Installation
+
+To install the package from the Python Package Index (PyPI), use `pip`:
+
+```bash
+pip install huff
+```
+
+To install the package from GitHub with `pip`: 
+
+```bash
+pip install git+https://github.com/geowieland/huff_official.git
+```
+
+
 ## Features
 
 - **Data management and preliminary analysis**: 
@@ -49,21 +78,6 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 (1) © openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors | https://openrouteservice.org/
 
 (2) © OpenStreetMap contributors | available under the Open Database License | https://www.openstreetmap.org/
-
-
-## Installation
-
-To install the package from the Python Package Index (PyPI), use `pip`:
-
-```bash
-pip install huff
-```
-
-To install the package from GitHub with `pip`: 
-
-```bash
-pip install git+https://github.com/geowieland/huff_official.git
-```
 
 
 ## Examples
