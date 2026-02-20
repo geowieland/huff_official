@@ -11,7 +11,7 @@ identifiers:
     value: 10.5281/zenodo.18639559
   - type: url
     value: https://doi.org/10.5281/zenodo.18639559
-title: huff: Market Area Analysis in Python
+title: "huff: Market Area Analysis in Python"
 url: https://pypi.org/project/huff/
 preferred-citation:
   authors:
