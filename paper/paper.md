@@ -1,27 +1,21 @@
 ---
-title: 'huff: A Python package for market area analysis'
-tags:
-  - Python
-  - Market area models
-  - Huff model
-  - Multiplicative Competitive Interaction model
-  - GIS
+title: "huff: A Python package for Market Area Analysis"
 author:
-  - name: Thomas Wieland
-    orcid: 0000-0001-5168-9846
-    affiliation: 1
-    email: geowieland@googlemail.com
-affiliations:
-  - name: Freiburg, Germany
-    index: 1
-date: 14 February 2026
+  - |
+    \textbf{Thomas Wieland}  
+    Freiburg, Germany  
+    ORCID: 0000-0001-5168-9846  
+    EMail: geowieland@googlemail.com
 bibliography: paper.bib
+date: 19 February 2026
+version: 1.0.0
 ---
 
 
 **Summary**
 
-Market area models, such as the *Huff model* and its extensions, are widely used to estimate regional market shares and customer flows of retail and service locations. Another, now very common, area of ​​application is the analysis of catchment areas, supply structures and the accessibility of healthcare locations. The `huff` Python package provides a complete workflow for market area analysis, including data import, construction of origin-destination interaction matrices, basic model analysis, parameter estimation from empirical data, calculation of distance or travel time indicators, and map visualization. Additionally, the package provides several methods of spatial accessibility analysis. The package is modular and object-oriented. It is intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. The software has been publicly released on the Python Package Index since April 2025 with multiple versions.
+Market area models, such as the *Huff model* and its extensions, are widely used to estimate regional market shares and customer flows of retail and service locations. Another, now very common, area of ​​application is the analysis of catchment areas, supply structures and the accessibility of healthcare locations. The `huff` Python package provides a complete workflow for market area analysis, including data import, construction of origin-destination interaction matrices, basic model analysis, parameter estimation from empirical data, calculation of distance or travel time indicators, and map visualization. Additionally, the package provides several methods of spatial accessibility analysis. The package is modular and object-oriented. It is intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. The software is openly available via the [Python Package Index (PyPI)](https://pypi.org/project/huff/); its development and version history are managed in a public [GitHub Repository](https://github.com/geowieland/huff_official) and archived at [Zenodo](https://doi.org/10.5281/zenodo.18639559).
+
 
 **Statement of need**
 

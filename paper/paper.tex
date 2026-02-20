@@ -1,0 +1,574 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={huff: A Python package for Market Area Analysis},
+  pdfauthor={ Freiburg, Germany ORCID: 0000-0001-5168-9846 EMail: geowieland@googlemail.com},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{huff: A Python package for Market Area Analysis}
+\author{\textbf{Thomas Wieland}\\
+Freiburg, Germany\\
+ORCID: 0000-0001-5168-9846\\
+EMail: geowieland@googlemail.com}
+\date{19 February 2026}
+
+\begin{document}
+\maketitle
+
+\textbf{Summary}
+
+Market area models, such as the \emph{Huff model} and its extensions,
+are widely used to estimate regional market shares and customer flows of
+retail and service locations. Another, now very common, area of
+\hspace{0pt}\hspace{0pt}application is the analysis of catchment areas,
+supply structures and the accessibility of healthcare locations. The
+\texttt{huff} Python package provides a complete workflow for market
+area analysis, including data import, construction of origin-destination
+interaction matrices, basic model analysis, parameter estimation from
+empirical data, calculation of distance or travel time indicators, and
+map visualization. Additionally, the package provides several methods of
+spatial accessibility analysis. The package is modular and
+object-oriented. It is intended for researchers in economic geography,
+regional economics, spatial planning, marketing, geoinformation science,
+and health geography. The software is openly available via the
+\href{https://pypi.org/project/huff/}{Python Package Index (PyPI)}; its
+development and version history are managed in a public
+\href{https://github.com/geowieland/huff_official}{GitHub Repository}
+and archived at \href{https://doi.org/10.5281/zenodo.18639559}{Zenodo}.
+
+\textbf{Statement of need}
+
+Market area models are used in economic geography, regional economics,
+spatial planning, geoinformation science, and marketing, enabling the
+analysis and forecasting of market areas and customer flows for retail
+and service locations. The classical and most popular approach is the
+\emph{Huff model} (Huff 1962, 1963, 1961) and its numerous derivates and
+extensions, such as the \emph{Multiplicative Competitive Interaction
+(MCI) Model} (Nakanishi and Cooper 1974, 1982). Typical research
+applications include examining the influence of store attributes and
+transport costs on consumer store choice, forecasting the revenue of new
+locations, or predicting the impact of new locations on existing ones
+(De Beule et al. 2014; Fittkau 2004; Li and Liu 2012; Mensing 2018; Oruc
+and Tihi 2012; Suárez-Vega et al. 2015; Wieland 2015, 2019).
+
+In health geography, such models are used to analyse catchment areas
+with respect to medical practices and hospitals (Bai et al. 2023; Fülop
+et al. 2011; Jia 2016; Latruwe et al. 2023; Rhein et al. 2025; Wieland
+2018), and they are also increasingly being linked to methods for
+analyzing the supply structure and accessibility of health locations
+(Liu L 2022; Rauch et al. 2023; Subal J 2021). Moreover, market area
+models are also applied to other location-related contexts such as
+airports or recreation facilities (Wang et al. 2022; Wang et al. 2026).
+
+There are several major challenges in model-based market area analyses:
+
+\begin{itemize}
+\item
+  The calibration of the Huff model based on observed data on consumer
+  behavior and/or store sales is difficult because the model is
+  nonlinear in its weighting parameters (Huff 2003; Wieland 2017). In
+  this context, the MCI model (Nakanishi and Cooper 1974, 1982) has been
+  developed as an econometric estimation technique based on a
+  linearization (\emph{log-centering transformation}). As this approach
+  requires empirical market shares for fitting, it is applied in cases
+  where customer-store interaction data was obtained by surveys or
+  secondary data (Baviera-Puig et al. 2016; Latruwe et al. 2023; Oruc
+  and Tihi 2012; Suárez-Vega et al. 2015; Wieland 2015, 2019). Several
+  other researchers developed and used nonlinear iterative fitting
+  approaches, especially when no empirical customer-store interactions
+  are available, but only total sales of the locations investigated (De
+  Beule et al. 2014; Güßefeldt 2002; GH et al. 1972; Li and Liu 2012;
+  Liang et al. 2020; Mensing 2018; Orpana and Lampinen 2003; Wieland
+  2017). Due to the pronounced sensitivity of market area models to
+  weighting schemes, the availability of multiple calibration approaches
+  is essential in market area analysis.
+\item
+  Researchers must choose and compare appropriate weighting functions,
+  which may be chosen based on theoretical considerations and may result
+  in substantially different results. Nowadays, for input variables such
+  as travel time, several weighting functions (e.g., power, exponential,
+  logistic) are used, and the model results are compared using
+  goodness-to-fit metrics (Bai et al. 2023; Latruwe et al. 2023; Li and
+  Liu 2012; Orpana and Lampinen 2003). It is, thus, necessary that,
+  within the market area analysis workflow, several weighting functions
+  are available, and that there are options to compare different model
+  specifications based on fit metrics.
+\item
+  Calculating travel times may be time consuming because these are based
+  on graph theory network analysis and require real street networks
+  (Huff and McCallum 2008). Therefore, market area analysis typically
+  requires GIS (Geographic Information System) support and/or access to
+  an API providing calculations based on input origins and destinations.
+  It is extremely helpful for researchers if they can also complete this
+  part of the market area analysis workflow within the analysis tool.
+\end{itemize}
+
+The huff package for Python v1.8.x essentially provides the following
+features:
+
+\begin{itemize}
+\item
+  \emph{Data management and preliminary analysis}: Users may load
+  customer origins and supply locations from point shapefiles (or CSV,
+  XLSX). Attributes of customer origins and supply locations (variables,
+  weightings) may be set by the user. The next step is to create an
+  \emph{interaction matrix} with a built-in function, on the basis of
+  which all implemented models can then be calculated. Within an
+  interaction matrix, \emph{transport costs} (distance or travel time
+  between customer origins and supply locations) may be calculated with
+  built-in methods.
+\item
+  \emph{Basic Huff model analysis}: Given an interaction matrix, users
+  may calculate probabilities and expected customer flows with respect
+  to customer origins, and total market areas of supply locations.
+\item
+  \emph{Parameter estimation based on empirical data}: Given empirical
+  data on customer flows, regional market shares, or total sales, users
+  may estimate weighting parameters of market area models. Model
+  parametrization may be undergone using the econometric approach in the
+  \emph{MCI model} (if regional market shares are available) or by
+  Maximum Likelihood optimization using regional market shares, customer
+  flows, or total market areas.
+\item
+  \emph{Accessibility analysis}: The package includes methods of
+  accessibility analysis, which may be combined with market area
+  analysis (especially empirical estimation of weighting parameters),
+  namely \emph{Hansen accessibility} (Hansen 1959) and \emph{Two-step
+  floating catchment area analysis (2SFCA)} (Luo and Wang 2003).
+\item
+  \emph{GIS tools}: The library also includes auxiliary GIS functions
+  for market area analysis (buffer, distance matrix, overlay statistics)
+  and clients for OpenRouteService (Neis and Zipf 2008) and
+  OpenStreetMap (Haklay 2008) for simple maps, with all of them being
+  implemented in the market area analysis functions but are also able to
+  be used stand-alone.
+\end{itemize}
+
+\textbf{State of the field}
+
+To the best of our knowledge, no open-source Python package currently
+provides market area analysis and parameter estimation for the Huff or
+MCI model. No open-source software package currently exists that covers
+the entire workflow of market area analyses, as described in the
+``Statement of need'' section. Some but not all of the functionalities
+mentioned are implemented in R packages: Both the
+\texttt{SpatialPosition} package (Giraud and Commenges 2025) and the
+\texttt{huff-tools} package (Pavlis et al. 2014) provide basic Huff
+Model analyses with two parameters, calculation of air distances, and
+map visualization. The R package \texttt{MCI} (Wieland 2017) focuses on
+model fitting based on empirical data, but does not provide processing
+of geospatial data and the calculation of distances or travel times.
+Accessibility analysis via two-step floating catchment area analysis is
+implemented in the R package \texttt{accessibility} (Pereira and
+Herszenhut 2024). The (almost) complete workflow for market area
+analyses using the Huff/MCI model is currently only implemented in
+proprietary GIS software, namely the \emph{ArcGIS Business Analyst} by
+\emph{ESRI} (Esri 2025; Huff and McCallum 2008).
+
+\textbf{Software Architecture}
+
+The \texttt{huff} package is organized into a modular architecture that
+separates core modeling functionality from auxiliary helper modules. All
+model-related classes, methods and functions are implemented in the
+\texttt{models} module. Supporting functionalities are provided in
+separate modules, organized thematically. For example, the \texttt{ors}
+module provides an OpenRouteService client for retrieving travel time
+matrices and isochrones, which may be directly accessed from the
+\texttt{models} module. This design allows auxiliary functions to be
+used independently of the core models (stand-alone). In order to
+harmonize the data and outputs while processing, the \texttt{config}
+module includes configurations for all functions and definitions of
+default column names, suffixes and prefixes, and model terminology.
+
+The \texttt{huff} library follows an object-oriented design. The class
+structure reflects the conceptual actors of a spatial market: Customer
+demand locations are represented by the \texttt{CustomerOrigins} class
+and supply locations by the \texttt{SupplyLocations} class. Their
+connection is established via an interaction matrix containing all
+possible origin-destination combinations and the corresponding data,
+such as travel times and location attributes. It is created from the
+location data using the built-in function
+\texttt{create\_interaction\_matrix()} from the \texttt{models} module,
+resulting in an instance of the \texttt{InteractionMatrix} class. All
+implemented model analyses may be calculated from an
+\texttt{InteractionMatrix} object, with the individual steps of the
+model calculations being methods of this class, e.g.,
+\texttt{transport\_costs()} for adding distances or travel times,
+\texttt{probabilities()}, \texttt{flows()}, and \texttt{marketareas()}
+for Huff model calculations, or \texttt{mci\_fit()} for a MCI model
+analysis. These model analyses return objects of specific classes for
+each model, e.g., \texttt{HuffModel} and \texttt{MCIModel} for Huff and
+MCI models, respectively. All mentioned classes include
+\texttt{summary()}, \texttt{show\_log()}, and, in relevant cases,
+\texttt{plot()} methods.
+
+This structure was chosen to ensure a consistent workflow and a unified
+data structure, regardless of which model analysis is to be performed.
+The typical workflow for a basic Huff analysis (without empirical
+parameter estimation) consists of the following steps: (1) Load
+geospatial data of customer origins and supply locations, (2) Define
+their attributes and weightings, (3) Create an interaction matrix from
+origins and destinations, including the calculation of distances or
+travel time, (4) Calculate regional market shares, expected customer
+flows, and total market areas of all supply locations (This workflow is
+shown in the \emph{Examples} section of the package README.MD). Advanced
+model analyses (e.g., including empirical calibration) require further
+steps (See the examples folder in the
+\href{http://www.github.com/geowieland/huff_official.git}{corresponding
+GitHub repository}).
+
+\textbf{Research impact statement}
+
+The \texttt{huff} package is currently used in a health geography
+project at the Wuerzburg university hospital which deals with the
+catchment areas of pediatric oncology care; a paper on this topic is
+currently in the review process. Given the rising number of scientific
+studies using market area models - particularly for non-retail purposes
+such as health geography - and the widespread use of Python as a
+programming language, it is to be expected that the \texttt{huff}
+library will see frequent adoption in related research projects.
+
+\textbf{Software development history statement}
+
+Due to data confidentiality requirements, the early development of the
+\texttt{huff} library took place in a private repository; the public
+repository was initialized more recently to provide open access for
+reproducibility and review. The \texttt{huff} Python package has been
+publicly developed and published via the {[}Python Package Index{]}
+(https://pypi.org/project/huff/) since April 2025. As of submission, it
+has undergone 41 releases, showing continuous improvement and feature
+additions. The library is actively used: since its first release
+(version 1.0.0) in April 2025, it has been downloaded approximately
+21,900 times from the Python Package Index (source:
+\href{https://pepy.tech/project/huff}{pepy.tech}, accessed February 14,
+2026).
+
+\textbf{AI usage disclosure}
+
+No AI tools were used for software design, implementation, or
+decision-making. The Continue agent in Microsoft Visual Studio Code
+(with model GPT-5 mini) was used to generate initial docstrings, which
+were subsequently reviewed and adapted by the author. The manuscript
+text was written without the use of AI tools.
+
+\textbf{References}
+
+\protect\phantomsection\label{refs}
+\begin{CSLReferences}{1}{1}
+\bibitem[\citeproctext]{ref-bai2023}
+Bai, Lingyao, Zhuolin Tao, Yang Cheng, Ling Feng, and Shaoshuai Wang.
+2023. {``{Delineating hierarchical obstetric hospital service areas
+using the Huff model based on medical records}.''} \emph{Applied
+Geography} 153: 102903.
+https://doi.org/\url{https://doi.org/10.1016/j.apgeog.2023.102903}.
+
+\bibitem[\citeproctext]{ref-baviera2016}
+Baviera-Puig, Amparo, Juan Buitrago-Vera, and Carmen Escriba-Perez.
+2016. {``{Geomarketing models in supermarket location strategies}.''}
+\emph{Journal of Business Economics and Management} 17 (6): 1205--21.
+https://doi.org/\url{http://dx.doi.org/10.3846/16111699.2015.1113198}.
+
+\bibitem[\citeproctext]{ref-debeule2014}
+De Beule, Matthias, Dirk Van den Poel, and Nico Van de Weghe. 2014.
+{``An Extended Huff-Model for Robustly Benchmarking and Predicting
+Retail Network Performance.''} \emph{Applied Geography} 46: 80--89.
+https://doi.org/\url{https://doi.org/10.1016/j.apgeog.2013.09.026}.
+
+\bibitem[\citeproctext]{ref-esri2025}
+Esri. 2025. \emph{ArcGIS Business Analyst}. Released.
+\url{https://www.esri.com/en-us/arcgis/products/arcgis-business-analyst/overview}.
+
+\bibitem[\citeproctext]{ref-fittkau2004}
+Fittkau, Dirk. 2004. {``{Beeinflussung regionaler Kaufkraftströme durch
+den Autobahnlückenschluß der A 49 Kassel-Gießen - Zur empirischen
+Relevanz der New Economic Geography in wirtschaftsgeographischen
+Fragestellungen}.''} Dissertation, Rheinisch-Westfälische Technische
+Hochschule Aachen.
+https://doi.org/\url{http://dx.doi.org/10.53846/goediss-3024}.
+
+\bibitem[\citeproctext]{ref-fuelop2011}
+Fülop, Gerhard, Pascal Kopetsch, and Christian Schöpe. 2011.
+{``{Catchment areas of medical practices and the role played by
+geographical distance in the patient's choice of doctor}.''} \emph{The
+Annals of Regional Science} 46 (3): 691--706.
+https://doi.org/\url{https://doi.org/10.1007/s00168-009-0347-y}.
+
+\bibitem[\citeproctext]{ref-haines1972}
+GH, Haines Jr, Simon LS, and Alexis M. 1972. {``{Maximum Likelihood
+Estimation of Central-City Food Trading Areas}.''} \emph{Journal of
+Marketing Research} 9: 154--59.
+https://doi.org/\url{https://doi.org/10.2307/3149948}.
+
+\bibitem[\citeproctext]{ref-giraud2025}
+Giraud, Timothée, and Hadrien Commenges. 2025. \emph{SpatialPosition:
+Spatial Position Models}. Released.
+\url{https://doi.org/10.32614/CRAN.package.SpatialPosition}.
+
+\bibitem[\citeproctext]{ref-guessefeldt2002}
+Güßefeldt, Jörg. 2002. {``{Zur Modellierung von räumlichen
+Kaufkraftströmen in unvollkommenen Märkten}.''} \emph{ERDKUNDE} 56 (4):
+351--70. \url{https://doi.org/10.3112/erdkunde.2002.04.02}.
+
+\bibitem[\citeproctext]{ref-haklay2008}
+Haklay, Mordechai. 2008. {``OpenStreetMap: User-Generated Street
+Maps.''} \emph{IEEE Pervasive Computing} 7 (4): 12--18.
+\url{https://doi.org/10.1109/MPRV.2008.80}.
+
+\bibitem[\citeproctext]{ref-hansen1959}
+Hansen, Walter G. 1959. {``{How Accessibility Shapes Land Use}.''}
+\emph{Journal of the American Institute of Planners} 25 (2): 73--76.
+\url{https://doi.org/10.1080/01944365908978307}.
+
+\bibitem[\citeproctext]{ref-huff1964}
+Huff, David L. 1961. {``{Defining and estimating a trading area}.''}
+\emph{Land Economics} 28 (4): 34--38.
+https://doi.org/\url{https://doi.org/10.2307/1249154}.
+
+\bibitem[\citeproctext]{ref-huff1962}
+Huff, David L. 1962. \emph{{Determination of Intra-Urban Retail Trade
+Areas}}. Real Estate Research Program, Graduate Schools of Business
+Administration, University of California.
+
+\bibitem[\citeproctext]{ref-huff1963}
+Huff, David L. 1963. {``{A Probabilistic Analysis of Shopping Center
+Trade Areas}.''} \emph{Land Economics} 39 (1): 81--90.
+https://doi.org/\url{https://doi.org/10.2307/3144521}.
+
+\bibitem[\citeproctext]{ref-huff2003}
+Huff, David L. 2003. {``{Parameter Estimation in the Huff Model}.''}
+\emph{ArcUser} 6: 34--36.
+
+\bibitem[\citeproctext]{ref-huff2008}
+Huff, David L., and Bradley McCallum. 2008. \emph{{Calibrating the Huff
+Model Using ArcGIS Business Analyst}}. ESRI White Paper, September 2008.
+ESRI.
+
+\bibitem[\citeproctext]{ref-jia2016}
+Jia, Peng. 2016. {``Developing a Flow-Based Spatial Algorithm to
+Delineate Hospital Service Areas.''} \emph{Applied Geography} 75:
+137--43.
+https://doi.org/\url{https://doi.org/10.1016/j.apgeog.2016.08.008}.
+
+\bibitem[\citeproctext]{ref-latruwe2023}
+Latruwe, T, M Van der Wee, P Vanleenhove, K Michielsen, S Verbrugge, and
+D Colle. 2023. {``{Improving inpatient and daycare admission estimates
+with gravity models}.''} \emph{Health Services and Outcomes Research
+Methodology} 23 (4): 452--67.
+https://doi.org/\url{https://doi.org/10.1007/s10742-022-00298-4}.
+
+\bibitem[\citeproctext]{ref-li2012}
+Li, Yingru, and Lin Liu. 2012. {``Assessing the Impact of Retail
+Location on Store Performance: A Comparison of Wal-Mart and Kmart Stores
+in Cincinnati.''} \emph{Applied Geography} 32 (2): 591--600.
+https://doi.org/\url{https://doi.org/10.1016/j.apgeog.2011.07.006}.
+
+\bibitem[\citeproctext]{ref-liang2020}
+Liang, Yunlei, Song Gao, Yuxin Cai, Natasha Zhang Foutz, and Lei Wu.
+2020. {``{Calibrating the dynamic Huff model for business analysis using
+location big data}.''} \emph{Transactions in GIS} 24 (3): 681--703.
+https://doi.org/\url{https://doi.org/10.1111/tgis.12624}.
+
+\bibitem[\citeproctext]{ref-liu2022}
+Liu L, Zhao Y, Lyu H. 2022. {``{An Improved Two-Step Floating Catchment
+Area (2SFCA) Method for Measuring Spatial Accessibility to Elderly Care
+Facilities in Xi'an, China}.''} \emph{International Journal of
+Environmental Research and Public Health} 19: 11465.
+https://doi.org/\url{https://doi.org/10.3390/ijerph191811465}.
+
+\bibitem[\citeproctext]{ref-luo2003}
+Luo, Wei, and Fahui Wang. 2003. {``{Measures of Spatial Accessibility to
+Health Care in a GIS Environment: Synthesis and a Case Study in the
+Chicago Region}.''} \emph{Environment and Planning B: Planning and
+Design} 30 (6): 865--84. \url{https://doi.org/10.1068/b29120}.
+
+\bibitem[\citeproctext]{ref-mensing2018}
+Mensing, Matthias. 2018. {``{L}ebensmittel-{O}nlinehandel -
+{A}lternative Zur Zukünftigen {V}ersorgung Der {B}evölkerung Ländlicher
+{R}äume?''} Dissertation, Rheinisch-Westfälische Technische Hochschule
+Aachen. \url{https://doi.org/10.18154/RWTH-2019-02683}.
+
+\bibitem[\citeproctext]{ref-nakanishi1974}
+Nakanishi, Masao, and Lee G. Cooper. 1974. {``{Parameter estimation for
+a Multiplicative Competitive Interaction Model: Least squares
+approach}.''} \emph{Journal of Marketing Research} 11 (3): 303--11.
+https://doi.org/\url{https://doi.org/10.2307/3151146}.
+
+\bibitem[\citeproctext]{ref-nakanishi1982}
+Nakanishi, Masao, and Lee G. Cooper. 1982. {``{Technical Note ---
+Simplified Estimation Procedures for MCI Models}.''} \emph{Marketing
+Science} 1 (3): 314--22.
+https://doi.org/\url{https://doi.org/10.1287/mksc.1.3.314}.
+
+\bibitem[\citeproctext]{ref-neis2008}
+Neis, Pascal, and Alexander Zipf. 2008. {``OpenRouteService.org Is Three
+Times "Open": Combining OpenSource, OpenLS and OpenStreetMap.''}
+\emph{GIS Research UK Conference (GISRUK 2008)}.
+
+\bibitem[\citeproctext]{ref-orpana2003}
+Orpana, Tommi, and Jouko Lampinen. 2003. {``Building Spatial Choice
+Models from Aggregate Data.''} \emph{Journal of Regional Science} 43
+(2): 319--48.
+https://doi.org/\url{https://doi.org/10.1111/1467-9787.00301}.
+
+\bibitem[\citeproctext]{ref-oruc2012}
+Oruc, Nermin, and Boris Tihi. 2012. {``{Competitive Location Assessment
+-- the MCI Approach}.''} \emph{South East European Journal of Economics
+and Business} 7 (2): 35--49.
+\url{https://doi.org/10.2478/v10033-012-0013-7}.
+
+\bibitem[\citeproctext]{ref-pavlis2014}
+Pavlis, Michail, Les Dolega, and Alex Singleton. 2014.
+\emph{Huff-Tools}. Released.
+\url{https://github.com/alexsingleton/Huff-Tools/}.
+
+\bibitem[\citeproctext]{ref-pereira2024}
+Pereira, Rafael H. M., and Daniel Herszenhut. 2024. \emph{Accessibility:
+Transport Accessibility Measures}. Released.
+\url{https://doi.org/10.32614/CRAN.package.accessibility}.
+
+\bibitem[\citeproctext]{ref-rauch2023}
+Rauch, S., S. Stangl, T. Haas, J. Rauh, and P. U. Heuschmann. 2023.
+{``Spatial Inequalities in Preventive Breast Cancer Care: A Comparison
+of Different Accessibility Approaches for Prevention Facilities in
+Bavaria, Germany.''} \emph{Journal of Transport \& Health} 29: 101567.
+https://doi.org/\url{https://doi.org/10.1016/j.jth.2023.101567}.
+
+\bibitem[\citeproctext]{ref-vonrhein2025}
+Rhein, M von, J Hauser, L Haldimann, R Jörg, and O. Gruebner. 2025.
+{``{Imbalanced access to pediatric primary care in Switzerland:
+geographic differences and modeled future challenges}.''} \emph{European
+Journal of Pediatrics} 184: 648.
+https://doi.org/\url{https://doi.org/10.1007/s00431-025-06441-w}.
+
+\bibitem[\citeproctext]{ref-suarezvega2015}
+Suárez-Vega, Rafael, José Luis Gutiérrez-Acuña, and Manuel
+Rodríguez-Díaz. 2015. {``{Locating a supermarket using a locally
+calibrated Huff model}.''} \emph{International Journal of Geographical
+Information Science} 29 (2): 217--33.
+\url{https://doi.org/10.1080/13658816.2014.958154}.
+
+\bibitem[\citeproctext]{ref-subal2021}
+Subal J, Krisp JM, Paal P. 2021. {``{Quantifying spatial accessibility
+of general practitioners by applying a modified huff three-step floating
+catchment area (MH3SFCA) method}.''} \emph{International Journal of
+Health Geographics} 20: 9.
+https://doi.org/\url{https://doi.org/10.1186/s12942-021-00263-3}.
+
+\bibitem[\citeproctext]{ref-wang2022}
+Wang, Huimin, Xiaojian Wei, and Weixuan Ao. 2022. {``{Assessing Park
+Accessibility Based on a Dynamic Huff Two-Step Floating Catchment Area
+Method and Map Service API}.''} \emph{ISPRS International Journal of
+Geo-Information} 11 (7). \url{https://doi.org/10.3390/ijgi11070394}.
+
+\bibitem[\citeproctext]{ref-wang2026}
+Wang, Yao, Liushan Lin, Xiaodong Meng, Meilin Zhu, and Changcheng Kan.
+2026. {``{Measuring airport catchment areas via the Huff gravity model
+calibrated with mobile location data---Evidence from the Yangtze River
+Delta region}.''} \emph{Journal of Transport Geography} 131: 104552.
+https://doi.org/\url{https://doi.org/10.1016/j.jtrangeo.2026.104552}.
+
+\bibitem[\citeproctext]{ref-wieland2015}
+Wieland, Thomas. 2015. \emph{Räumliches Einkaufsverhalten Und
+Standortpolitik Im Einzelhandel Unter Berücksichtigung von
+Agglomerationseffekten - Theoretische Erklärungsansätze,
+Modellanalytische Zugänge Und Eine Empirisch-Ökonometrische
+Marktgebietsanalyse Anhand Eines Fallbeispiels Aus Dem Ländlichen Raum
+Ostwestfalens/Südniedersachsens}. MetaGIS.
+
+\bibitem[\citeproctext]{ref-wieland2017}
+Wieland, Thomas. 2017. {``Market Area Analysis for Retail and Service
+Locations with MCI.''} \emph{The R Journal} 9: 298--323.
+\url{https://doi.org/10.32614/RJ-2017-020}.
+
+\bibitem[\citeproctext]{ref-wieland2018}
+Wieland, Thomas. 2018. {``{Modellgestützte Verfahren und "big (spatial)
+data" in der regionalen Versorgungsforschung II: Räumliche
+Interaktionsmodelle}.''} \emph{Monitor Versorgungsforschung} 11 (3):
+59--64. \url{https://doi.org/10.24945/MVF.03.18.1866-0533.2083}.
+
+\bibitem[\citeproctext]{ref-wieland2019}
+Wieland, Thomas. 2019. {``{Competitive locations of grocery stores in
+the local supply context - The case of the urban district
+Freiburg-Haslach}.''} \emph{European Journal of Geography} 9 (3):
+89--115.
+\url{https://www.eurogeojournal.eu/index.php/egj/article/view/41}.
+
+\end{CSLReferences}
+
+\end{document}

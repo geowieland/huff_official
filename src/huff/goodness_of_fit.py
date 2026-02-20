@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.5
-# Last update: 2026-02-08 12:56
+# Version:     1.0.7
+# Last update: 2026-02-20 18:38
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -90,12 +90,13 @@ def modelfit(
 
     assert observed_no == expected_no, "Error while calculating fit metrics: Observed and expected differ in length"
     
-    if not isinstance(observed, np.number): 
-        if not is_numeric_dtype(observed):
-            raise ValueError("Error while calculating fit metrics: Observed column is not numeric")
-    if not isinstance(expected, np.number):
-        if not is_numeric_dtype(expected):
-            raise ValueError("Error while calculating fit metrics: Expected column is not numeric")
+    observed = np.asarray(observed)
+    expected = np.asarray(expected)
+    
+    if not is_numeric_dtype(observed):
+        raise ValueError("Error while calculating fit metrics: Observed column is not numeric")
+    if not is_numeric_dtype(expected):
+        raise ValueError("Error while calculating fit metrics: Expected column is not numeric")
     
     if remove_nan:
         
@@ -117,6 +118,9 @@ def modelfit(
         
         observed = obs_exp_clean[config.DEFAULT_OBSERVED_COL].to_numpy()
         expected = obs_exp_clean[config.DEFAULT_EXPECTED_COL].to_numpy()
+        
+        observed_no = len(observed)
+        expected_no = len(expected) 
     
     else:
         
@@ -130,10 +134,17 @@ def modelfit(
     residuals_abs = abs(residuals)
  
     if any(observed == 0):
+        
         if verbose:
-            print ("Vector 'observed' contains values equal to zero. No APE/MAPE calculated.")
-        APE = np.full_like(observed, np.nan)
-        MAPE = None
+            print ("NOTE: Vector 'observed' contains values equal to zero. These values are skipped for APE and MAPE calculation.")
+        
+        APE = np.where(observed != 0,
+            abs((observed-expected)/observed)*perc_factor,
+            np.nan
+            )
+        
+        MAPE = np.nanmean(APE)
+        
     else:
         APE = abs(observed-expected)/observed*perc_factor
         MAPE = float(np.mean(APE))
