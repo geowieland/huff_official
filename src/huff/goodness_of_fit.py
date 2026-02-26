@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.7
-# Last update: 2026-02-20 18:38
+# Version:     1.0.8
+# Last update: 2026-02-26 17:20
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -93,16 +93,22 @@ def modelfit(
     observed = np.asarray(observed)
     expected = np.asarray(expected)
     
-    if not is_numeric_dtype(observed):
-        raise ValueError("Error while calculating fit metrics: Observed column is not numeric")
-    if not is_numeric_dtype(expected):
-        raise ValueError("Error while calculating fit metrics: Expected column is not numeric")
+    type_errors = []    
+    if not is_numeric_dtype(observed) or not np.issubdtype(observed.dtype, np.number):        
+        try:
+            observed = observed.astype(float)
+        except (ValueError, TypeError):
+            type_errors.append("Observed vector is not numeric.")
+    if not is_numeric_dtype(expected) or not np.issubdtype(expected.dtype, np.number):
+        try:
+            expected = expected.astype(float)
+        except (ValueError, TypeError):
+            type_errors.append("Expected vector is not numeric.")
+    if len(type_errors) > 0:
+        raise TypeError(f"Error(s) while calculating fit metrics: {' '.join(type_errors)}")
     
     if remove_nan:
         
-        observed = observed.reset_index(drop=True)
-        expected = expected.reset_index(drop=True)
-
         obs_exp = pd.DataFrame(
             {
                 config.DEFAULT_OBSERVED_COL: observed, 
@@ -433,20 +439,39 @@ def modelfit_cat(
 
     observed_no = len(observed)
     expected_no = len(expected)
+    
+    observed = np.asarray(observed)
+    expected = np.asarray(expected)
 
     assert observed_no == expected_no, "Error while calculating fit metrics: Observed and expected differ in length"
     
-    if not isinstance(observed, np.number): 
-        if not is_numeric_dtype(observed):
-            raise ValueError("Error while calculating fit metrics: Observed column is not numeric")
-    if not isinstance(expected, np.number):
-        if not is_numeric_dtype(expected):
-            raise ValueError("Error while calculating fit metrics: Expected column is not numeric")
+    type_errors = []    
+    if not is_numeric_dtype(observed) or not np.issubdtype(observed.dtype, np.number):        
+        try:
+            observed = observed.astype(float)
+        except (ValueError, TypeError):
+            type_errors.append("Observed vector is not numeric.")
+    if not is_numeric_dtype(expected) or not np.issubdtype(expected.dtype, np.number):
+        try:
+            expected = expected.astype(float)
+        except (ValueError, TypeError):
+            type_errors.append("Expected vector is not numeric.")
+    if len(type_errors) > 0:
+        raise TypeError(f"Error(s) while calculating fit metrics: {' '.join(type_errors)}")
+    
+    obs_series = pd.Series(observed)
+    exp_series = pd.Series(expected)
+    obs_unique = set(obs_series.dropna().unique())
+    exp_unique = set(exp_series.dropna().unique())
+    value_warnings = []
+    if obs_unique != {0, 1}:
+        value_warnings.append("Observed vector is not binary.")
+    if exp_unique != {0, 1}:
+        value_warnings.append("Expected vector is not binary.")
+    if len(value_warnings) > 0:
+        print(f"WARNING: {' '.join(value_warnings)}")
     
     if remove_nan:
-        
-        observed = observed.reset_index(drop=True)
-        expected = expected.reset_index(drop=True)
 
         obs_exp = pd.DataFrame(
             {

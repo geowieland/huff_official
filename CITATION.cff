@@ -23,9 +23,7 @@ preferred-citation:
     - Multiplicative competitive interaction model
   title: >-
     huff: Market Area Analysis in Python
-  date-published: 2026-02-14
-  year: 2026
-  month: 2
+  year: 2026  
   type: software
   url: https://pypi.org/project/huff/
   doi: 10.5281/zenodo.18639559

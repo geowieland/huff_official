@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.2
-# Last update: 2026-02-11 20:49
+# Version:     1.5.3
+# Last update: 2026-02-26 17:07
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -458,7 +458,7 @@ class Client:
         save_output: bool = True,
         output_filepath: str = "isochrones.shp",
         output_crs: str = "EPSG:4326",
-        verbose: bool = False
+        verbose: bool = config.VERBOSE
         ):
         
         """

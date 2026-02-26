@@ -23,7 +23,7 @@ A software paper describing the library is available at [arXiv](https://arxiv.or
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.3) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.4) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -207,9 +207,7 @@ For detailed examples, see the /examples folder in the [public GitHub repository
   - Wieland T (2018) Competitive locations of grocery stores in the local supply context - The case of the urban district Freiburg-Haslach. *European Journal of Geography* 9(3): 98-115. https://www.eurogeojournal.eu/index.php/egj/article/view/41
 
 
-## What's new (v1.8.3)
+## What's new (v1.8.4)
 - Bugfixes
-  - Correction in goodness_of_fit.modelfit(): Length of observed and expected vectors is refreshed after removing NaN (if desired by user)
-- Other
-  - goodness_of_fit.modelfit() skips zero values when calculating APE and MAPE instead of returning None
-  - Update of literature in README
+  - Correct type checking and obs/exp conversion in goodness_of_fit.modelfit() and goodness_of_fit.modelfit_cat()
+  - Checking vectors for binary values in goodness_of_fit.modelfit_cat()
