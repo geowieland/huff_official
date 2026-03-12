@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.8.2
-# Last update: 2026-02-16 11:58
+# Version:     1.8.4
+# Last update: 2026-03-12 07:16
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -154,7 +154,7 @@ class CustomerOrigins:
         metadata = self.metadata
 
         print(config.DEFAULT_NAME_CUSTOMER_ORIGINS)
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             "No. locations",
@@ -206,7 +206,7 @@ class CustomerOrigins:
             "YES" if self.buffers_gdf is not None else "NO"
         )
 
-        print("--------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         return metadata
     
@@ -222,7 +222,7 @@ class CustomerOrigins:
     def define_marketsize(
         self,
         marketsize_col: str,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -233,7 +233,7 @@ class CustomerOrigins:
         marketsize_col : str
             Name of the column representing market size.
         verbose : bool, optional
-            If True, print status messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -277,7 +277,7 @@ class CustomerOrigins:
         self,
         func = "power",
         param_lambda = -2,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
         
         """
@@ -300,8 +300,8 @@ class CustomerOrigins:
             of parameters depend on `func`:
             - For "power": a single float (exponent).
             - For "logistic": a list of two floats [k, x0] (steepness and midpoint).
-        verbose : bool, default=config.VERBOSE
-            If True, prints detailed messages about the steps performed in the function.
+        verbose : bool, optional
+            If True, print informational messages during processing.
             
         Returns
         -------
@@ -370,7 +370,7 @@ class CustomerOrigins:
         save_output: bool = True,
         output_filepath: str = "customer_origins_isochrones.shp",
         output_crs: str = "EPSG:4326",
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
         
         """
@@ -413,10 +413,8 @@ class CustomerOrigins:
             File path to save the shapefile if `save_output` is True.
         output_crs : str, default="EPSG:4326"
             Coordinate reference system for the output geometries.
-        verbose : bool, default=config.VERBOSE
-            If True, prints detailed messages about the steps performed while 
-            retrieving and processing the isochrones, including API requests 
-            and file saving.
+        verbose : bool, optional
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -505,7 +503,7 @@ class CustomerOrigins:
         save_output: bool = True,
         output_filepath: str = "customer_origins_buffers.shp",
         output_crs: str = "EPSG:4326",
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -524,7 +522,7 @@ class CustomerOrigins:
         output_crs : str, optional
             Coordinate reference system for output (default: "EPSG:4326").
         verbose : bool, optional
-            If True, print status messages (default taken from config.VERBOSE).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -608,7 +606,7 @@ class CustomerOrigins:
         map_title : str, optional
             Title of the map (default: "Map of customer origins with OSM basemap").
         verbose : bool, optional
-            If True, print progress messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -837,7 +835,7 @@ class SupplyLocations:
         metadata = self.metadata
 
         print(config.DEFAULT_NAME_SUPPLY_LOCATIONS)        
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             "No. locations",
@@ -912,7 +910,7 @@ class SupplyLocations:
             "YES" if self.buffers_gdf is not None else "NO"
         )
 
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         return metadata
 
@@ -928,7 +926,7 @@ class SupplyLocations:
     def define_attraction(
         self,
         attraction_col: str,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -940,7 +938,7 @@ class SupplyLocations:
         attraction_col : str
             Name of the column to be used as the attraction variable.
         verbose : bool, optional
-            If True, prints status messages (default is config.VERBOSE).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -1163,6 +1161,7 @@ class SupplyLocations:
                     raise KeyError(f"No 'new_value' key in new data entry {key}")
 
                 geodata_gpd_original.loc[geodata_gpd_original[unique_id].astype(str) == str(entry["location"]), entry["attraction_col"]] = entry["new_value"]
+                geodata_gpd_original.loc[geodata_gpd_original[unique_id].astype(str) == str(entry["location"]), "j_update"] = 1
 
         self.geodata_gpd_original = geodata_gpd_original
         
@@ -1277,7 +1276,7 @@ class SupplyLocations:
         save_output: bool = True,
         output_filepath: str = "supply_locations_isochrones.shp",
         output_crs: str = "EPSG:4326",
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -1320,10 +1319,8 @@ class SupplyLocations:
             File path to save the shapefile if `save_output` is True.
         output_crs : str, default="EPSG:4326"
             Coordinate reference system for the output geometries.
-        verbose : bool, default=config.VERBOSE
-            If True, prints detailed messages about the steps performed while 
-            retrieving and processing the isochrones, including API requests 
-            and file saving.
+        verbose : bool, optional
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -1433,7 +1430,7 @@ class SupplyLocations:
         output_crs : str, optional
             Coordinate reference system for output (default: "EPSG:4326").
         verbose : bool, optional
-            If True, print status messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -1516,7 +1513,7 @@ class SupplyLocations:
         map_title : str, optional
             Title of the map (default: "Map of customer origins with OSM basemap").
         verbose : bool, optional
-            If True, print progress messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -1762,7 +1759,7 @@ class InteractionMatrix:
         interaction_matrix_metadata = self.get_metadata()
 
         print(config.DEFAULT_NAME_INTERACTION_MATRIX)
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
                 
         helper.print_summary_row(
             config.DEFAULT_NAME_SUPPLY_LOCATIONS,
@@ -1784,7 +1781,7 @@ class InteractionMatrix:
             attrac_cols
         )
 
-        print("--------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             config.DEFAULT_NAME_CUSTOMER_ORIGINS,
@@ -1800,7 +1797,7 @@ class InteractionMatrix:
 
         helper.print_weightings(self)
 
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         return [
             customer_origins_metadata,
@@ -1832,7 +1829,7 @@ class InteractionMatrix:
         shp_save_output: bool = False,
         shp_output_filepath: str = "lines.shp",
         shp_output_crs: str = "EPSG:4326",
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -1879,7 +1876,7 @@ class InteractionMatrix:
         shp_output_crs : str, optional
             CRS for shapefile output.
         verbose : bool, optional
-            If True, print progress messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -2056,7 +2053,7 @@ class InteractionMatrix:
     def set_attraction_constant(
         self,
         constant_value: int = 1,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -2068,7 +2065,7 @@ class InteractionMatrix:
         constant_value : int
             Integer value of constant attraction (default: 1).
         verbose : bool, optional
-            If True, print progress messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -2278,7 +2275,7 @@ class InteractionMatrix:
     def utility(
         self,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -2295,7 +2292,7 @@ class InteractionMatrix:
             If True, the relevant variables (attraction and transport costs) are checked
             whether they are numeric, strictly positive (non-zero), and non-constant.
         verbose : bool, optional
-            If True, print progress messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -2448,7 +2445,7 @@ class InteractionMatrix:
     def probabilities(
         self,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE        
+        verbose: bool = False        
         ):
 
         """
@@ -2467,7 +2464,7 @@ class InteractionMatrix:
             If True, the relevant variables (attraction and transport costs) are checked
             whether they are numeric, strictly positive (non-zero), and non-constant.
         verbose : bool, optional
-            If True, print progress messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -2555,7 +2552,7 @@ class InteractionMatrix:
     def flows(
         self,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -2572,7 +2569,7 @@ class InteractionMatrix:
             If True, the relevant variables (attraction and transport costs) are checked
             whether they are numeric, strictly positive (non-zero), and non-constant.
         verbose : bool, optional
-            If True, print progress messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -2657,7 +2654,7 @@ class InteractionMatrix:
     def marketareas(
         self,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -2671,7 +2668,7 @@ class InteractionMatrix:
             If True, the relevant variables (attraction and transport costs) are checked
             whether they are numeric, strictly positive (non-zero), and non-constant.
         verbose : bool, optional
-            If True, print progress messages (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -2757,7 +2754,7 @@ class InteractionMatrix:
         from_origins: bool = True,
         exclude_self: bool = True,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -2781,8 +2778,8 @@ class InteractionMatrix:
         check_df_vars : bool, default=True
             If True, validate required variables in the interaction matrix before
             computing utilities.
-        verbose : bool, default=False
-            If True, print progress information during the calculation.
+        verbose : bool, optional
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -2908,7 +2905,7 @@ class InteractionMatrix:
         use_weightings: bool = True,
         demand_factor: int = 1,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -2941,8 +2938,8 @@ class InteractionMatrix:
         check_df_vars : bool, default=True
             If True, validate the presence of required variables in the interaction
             matrix before calculation.
-        verbose : bool, default=False
-            If True, print progress information during the calculation.
+        verbose : bool, optional
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -3184,7 +3181,7 @@ class InteractionMatrix:
         use_weightings: bool = True,
         demand_factor: int = 1,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -3217,8 +3214,8 @@ class InteractionMatrix:
         check_df_vars : bool, default=True
             If True, validate the presence of required variables in the interaction
             matrix before calculation.
-        verbose : bool, default=False
-            If True, print progress information during the calculation.
+        verbose : bool, optional
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -3370,7 +3367,7 @@ class InteractionMatrix:
     def mci_transformation(
         self,
         cols: list = [config.DEFAULT_COLNAME_ATTRAC, config.DEFAULT_COLNAME_TC],
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -3389,7 +3386,7 @@ class InteractionMatrix:
             applied. By default, the attractiveness and transport cost columns
             defined in the configuration are used.
         verbose : bool, optional
-            If True, print progress information during the calculation.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -3457,7 +3454,7 @@ class InteractionMatrix:
     def zeta_squared_transformation(
         self,
         cols: list = None,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -3475,7 +3472,7 @@ class InteractionMatrix:
             Names of the columns to which the zeta-squared transformation is
             applied. 
         verbose : bool, optional
-            If True, print progress information during the calculation.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -3544,7 +3541,7 @@ class InteractionMatrix:
         self,
         cols: list = None,
         alpha = 0.05,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -3567,7 +3564,7 @@ class InteractionMatrix:
             Significance level used to compute confidence intervals for the
             estimated coefficients.
         verbose : bool, optional
-            If True, print progress information during the estimation.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -3910,7 +3907,7 @@ class InteractionMatrix:
         fit_by = "probabilities",
         update_estimates: bool = True,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -3951,8 +3948,7 @@ class InteractionMatrix:
             If True, checks for the presence and consistency of required DataFrame
             variables during likelihood evaluation.
         verbose : bool, optional
-            If True, prints progress messages and optimization status to the
-            console.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -4209,11 +4205,11 @@ class InteractionMatrix:
             print("OK")
         
         return self
-
+    
     def change_attraction_values(
         self,
         new_attraction_values: dict,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -4233,7 +4229,7 @@ class InteractionMatrix:
             specifying the supply location identifier, the attraction column to be
             modified, and the new attraction value, respectively.
         verbose : bool, optional
-            If True, prints a summary of the performed updates to the console.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -4294,7 +4290,7 @@ class InteractionMatrix:
 
     def update(
         self,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -4308,7 +4304,7 @@ class InteractionMatrix:
         Parameters
         ----------
         verbose : bool, optional
-            If True, print progress messages (default: config.VERBOSE).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -4476,7 +4472,7 @@ class InteractionMatrix:
         map_title : str, optional
             Title for the map output.
         verbose : bool, optional
-            If True, print progress messages.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -4721,8 +4717,9 @@ class MarketAreas:
         self,
         model_object,
         output_model = "Huff",
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
+        
         """
         Attach market areas to a Huff or MCI model.
         
@@ -4735,8 +4732,8 @@ class MarketAreas:
             The model or interaction matrix to which market areas are to be added.
         output_model : {"Huff", "MCI"}, default="Huff"
             Type of model to return when input is an InteractionMatrix.
-        verbose : bool, default=True
-            If True, print progress information.
+        verbose : bool, optional
+            If True, print informational messages during processing.
         
         Returns
         -------
@@ -4770,6 +4767,11 @@ class MarketAreas:
             model_object_type = config.MODELS["MCI"]["description"]
             
             metadata = model_object.metadata
+            
+            if "total_col" in self.metadata:
+                metadata["total_col"] = self.metadata["total_col"]
+                if verbose:
+                    print(f"NOTE: Market areas total column '{self.metadata['total_col']}' was added to model metadata")
 
             model = MCIModel(
                 interaction_matrix = model_object.interaction_matrix,
@@ -4784,6 +4786,11 @@ class MarketAreas:
             model_object_type = config.MODELS["Huff"]["description"]
             
             metadata = model_object.metadata
+            
+            if "total_col" in self.metadata:
+                metadata["total_col"] = self.metadata["total_col"]
+                if verbose:
+                    print(f"NOTE: Market areas total column '{self.metadata['total_col']}' was added to model metadata")
             
             model = HuffModel(
                 interaction_matrix = model_object.interaction_matrix,
@@ -4801,6 +4808,11 @@ class MarketAreas:
             if output_model == config.MODELS_LIST[0]:
 
                 metadata = {}
+                
+                if "total_col" in self.metadata:
+                    metadata["total_col"] = self.metadata["total_col"]
+                    if verbose:
+                        print(f"NOTE: Market areas total column '{self.metadata['total_col']}' was added to model metadata")
 
                 model = HuffModel(
                     interaction_matrix=model_object,
@@ -4811,6 +4823,9 @@ class MarketAreas:
             if output_model == config.MODELS_LIST[1]:
 
                 metadata = {}
+                
+                if "total_col" in self.metadata:
+                    metadata["total_col"] = self.metadata["total_col"]
                 
                 model = MCIModel(
                     interaction_matrix=model_object,
@@ -4923,6 +4938,7 @@ class HuffModel:
         return self.market_areas_df
         
     def summary(self):
+        
         """
         Print a concise summary of the Huff model and return related metadata.
 
@@ -4948,7 +4964,7 @@ class HuffModel:
         interaction_matrix_metadata = interaction_matrix.get_metadata()
 
         print(config.MODELS["Huff"]["description"])        
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             config.DEFAULT_NAME_SUPPLY_LOCATIONS,
@@ -4978,7 +4994,7 @@ class HuffModel:
 
         if interaction_matrix_metadata != {} and "fit" in interaction_matrix_metadata and interaction_matrix_metadata["fit"]["function"] is not None:
 
-            print("--------------------------------------")
+            print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
             print("Parameter estimation")
 
@@ -5001,7 +5017,7 @@ class HuffModel:
                     interaction_matrix_metadata['fit']['method']
                     )
 
-            print("--------------------------------------")            
+            print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)            
 
             if "fit" in interaction_matrix_metadata:
                 huff_modelfit = self.modelfit(by = interaction_matrix_metadata["fit"]["fit_by"])
@@ -5012,7 +5028,7 @@ class HuffModel:
 
                 helper.print_modelfit(huff_modelfit)
                 
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         return [
             customer_origins_metadata,
@@ -5109,7 +5125,7 @@ class HuffModel:
         self,
         cols: list = None,
         alpha = 0.05,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
         
         """
@@ -5129,7 +5145,7 @@ class HuffModel:
         alpha : float, optional
             Significance level for confidence intervals (default: 0.05).
         verbose : bool, optional
-            If True, print progress messages.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -5396,8 +5412,9 @@ class HuffModel:
         update_estimates: bool = True,
         check_numbers: bool = True,
         check_df_vars: bool = True,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
+
         """
         Fit model parameters for the Huff model.
 
@@ -5425,7 +5442,7 @@ class HuffModel:
         check_df_vars : bool, optional
             If True, check required DataFrame variables during fitting.
         verbose : bool, optional
-            If True, print progress messages.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -5645,7 +5662,7 @@ class HuffModel:
 
             raise ValueError("Error in ml_fit: Parameter 'fit_by' must be 'probabilities', 'flows' or 'totals'")
 
-        return self      
+        return self
     
     def confint(
         self,
@@ -5768,6 +5785,301 @@ class HuffModel:
         
         return self
     
+    def optimize_attraction(
+        self,
+        tolerance: float = 0.05,
+        iterations: int = 5,
+        start_with: str = "max",
+        check_numbers: bool = True,
+        verbose: bool = False
+        ):        
+
+        """
+        Fit Huff model by local optimization of attraction variable.
+
+        See Wieland (2017) for a description of the optimization algorithm.
+
+        Parameters
+        ----------
+        tolerance : float, optional
+            Absolute percentage error for the individual location to be accepted.
+        iterations : int, optional
+            Number of iterations.
+        start_with : {"min", "max"}, optional
+            Start optimization mit highest ("max") or lowest ("min") attraction value.
+        check_numbers : bool, optional
+            If True, validate numeric totals when fitting by "totals".
+        verbose : bool, optional
+            If True, print informational messages during processing.
+
+        Returns
+        -------
+        HuffModel
+            The current HuffModel instance with attraction values.
+            Note: The method overwrites attraction definition and weightings.
+
+        Raises
+        ------
+        KeyError
+            If HuffModel object does not contain supply locations.
+        KeyError
+            If supply locations do not contain metadata.
+        KeyError
+            If HuffModel object does not contain total market areas.
+        KeyError
+            If HuffModel market areas do not contain total market area values.
+        
+        Example
+        --------
+        >>> Wieland2015_interaction_matrix3 = load_interaction_matrix(
+        ...     data="data/Wieland2015.xlsx",
+        ...     customer_origins_col="Quellort",
+        ...     supply_locations_col="Zielort",
+        ...     attraction_col=["VF"],
+        ...     market_size_col="Sum_Ek",
+        ...     flows_col="Anb_Eink",
+        ...     transport_costs_col="Dist_Min2",
+        ...     transport_costs_metrics="time",
+        ...     transport_costs_time_unit="minutes",
+        ...     probabilities_col="MA_Anb",
+        ...     data_type="xlsx",
+        ...     xlsx_sheet="interactionmatrix",
+        ...     check_df_vars=False
+        ... )
+        >>> Wieland2015_interaction_matrix3.define_weightings(
+        ...     vars_funcs = {
+        ...         0: {
+        ...             "name": "A_j",
+        ...             "func": "power",
+        ...             "param": 0.9
+        ...         },
+        ...         1: {
+        ...             "name": "t_ij",
+        ...             "func": "power",
+        ...             "param": -1.9
+        ...         },
+        ...     }
+        ... )
+        >>> huff_model3 = Wieland2015_interaction_matrix3.marketareas()
+        >>> wieland2015_totalmarketareas = load_marketareas(
+        ...     data="data/Wieland2015.xlsx",
+        ...     supply_locations_col="Zielort",
+        ...     total_col="Anb_Eink",
+        ...     data_type="xlsx",
+        ...     xlsx_sheet="total_marketareas"
+        ... )
+        >>> huff_model3 = wieland2015_totalmarketareas.add_to_model(huff_model3)
+        >>> huff_model3.optimize_attraction(
+        ...     verbose=True, 
+        ...     iterations=10
+        ... )
+        >>> huff_model3.summary()
+        """
+
+        supply_locations = self.interaction_matrix.supply_locations
+        if supply_locations is None:
+            raise KeyError("HuffModel object does not contain supply locations")        
+        if getattr(supply_locations, "metadata", None) is None:
+            raise KeyError("Supply locations in HuffModel object lack metadata")
+                
+        if self.market_areas_df is None:
+            raise KeyError("HuffModel object does not contain total market areas")
+            
+        market_areas_df = self.market_areas_df.copy()
+        
+        if check_numbers:
+                
+            interaction_matrix_df = self.get_interaction_matrix_df()
+            T_j_market_areas_df = sum(market_areas_df[config.DEFAULT_COLNAME_TOTAL_MARKETAREA])
+            T_j_interaction_matrix_df = sum(interaction_matrix_df[config.DEFAULT_COLNAME_FLOWS])
+            
+            if T_j_market_areas_df != T_j_interaction_matrix_df:
+                print(f"WARNING: Sum of total market areas ({int(T_j_market_areas_df)}) is not equal to sum of customer flows ({int(T_j_interaction_matrix_df)})")
+        
+        if verbose:
+            print(f"NOTE: Total market areas in column '{config.DEFAULT_COLNAME_TOTAL_MARKETAREA}' are treated as empirical total values for optimization of attraction variable.")
+
+        if config.DEFAULT_COLNAME_TOTAL_MARKETAREA not in market_areas_df.columns:
+            raise KeyError("Market areas data in HuffModel object do not contain total market area values")
+        
+        if verbose:
+            print("Extracting and re-arranging supply locations data", end = " ... ")       
+        
+        supply_locations_metadata = supply_locations.get_metadata()
+        
+        attraction_col = supply_locations_metadata["attraction_col"]
+        unique_id = supply_locations_metadata["unique_id"]
+        
+        supply_locations_geodata_gpd_original = supply_locations.get_geodata_gpd_original()       
+        
+        attraction_col_first = attraction_col[0]        
+        
+        supply_locations_attraction_totals = pd.merge(
+            supply_locations_geodata_gpd_original[[unique_id, attraction_col_first]],
+            market_areas_df[[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS, config.DEFAULT_COLNAME_TOTAL_MARKETAREA]],
+            how = "inner",
+            left_on = unique_id,
+            right_on = config.DEFAULT_COLNAME_SUPPLY_LOCATIONS
+            )
+        
+        supply_locations_attraction_totals = supply_locations_attraction_totals.dropna(subset = config.DEFAULT_COLNAME_TOTAL_MARKETAREA)        
+        supply_locations_attraction_totals = supply_locations_attraction_totals.rename(columns={config.DEFAULT_COLNAME_TOTAL_MARKETAREA: config.DEFAULT_COLNAME_TOTAL_MARKETAREA_OBSERVED})
+        
+        if start_with == "min":
+            
+            supply_locations_attraction_totals = supply_locations_attraction_totals.sort_values(
+                by = attraction_col_first, 
+                ascending=True
+                )           
+                
+        else:
+            
+            supply_locations_attraction_totals = supply_locations_attraction_totals.sort_values(
+                by = attraction_col_first, 
+                ascending=False
+                )                            
+        
+        if verbose:
+            
+            print("OK")
+            
+            if start_with == "min":
+                print("NOTE: Local optimization of attraction values starts with supply location with lowest attraction value")
+            else:
+                print("NOTE: Local optimization of attraction values starts with supply location with highest attraction value")                
+            
+            print(f"NOTE: There are {len(supply_locations_attraction_totals)} supply locations with valid unique identifiers and total market areas.")
+        
+        if len(attraction_col) > 1:
+            
+            if verbose:
+                print(f"NOTE: There are {len(attraction_col)} attraction variables the HuffModel object. Only the first one '{attraction_col_first}' is used and all others will be deleted.")
+            
+            self.interaction_matrix.supply_locations.metadata["attraction_col"] = [attraction_col_first]
+            
+            helper.add_timestamp(
+                self.interaction_matrix.supply_locations,
+                function="optimize_attraction",
+                process=f"Reset of attraction variable to '{attraction_col_first}'"
+                )
+            
+        else:
+            if verbose:
+                print(f"NOTE: Attraction variable '{attraction_col_first}' is used for optimization of attraction.")
+        
+        if verbose:
+            print(f"Weighting function and parameter for attraction variable '{attraction_col_first}' of supply locations are reset", end = " ... ")
+            
+            self.interaction_matrix.supply_locations.metadata["weighting"] = {
+                0: {
+                    "name": attraction_col_first,
+                    "func": "power", 
+                    "param": 1
+                    }
+                }
+            
+            helper.add_timestamp(
+                self.interaction_matrix.supply_locations,
+                function="optimize_attraction",
+                process=f"Reset of weighting function and parameter for attraction variable '{attraction_col_first}' to power function with gamma = 1"
+                )
+            
+        if verbose:
+            print("OK")
+            print("Updating interaction matrix and market areas with new attraction variable and weighting", end = " ... ")        
+            
+        self.interaction_matrix = self.interaction_matrix.utility(verbose=False)
+        self.interaction_matrix = self.interaction_matrix.probabilities(verbose=False)
+        self.interaction_matrix = self.interaction_matrix.flows(verbose=False)        
+        
+        huff_result = self.interaction_matrix.marketareas(verbose=False)
+        self.market_areas_df = huff_result.market_areas_df
+        
+        market_areas_df = self.market_areas_df.copy()
+        
+        market_areas_df = market_areas_df.merge(
+            supply_locations_attraction_totals,
+            how = "inner",
+            left_on = config.DEFAULT_COLNAME_SUPPLY_LOCATIONS,
+            right_on = config.DEFAULT_COLNAME_SUPPLY_LOCATIONS
+            )        
+                
+        if verbose:
+            print("OK")
+            print(f"Performing {iterations} iterations of local optimization of attraction", end = " ... ")            
+        
+        for i in range(1, iterations + 1):        
+        
+            for i, row in market_areas_df.iterrows():            
+                
+                j_deviation = abs(row[config.DEFAULT_COLNAME_TOTAL_MARKETAREA]-row[config.DEFAULT_COLNAME_TOTAL_MARKETAREA_OBSERVED])/row[config.DEFAULT_COLNAME_TOTAL_MARKETAREA_OBSERVED]
+                
+                if j_deviation <= tolerance:
+                    
+                    continue
+                
+                else:                
+                    
+                    b_j = row[attraction_col_first]/row[config.DEFAULT_COLNAME_TOTAL_MARKETAREA]
+                    A_j_adj = b_j*row[config.DEFAULT_COLNAME_TOTAL_MARKETAREA_OBSERVED]
+                    
+                    self.interaction_matrix.supply_locations = self.interaction_matrix.supply_locations.change_attraction_values(
+                        new_attraction_values = {
+                            0: {
+                                "location": row[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS],
+                                "attraction_col": attraction_col_first,
+                                "new_value": int(A_j_adj)
+                            }
+                        }
+                    )
+
+                    self.interaction_matrix.interaction_matrix_df.loc[self.interaction_matrix.interaction_matrix_df[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS] == row[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS], config.DEFAULT_COLNAME_ATTRAC] = int(A_j_adj)
+
+                    self.interaction_matrix = self.interaction_matrix.utility(verbose=False)
+                    self.interaction_matrix = self.interaction_matrix.probabilities(verbose=False)
+                    self.interaction_matrix = self.interaction_matrix.flows(verbose=False)        
+                                      
+                    huff_result_new = self.interaction_matrix.marketareas(verbose=False)
+                    self.market_areas_df =  huff_result_new.market_areas_df
+                    
+                    market_areas_df.loc[market_areas_df[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS] == row[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS], config.DEFAULT_COLNAME_TOTAL_MARKETAREA] = huff_result_new.market_areas_df.loc[huff_result_new.market_areas_df[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS] == row[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS], config.DEFAULT_COLNAME_TOTAL_MARKETAREA].values[0]
+                
+        if verbose:
+            print("OK")
+            print("Collecting model fit information", end = " ... ")
+            
+        self.market_areas_df = self.market_areas_df.merge(
+            supply_locations_attraction_totals[[config.DEFAULT_COLNAME_SUPPLY_LOCATIONS, config.DEFAULT_COLNAME_TOTAL_MARKETAREA_OBSERVED]],
+            how = "inner",
+            left_on = config.DEFAULT_COLNAME_SUPPLY_LOCATIONS,
+            right_on = config.DEFAULT_COLNAME_SUPPLY_LOCATIONS
+        )
+        
+        self.interaction_matrix.metadata["fit"] = {
+            "function": "optimize_attraction",
+            "fit_by": "totals",
+            "tolerance": tolerance,
+            "iterations": iterations,
+            "start_with": start_with
+            } 
+
+        helper.add_timestamp(
+            self.interaction_matrix,
+            function="models.HuffModel.optimize_attraction",
+            process="Update of interaction matrix with locally optimized attraction variable"
+            )
+        
+        helper.add_timestamp(
+            self,
+            function="models.HuffModel.optimize_attraction",
+            process="Update of interaction matrix and total market areas with locally optimized attraction variable"
+            )
+        
+        if verbose:
+            print("OK")            
+        
+        return self
+        
     def modelfit(
         self,
         by = "probabilities"
@@ -6031,7 +6343,7 @@ class MCIModel:
         interaction_matrix_metadata = interaction_matrix.get_metadata()
 
         print(config.MODELS["MCI"]["description"])
-        print("============================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             config.DEFAULT_NAME_SUPPLY_LOCATIONS,
@@ -6044,7 +6356,7 @@ class MCIModel:
 
         helper.print_interaction_matrix_info(interaction_matrix)
         
-        print("--------------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
         
         print("Weighting estimates")
  
@@ -6078,13 +6390,13 @@ class MCIModel:
 
         if mci_modelfit is not None:
 
-            print("--------------------------------------------")
+            print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
             
             print ("Goodness-of-fit for probabilities")
 
             helper.print_modelfit(mci_modelfit)            
 
-        print("============================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         return [
             customer_origins_metadata,
@@ -6251,7 +6563,7 @@ class MCIModel:
     def probabilities (
         self,
         transformation = config.DEFAULT_MCI_TRANSFORMATION,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
         """
         Calculate probabilities for the MCI model based on computed utilities.
@@ -6261,7 +6573,7 @@ class MCIModel:
         transformation : str, optional
             Transformation used when computing utilities (passed to `utility`).
         verbose : bool, optional
-            If True, print informational messages.
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -6498,7 +6810,7 @@ class HansenAccessibility:
         metadata = self.metadata
 
         print(config.MODELS["Hansen"]["description"])
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             config.DEFAULT_NAME_SUPPLY_LOCATIONS,
@@ -6523,7 +6835,7 @@ class HansenAccessibility:
             attrac_cols
         )
 
-        print("--------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             config.DEFAULT_NAME_CUSTOMER_ORIGINS,
@@ -6539,7 +6851,7 @@ class HansenAccessibility:
 
         helper.print_weightings(interaction_matrix)
 
-        print("--------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
         
         if metadata["calculation"]["from_origins"]:
 
@@ -6555,7 +6867,7 @@ class HansenAccessibility:
                 config.DEFAULT_NAME_SUPPLY_LOCATIONS
                 )
             
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         return [
             customer_origins_metadata,
@@ -6642,7 +6954,7 @@ class FloatingCatchment:
         metadata = self.metadata
 
         print(config.MODELS["2SFCA"]["description"])
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
  
         helper.print_summary_row(
             config.DEFAULT_NAME_SUPPLY_LOCATIONS,
@@ -6667,7 +6979,7 @@ class FloatingCatchment:
             attrac_cols
         )
 
-        print("--------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             config.DEFAULT_NAME_CUSTOMER_ORIGINS,
@@ -6689,14 +7001,14 @@ class FloatingCatchment:
             
             print("Calculation without weightings")
 
-        print("--------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         helper.print_summary_row(
             "Threshold",
             metadata['calculation']['threshold']
         )
         
-        print("======================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         return [
             customer_origins_metadata,
@@ -6739,7 +7051,7 @@ def create_interaction_matrix(
         If True drop duplicate locations based on the provided unique id
         columns (default True).
     verbose : bool, optional
-        If True, print progress messages (default False).
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -7006,7 +7318,7 @@ def get_isochrones(
     save_output: bool = True,
     output_filepath: str = "isochrones.shp",
     output_crs: str = "EPSG:4326",
-    verbose: bool = config.VERBOSE
+    verbose: bool = False
     ):
 
     """
@@ -7047,7 +7359,7 @@ def get_isochrones(
         Coordinate reference system of the returned GeoDataFrame
         (default 'EPSG:4326').
     verbose : bool, optional
-        If True, print progress messages.
+            If True, print informational messages during processing.
 
     Returns
     -------
@@ -7063,7 +7375,6 @@ def get_isochrones(
     Example
     --------
     >>> isos = get_isochrones(Haslach.get_geodata_gpd(), unique_id_col='BEZEICHN', segments=[5,10])
-
     """
 
     coords = [(point.x, point.y) for point in geodata_gpd.geometry]

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.19
-# Last update: 2026-02-12 19:22
+# Version:     1.1.20
+# Last update: 2026-03-07 08:42
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -248,7 +248,7 @@ def add_timestamp(
     status : str, optional
         Process status label (default: "OK").
     verbose : bool, optional
-        If True, print informational messages (default: False).
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -416,7 +416,7 @@ def print_weightings(interaction_matrix):
     
     if (supply_locations_metadata["weighting"][0]["name"] is not None and supply_locations_metadata["weighting"][0]["func"] is not None and supply_locations_metadata["weighting"][0]["param"] is not None) or (customer_origins_metadata['weighting'][0]['param'] is not None):
     
-        print("--------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         print("Weightings")
 
@@ -501,7 +501,7 @@ def print_interaction_matrix_info(interaction_matrix):
     supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
     interaction_matrix_metadata = interaction_matrix.get_metadata()
 
-    print("--------------------------------------")
+    print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
     interactions = supply_locations_metadata["no_points"] * customer_origins_metadata["no_points"]
 

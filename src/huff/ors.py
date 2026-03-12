@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.3
-# Last update: 2026-02-26 17:07
+# Version:     1.5.4
+# Last update: 2026-03-07 08:57
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -111,7 +111,7 @@ class Isochrone:
         error_message = self.error_message
 
         print("Isochrones")
-        print("===========================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         print("Server respone")
         
@@ -125,7 +125,7 @@ class Isochrone:
                 error_message
                 )
 
-        print("-------------------------------------------")
+        print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         if metadata is not None and len(metadata) > 0 and "query" in metadata:
             
@@ -162,7 +162,7 @@ class Isochrone:
                 ors_url = save_config["ors_url"]
                 auth = save_config["auth"]
 
-                print("-------------------------------------------")
+                print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
                 helper.print_summary_row(
                     "Attribution",
@@ -197,7 +197,7 @@ class Isochrone:
 
             print("No isochrones were built.")
         
-        print("===========================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
         
         return metadata
 
@@ -333,7 +333,7 @@ class TimeDistanceMatrix:
         error_message = self.error_message
 
         print("Matrix")
-        print("===========================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
         print("Server response")
         
@@ -349,7 +349,7 @@ class TimeDistanceMatrix:
        
         if metadata is not None and len(metadata) > 0 and "query" in metadata:
 
-            print("-------------------------------------------")
+            print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
             profile = metadata["query"]["profile"]
             no_locations = len(metadata["query"]["locations"])
@@ -390,7 +390,7 @@ class TimeDistanceMatrix:
                 ors_url = save_config["ors_url"]
                 auth = save_config["auth"]
 
-                print("-------------------------------------------")
+                print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
                 helper.print_summary_row(
                     "Attribution",
@@ -425,7 +425,7 @@ class TimeDistanceMatrix:
 
             print("No time/distance matrix was built.")
 
-        print("===========================================")
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
 
 class Client:
 
@@ -458,7 +458,7 @@ class Client:
         save_output: bool = True,
         output_filepath: str = "isochrones.shp",
         output_crs: str = "EPSG:4326",
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
         
         """
@@ -488,7 +488,7 @@ class Client:
         output_crs : str, optional
             Coordinate reference system of the output (default: "EPSG:4326").
         verbose : bool, optional
-            If True, print additional information during execution (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -657,7 +657,7 @@ class Client:
         csv_sep: str = ";",
         csv_decimal: str = ",",
         csv_encoding: str = None,
-        verbose: bool = config.VERBOSE
+        verbose: bool = False
         ):
 
         """
@@ -695,7 +695,7 @@ class Client:
         csv_encoding : str, optional
             Encoding for CSV file (default: None, system default).
         verbose : bool, optional
-            If True, print additional information during execution (default: False).
+            If True, print informational messages during processing.
 
         Returns
         -------

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.11
-# Last update: 2026-02-26 17:06
+# Version:     1.4.12
+# Last update: 2026-03-07 08:57
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -108,7 +108,7 @@ def get_basemap(
     ne_lon, 
     zoom = 15,
     tile_delay = 0.1,
-    verbose: bool = config.VERBOSE
+    verbose: bool = False
     ):
 
     """
@@ -126,7 +126,7 @@ def get_basemap(
     tile_delay : float, optional
         Delay in seconds between tile downloads (default 0.1).
     verbose : bool, optional
-        If True, print progress messages (default False).
+        If True, print informational messages during processing.
 
     Returns
     -------

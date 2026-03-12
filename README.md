@@ -23,7 +23,7 @@ A software paper describing the library is available at [arXiv](https://arxiv.or
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.4) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.5) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -53,6 +53,7 @@ pip install git+https://github.com/geowieland/huff_official.git
   - Different function types: power, exponential, logistic
   - Defining further attraction indicators in the utility function
   - Huff model parameter estimation via Maximum Likelihood (ML) by probalities, customer flows, and total market areas
+  - Huff model fit via local optimization of attraction
   - Huff model market simulation
 - **Multiplicative Competitive Interaction Model**: 
   - Log-centering transformation of interaction matrix
@@ -184,6 +185,7 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 
 
 ## Literature
+
   - Cooper LG, Nakanishi M (1983) Standardizing Variables in Multiplicative Choice Models. *Journal of Consumer Research* 10(1): 96–108. [10.1086/208948](https://doi.org/10.1086/208948)
   - De Beule M, Van den Poel D, Van de Weghe N (2014) An extended Huff-model for robustly benchmarking and predicting retail network performance. *Applied Geography* 46(1): 80–89. [10.1016/j.apgeog.2013.09.026](https://doi.org/10.1016/j.apgeog.2013.09.026)
   - Güssefeldt J (2002) Zur Modellierung von räumlichen Kaufkraftströmen in unvollkommenen Märkten. *Erdkunde* 56(4): 351–370. [10.3112/erdkunde.2002.04.02](https://doi.org/10.3112/erdkunde.2002.04.02)
@@ -207,7 +209,17 @@ For detailed examples, see the /examples folder in the [public GitHub repository
   - Wieland T (2018) Competitive locations of grocery stores in the local supply context - The case of the urban district Freiburg-Haslach. *European Journal of Geography* 9(3): 98-115. https://www.eurogeojournal.eu/index.php/egj/article/view/41
 
 
-## What's new (v1.8.4)
+## AI Usage Statement
+
+This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation.
+
+
+## What's new (v1.8.5)
+
+- Extensions
+  - Local optimization of attraction algorithm is now implemented via models.HuffModel.optimize_attraction()
 - Bugfixes
-  - Correct type checking and obs/exp conversion in goodness_of_fit.modelfit() and goodness_of_fit.modelfit_cat()
-  - Checking vectors for binary values in goodness_of_fit.modelfit_cat()
+  - goodness_of_fit.modelfit_plot(): Default value for label when parameter 'label_prefixes' is None
+  - models.MarketAreas.add_to_model(): Market areas total column is passed to new object's metadata
+  - data_management.load_interaction_matrix(): Added update flag for supply locations
+  - Correction and harmonization of documentation texts

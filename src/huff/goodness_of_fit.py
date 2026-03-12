@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.8
-# Last update: 2026-02-26 17:20
+# Version:     1.0.10
+# Last update: 2026-03-11 19:30
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -347,6 +347,8 @@ def modelfit_plot(
             )
     
     for i, entry in enumerate(modelfit_list):
+        
+        label = ""
         
         if len(label_prefixes) == len(modelfit_list):
             label = label_prefixes[i]

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.24
-# Last update: 2026-02-13 17:59
+# Version:     1.4.25
+# Last update: 2026-03-07 08:40
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -187,8 +187,7 @@ def distance_matrix(
         Coordinate reference system of the output GeoDataFrames, given as an
         EPSG code. Default is ``"EPSG:4326"``.
     verbose : bool, optional
-        If ``True``, progress information is printed to stdout. Default is
-        ``False``.
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -392,8 +391,8 @@ def distance_matrix_from_gdf(
         File path for saving the shapefile if `save_output` is True.
     output_crs : str, default "EPSG:4326"
         Coordinate Reference System for the output shapefile.
-    verbose : bool, default False
-        Whether to print progress messages.
+    verbose : bool, optional
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -483,7 +482,7 @@ def buffers(
     output_crs : str, default "EPSG:4326"
         Coordinate Reference System for the output shapefile.
     verbose : bool, optional
-        Whether to print progress messages (Default: False).
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -637,8 +636,8 @@ def polygon_select(
         File path for saving the buffer around polygons, if created.
     output_crs : str, default "EPSG:4326"
         Coordinate Reference System for the output shapefile.
-    verbose : bool, default False
-        Whether to print progress messages during processing.
+    verbose : bool, optional
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -733,8 +732,8 @@ def overlay_difference(
     sort_col : str, optional
         Column name to sort the polygons before computing differences.
         If None, the original order is used. Default is None.
-    verbose : bool, default False
-        If True, print progress messages during processing.
+    verbose : bool, optional
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -834,8 +833,8 @@ def point_spatial_join(
         File path to save the statistics CSV.
     output_crs : str, default "EPSG:4326"
         Coordinate Reference System for the output shapefile.
-    verbose : bool, default False
-        If True, prints progress messages during processing.
+    verbose : bool, optional
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -997,8 +996,8 @@ def map_with_basemap(
         Title of the map.
     show_plot : bool, default True
         Whether to display the plot interactively.
-    verbose : bool, default False
-        If True, prints progress messages during processing.
+    verbose : bool, optional
+        If True, print informational messages during processing.
 
     Returns
     -------
@@ -1426,8 +1425,8 @@ def point_gpd_from_list(
     save_shapefile : str or None, optional
         File path to save the GeoDataFrame as a shapefile. If None, no file is saved.
         Default is None.
-    verbose : bool, default False
-        If True, prints progress messages during processing.
+    verbose : bool, optional
+        If True, print informational messages during processing.
 
     Returns
     -------

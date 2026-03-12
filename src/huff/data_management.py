@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.8
-# Last update: 2026-02-12 19:17
+# Version:     1.0.9
+# Last update: 2026-03-11 19:27
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -464,7 +464,7 @@ def load_interaction_matrix(
         isochrones_gdf = None,
         buffers_gdf = None
         )
-    
+     
     helper.add_timestamp(
         customer_origins,
         function="data_management.load_interaction_matrix",
@@ -543,6 +543,8 @@ def load_interaction_matrix(
             geometry = "geometry",
             crs = crs_input
             )
+        
+    supply_locations_geodata_gpd_original[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_update"] = 0
                
     supply_locations_metadata = {
         "location_type": "destinations",
@@ -568,7 +570,7 @@ def load_interaction_matrix(
         isochrones_gdf = None,
         buffers_gdf = None
         )
-    
+        
     helper.add_timestamp(
         supply_locations,
         function="data_management.load_interaction_matrix",
@@ -722,7 +724,7 @@ def load_marketareas(
     if supply_locations_col not in market_areas_df.columns:
         raise KeyError (f"Error while loading market areas: Column {supply_locations_col} not in data")
     if total_col not in market_areas_df.columns:
-        raise KeyError (f"Error while loading market areas: Column {supply_locations_col} not in data")
+        raise KeyError (f"Error while loading market areas: Column {total_col} not in data")
     
     if check_df_vars:
         helper.check_vars(
