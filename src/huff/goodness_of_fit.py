@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.10
-# Last update: 2026-03-11 19:30
+# Version:     1.0.11
+# Last update: 2026-03-21 09:58
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -144,10 +144,12 @@ def modelfit(
         if verbose:
             print ("NOTE: Vector 'observed' contains values equal to zero. These values are skipped for APE and MAPE calculation.")
         
-        APE = np.where(observed != 0,
-            abs((observed-expected)/observed)*perc_factor,
-            np.nan
-            )
+        APE = np.divide(
+            np.abs(observed - expected),
+            observed,
+            out=np.full_like(observed, np.nan, dtype=float),
+            where=observed != 0
+            ) * perc_factor
         
         MAPE = np.nanmean(APE)
         

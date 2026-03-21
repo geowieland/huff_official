@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.12
-# Last update: 2026-03-07 10:17
+# Version:     1.0.13
+# Last update: 2026-03-21 09:59
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.8.5"
+PACKAGE_VERSION = "1.8.6"
 
 # Basic config:
 
@@ -83,6 +83,8 @@ DEFAULT_TOTAL_SUFFIX = "_total"
 DEFAULT_COORDS_SUFFIX = "_coords"
 DEFAULT_UNIQUE_ID_SUFFIX = "_uid"
 DEFAULT_ZST_SUFFIX = "__ZST"
+DEFAULT_ORIGINS_SUFFIX = "_origins"
+DEFAULT_DESTINATIONS_SUFFIX = "_destinations"
 
 DEFAULT_OBSERVED_COL = "observed"
 DEFAULT_EXPECTED_COL = "expected"

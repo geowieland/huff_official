@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.8.4
-# Last update: 2026-03-12 07:16
+# Version:     1.8.5
+# Last update: 2026-03-21 10:34
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -311,10 +311,11 @@ class CustomerOrigins:
 
         Raises
         ------
-        ValueError
-            If `func` is not in the list of permitted weighting functions.
-        TypeError
-            If `param_lambda` is not of the expected type for the selected function.
+        WeightingError
+            If there is any error in the weightings definition, e.g.
+            - If `func` is not in the list of permitted weighting functions.
+            - If `param_lambda` is not of the expected type for the selected function.
+            - If `param_lambda` contains non-numeric values.           
 
         Example
         --------
@@ -331,17 +332,17 @@ class CustomerOrigins:
                         
         metadata = self.metadata
 
-        if func not in config.PERMITTED_WEIGHTING_FUNCTIONS_LIST:
-            raise ValueError(f"Error while defining transport costs weighting: Parameter 'func' was set to {func}. Permitted weighting functions are: {', '.join(config.PERMITTED_WEIGHTING_FUNCTIONS_LIST)}")
-
-        if not isinstance(param_lambda, config.PERMITTED_WEIGHTING_FUNCTIONS[func]["type"]):
-            raise TypeError(f"Error while defining transport costs weighting: Function type {func} requires {config.PERMITTED_WEIGHTING_FUNCTIONS[func]['no_params']} parameter(s) in a {config.PERMITTED_WEIGHTING_FUNCTIONS[func]['type']}")
+        check_weighting(
+            name = config.DEFAULT_COLNAME_TC,
+            func = func,
+            param = param_lambda
+            )
         
         metadata["weighting"][0]["name"] = config.DEFAULT_COLNAME_TC
         metadata["weighting"][0]["func"] = func
 
         if isinstance(param_lambda, list):
-            metadata["weighting"][0]["param"] = [float(param_lambda[0]), float(param_lambda[1])]
+            metadata["weighting"][0]["param"] = [float(par) for par in param_lambda]
         else:
             metadata["weighting"][0]["param"] = float(param_lambda)
         
@@ -790,6 +791,7 @@ class SupplyLocations:
         return self.metadata
     
     def get_isochrones_gdf(self):
+
         """
         Return the isochrones GeoDataFrame for supply locations.
 
@@ -882,7 +884,7 @@ class SupplyLocations:
                 func_description = config.PERMITTED_WEIGHTING_FUNCTIONS[value['func']]['description']
 
                 helper.print_summary_row(
-                    name,
+                    f"  {name}",
                     f"{param} ({func_description})"
                 )
 
@@ -984,7 +986,8 @@ class SupplyLocations:
     def define_attraction_weighting(
         self,
         func = "power",
-        param_gamma = 1
+        param_gamma = 1,
+        verbose: bool = False
         ):
 
         """
@@ -995,13 +998,23 @@ class SupplyLocations:
         ----------
         func : str, optional
             Weighting function to use (default is "power").
-        param_gamma : float, optional
-            Parameter for the weighting function (default is 1).
+        param_gamma : float or list of float, optional
+            Parameter(s) for the weighting function (default is 1).
+        verbose : bool, optional
+            If True, print informational messages during processing.
 
         Returns
         -------
         self : SupplyLocations
             The same object with updated metadata.
+
+        Raises
+        ------
+        WeightingError
+            If there is any error in the weightings definition, e.g.
+            - If `func` is not in the list of permitted weighting functions.
+            - If `param_gamma` is not of the expected type for the selected function.
+            - If `param_gamma` contains non-numeric values.    
 
         Example
         -------
@@ -1019,18 +1032,28 @@ class SupplyLocations:
         if metadata["attraction_col"] is None:
             raise ValueError(f"Error while defining attraction weighting: {config.DEFAULT_NAME_ATTRAC} column is not yet defined. Use SupplyLocations.define_attraction()")
         
-        if func not in config.PERMITTED_WEIGHTING_FUNCTIONS_LIST:
-            raise ValueError(f"Error while defining attraction weighting: Parameter 'func' was set to {func}. Permitted weighting functions are: {', '.join(config.PERMITTED_WEIGHTING_FUNCTIONS_LIST)}")
+        check_weighting(
+            name = config.DEFAULT_COLNAME_ATTRAC,
+            func = func,
+            param = param_gamma
+            )
         
         metadata["weighting"][0]["name"] = config.DEFAULT_COLNAME_ATTRAC
         metadata["weighting"][0]["func"] = func
-        metadata["weighting"][0]["param"] = float(param_gamma)
+
+        if isinstance(param_gamma, list):
+            metadata["weighting"][0]["param"] = [float(par) for par in param_gamma]
+        else:
+            metadata["weighting"][0]["param"] = float(param_gamma)
         
         helper.add_timestamp(
             self,
             function="models.SupplyLocations.define_attraction_weighting",
             process = f"Defined attraction weighting with {func} function with gamma = {param_gamma}"
             )
+        
+        if verbose:
+            print(f"Defined attraction weighting to function {func} with parameter(s) {param_gamma}")
 
         return self
 
@@ -1058,6 +1081,22 @@ class SupplyLocations:
         self : SupplyLocations
             Updated object with the new variable added.
 
+        Raises
+        ------
+        ValueError
+            If first attraction variable is not yet defined.
+        KeyError
+            If stated attraction variable does not exist in 
+            the original supply locations data.
+        TypeError
+            If stated attraction variable in the original supply 
+            locations data contains non-numeric values.
+        WeightingError
+            If there is any error in the weightings definition, e.g.
+            - If `func` is not in the list of permitted weighting functions.
+            - If `param` is not of the expected type for the selected function.
+            - If `param` contains non-numeric values.            
+
         Example
         -------
         >>> Haslach_supermarkets = load_geodata(
@@ -1074,9 +1113,25 @@ class SupplyLocations:
         """
             
         metadata = self.metadata
+        
+        geodata_gpd_original = self.get_geodata_gpd_original()
 
         if metadata["attraction_col"] is None:
-            raise ValueError (f"Error while adding utility variable: {config.DEFAULT_NAME_ATTRAC} column is not yet defined. Use SupplyLocations.define_attraction()")
+            raise ValueError(f"Error while adding attraction variable '{var}': First {config.DEFAULT_NAME_ATTRAC} column is not yet defined. Use SupplyLocations.define_attraction()")
+
+        if var not in geodata_gpd_original.columns:
+            raise KeyError(f"Error while adding attraction variable '{var}': Column does not exist in original supply locations data.")
+        
+        if not helper.check_numeric_series(geodata_gpd_original[var]):
+            raise TypeError(f"Error while adding attraction variable '{var}': Column contains non-numeric values")
+
+        geodata_gpd_original[var] = pd.to_numeric(geodata_gpd_original[var])
+
+        check_weighting(
+            name=var,
+            func=func,
+            param=param
+        )
 
         no_attraction_vars = len(metadata["attraction_col"])
         new_key = no_attraction_vars
@@ -1088,6 +1143,9 @@ class SupplyLocations:
             "func": func,
             "param": param
             }
+        
+        self.metadata = metadata
+        self.geodata_gpd_original = geodata_gpd_original
 
         helper.add_timestamp(
             self,
@@ -1477,7 +1535,7 @@ class SupplyLocations:
             )
         
         return self
-    
+
     def plot(
         self,
         point_style={},
@@ -1627,6 +1685,12 @@ class SupplyLocations:
 class InteractionMatrixError(Exception):
     """
     Error class for any errors in interaction matrix calculations
+    """
+    pass
+
+class WeightingError(Exception):
+    """
+    Error class for any errors with respect to weightings
     """
     pass
 
@@ -1825,6 +1889,7 @@ class InteractionMatrix:
         ors_auth: str = None,
         save_output: bool = False,
         remove_duplicates: bool = True,
+        timeout: int = 10,
         output_filepath: str = "transport_costs_matrix.csv",
         shp_save_output: bool = False,
         shp_output_filepath: str = "lines.shp",
@@ -1841,8 +1906,7 @@ class InteractionMatrix:
         
         If using ORS:
         See the ORS API documentation: https://openrouteservice.org/dev/#/api-docs
-        See the current API restrictions: https://openrouteservice.org/restrictions/
-                
+        See the current API restrictions: https://openrouteservice.org/restrictions/                
 
         Parameters
         ----------
@@ -1867,6 +1931,8 @@ class InteractionMatrix:
             If True, save the transport cost matrix to file.
         remove_duplicates : bool, optional
             If True, remove duplicate origin and destination locations.
+        timeout : int, optional
+            Request timeout in seconds (default: 10).
         output_filepath : str, optional
             File path for saving the transport cost matrix.
         shp_save_output : bool, optional
@@ -1965,6 +2031,7 @@ class InteractionMatrix:
                 destinations = locations_coords_index,
                 range_type = range_type,
                 profile = profile,
+                timeout = timeout,
                 save_output = save_output,
                 output_filepath = output_filepath,
                 verbose = verbose
@@ -2170,6 +2237,14 @@ class InteractionMatrix:
         self : InteractionMatrix
             Updated object with updated metadata of CustomerOrigins and SupplyLocations objects.
 
+        Raises
+        ------
+        WeightingError
+            If there is any error in the weightings definitions, e.g.
+            - If any `func` in `vars_funcs` is not in the list of permitted weighting functions.
+            - If any `param` in `vars_funcs` is not of the expected type for the selected function.
+            - If `param` in `vars_funcs` contains non-numeric values.  
+
         Example
         -------
         >>> Freiburg_Stadtbezirke_SHP = gp.read_file("data/Freiburg_Stadtbezirke_Point.shp")
@@ -2219,11 +2294,31 @@ class InteractionMatrix:
         supply_locations_metadata = self.supply_locations.metadata
         customer_origins_metadata = self.customer_origins.metadata
         
+        weighting_errors = []
+
+        try:
+            check_weighting(
+                name = vars_funcs[0]["name"],
+                func = vars_funcs[0]["func"],
+                param = vars_funcs[0]["param"]
+                )
+        except Exception as e:
+            weighting_errors.append(str(e))
+        
         supply_locations_metadata["weighting"][0]["name"] = vars_funcs[0]["name"]
         supply_locations_metadata["weighting"][0]["func"] = vars_funcs[0]["func"]
         if "param" in vars_funcs[0]:
             supply_locations_metadata["weighting"][0]["param"] = vars_funcs[0]["param"]
-    
+
+        try:
+            check_weighting(
+                name = vars_funcs[1]["name"],
+                func = vars_funcs[1]["func"],
+                param = vars_funcs[1]["param"]
+                )
+        except Exception as e:
+            weighting_errors.append(str(e))
+
         customer_origins_metadata["weighting"][0]["name"] = vars_funcs[1]["name"]
         customer_origins_metadata["weighting"][0]["func"] = vars_funcs[1]["func"]
         if "param" in vars_funcs[1]:
@@ -2243,22 +2338,38 @@ class InteractionMatrix:
                         "param": None
                         }
 
+                try:
+                    check_weighting(
+                        name = var["name"],
+                        func = var["func"],
+                        param = var["param"]
+                        )
+                except Exception as e:
+                    weighting_errors.append(str(e))
+
                 supply_locations_metadata["weighting"][key-1]["name"] = var["name"]
                 supply_locations_metadata["weighting"][key-1]["func"] = var["func"]
 
                 if "param" in var:
                     supply_locations_metadata["weighting"][key-1]["param"] = var["param"]
 
+        status = "OK"
+
+        if len(weighting_errors) > 0:
+            status = f"{' '.join(weighting_errors)}"
+
         helper.add_timestamp(
             self.supply_locations,
             function="models.InteractionMatrix.define_weightings",
-            process=f"Defined weightings for {len(vars_funcs)} variables"
+            process=f"Defined weightings for {len(vars_funcs)} variables",
+            status=status
             )
 
         helper.add_timestamp(
             self.customer_origins,
             function="models.InteractionMatrix.define_weightings",
-            process=f"Defined weightings for {len(vars_funcs)} variables"
+            process=f"Defined weightings for {len(vars_funcs)} variables",
+            status=status
             )
         
         self.supply_locations.metadata = supply_locations_metadata
@@ -2365,39 +2476,60 @@ class InteractionMatrix:
         
         if verbose:
             print("Calculating utility", end = " ... ")
-            
+                  
         customer_origins = self.customer_origins
         customer_origins_metadata = customer_origins.get_metadata()
-        tc_weighting = customer_origins_metadata["weighting"][0]
-       
-        if tc_weighting["func"] == config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[2]:
+        tc_weighting = customer_origins_metadata["weighting"][0]   
+
+        check_weighting(
+            name = config.DEFAULT_COLNAME_TC,
+            func = tc_weighting["func"],
+            param = tc_weighting["param"]
+            )
+                
+        if config.PERMITTED_WEIGHTING_FUNCTIONS[tc_weighting["func"]]["no_params"] > 1:
             interaction_matrix_df[config.DEFAULT_COLNAME_TC_WEIGHTED] = weighting(
                 values = interaction_matrix_df[config.DEFAULT_COLNAME_TC],
                 func = tc_weighting["func"],
                 b = tc_weighting["param"][0],
                 c = tc_weighting["param"][1]
                 )
-        else:
+        else:                     
             interaction_matrix_df[config.DEFAULT_COLNAME_TC_WEIGHTED] = weighting(
                 values = interaction_matrix_df[config.DEFAULT_COLNAME_TC],
                 func = tc_weighting["func"],
                 b = tc_weighting["param"]
-                )      
-                           
+                )     
+        
         supply_locations = self.supply_locations
         supply_locations_metadata = supply_locations.get_metadata()
-        attraction_weighting = supply_locations_metadata["weighting"][0]        
-        
-        interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED] = weighting(
-            values = interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC],
-            func = attraction_weighting["func"],
-            b = attraction_weighting["param"]
-            ) 
         
         attrac_vars = supply_locations_metadata["attraction_col"]
         attrac_vars_no = len(attrac_vars)
+        
+        attraction_weighting = supply_locations_metadata["weighting"][0]
         attrac_var_key = 0
 
+        check_weighting(
+            name = config.DEFAULT_COLNAME_ATTRAC_WEIGHTED,
+            func = attraction_weighting["func"],
+            param = attraction_weighting["param"]
+            )
+            
+        if config.PERMITTED_WEIGHTING_FUNCTIONS[attraction_weighting["func"]]["no_params"] > 1:
+            interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED] = weighting(
+                values = interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC],
+                func = attraction_weighting["func"],
+                b = attraction_weighting["param"][0],
+                c = attraction_weighting["param"][1]
+                )
+        else:            
+            interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED] = weighting(
+                values = interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC],
+                func = attraction_weighting["func"],
+                b = attraction_weighting["param"]
+                )
+        
         if attrac_vars_no > 1:
             
             for key, attrac_var in enumerate(attrac_vars):
@@ -2410,16 +2542,30 @@ class InteractionMatrix:
                 param = supply_locations_metadata["weighting"][attrac_var_key]["param"]
                 func = supply_locations_metadata["weighting"][attrac_var_key]["func"]
 
-                interaction_matrix_df[name+config.DEFAULT_WEIGHTED_SUFFIX] = weighting(
-                    values = interaction_matrix_df[name],
+                check_weighting(
+                    name = name,
                     func = func,
-                    b = param
+                    param = param
                     )
-                
-                interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED] = interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED]*interaction_matrix_df[name+config.DEFAULT_WEIGHTED_SUFFIX]
+            
+                if config.PERMITTED_WEIGHTING_FUNCTIONS[func]["no_params"] > 1:                    
+                    interaction_matrix_df[f"{name}{config.DEFAULT_WEIGHTED_SUFFIX}"] = weighting(
+                        values = interaction_matrix_df[name],
+                        func = func,
+                        b = param[0],
+                        c = param[1]
+                        )
+                else:
+                    interaction_matrix_df[f"{name}{config.DEFAULT_WEIGHTED_SUFFIX}"] = weighting(
+                        values = interaction_matrix_df[name],
+                        func = func,
+                        b = param
+                        )
 
-                interaction_matrix_df = interaction_matrix_df.drop(columns=[name+config.DEFAULT_WEIGHTED_SUFFIX])
+                interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED] = interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED]*interaction_matrix_df[f"{name}{config.DEFAULT_WEIGHTED_SUFFIX}"]
 
+                interaction_matrix_df = interaction_matrix_df.drop(columns=[f"{name}{config.DEFAULT_WEIGHTED_SUFFIX}"])
+        
         interaction_matrix_df[config.DEFAULT_COLNAME_UTILITY] = interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED]*interaction_matrix_df[config.DEFAULT_COLNAME_TC_WEIGHTED]
         
         interaction_matrix_df = interaction_matrix_df.drop(columns=[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED, config.DEFAULT_COLNAME_TC_WEIGHTED])
@@ -4845,7 +4991,7 @@ class MarketAreas:
             print(f"{model_object_type} was added to {output_model} model object")
             
         return model
-
+    
 class HuffModel:
 
     """
@@ -6168,8 +6314,9 @@ class HuffModel:
         else:
 
             raise ValueError("Error in HuffModel.modelfit: Parameter 'by' must be 'probabilities', 'flows', or 'totals'")
-    
+
 class MCIModel:
+
     """
     Container for a fitted Multiplicative Competitive Interaction (MCI) model.
 
@@ -7035,15 +7182,15 @@ def create_interaction_matrix(
     ):
 
     """
-    Create an :class:`InteractionMatrix` from origin and destination objects.
+    Create an `InteractionMatrix` from origin and destination objects.
 
     Parameters
     ----------
     customer_origins : CustomerOrigins
-        A :class:`CustomerOrigins` instance containing origin locations and
+        A `CustomerOrigins` instance containing origin locations and
         optional attributes (e.g. market size).
     supply_locations : SupplyLocations
-        A :class:`SupplyLocations` instance containing destination locations
+        A `SupplyLocations` instance containing destination locations
         and attraction attributes.
     requiring_attributes : bool, optional
         If True, require market size and attraction attributes (default True).
@@ -7099,7 +7246,7 @@ def create_interaction_matrix(
     customer_origins_marketsize = customer_origins_metadata["marketsize_col"]
     
     supply_locations_unique_id = supply_locations_metadata["unique_id"]
-    supply_locations_attraction = supply_locations_metadata["attraction_col"][0]
+    supply_locations_attraction = supply_locations_metadata["attraction_col"]
     
     if verbose:
         print("OK")
@@ -7146,7 +7293,7 @@ def create_interaction_matrix(
     if verbose:
         print("OK")        
             
-    if supply_locations_attraction is None and requiring_attributes:
+    if (supply_locations_attraction is None or len(supply_locations_attraction) == 0) and requiring_attributes:
         print(f"WARNING: {config.DEFAULT_NAME_ATTRAC} column in supply locations not defined and is set to {config.DEFAULT_COLNAME_ATTRAC} = np.nan. Use SupplyLocations.define_attraction().")
 
     if verbose:
@@ -7159,22 +7306,27 @@ def create_interaction_matrix(
         supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop_duplicates(subset=supply_locations_unique_id)
         supply_locations_geodata_gpd_original = supply_locations_geodata_gpd_original.drop_duplicates(subset=supply_locations_unique_id)
         
-    if supply_locations_metadata["attraction_col"][0] is None:
-        supply_locations_attraction = config.DEFAULT_COLNAME_ATTRAC
-        supply_locations_geodata_gpd_original[supply_locations_attraction] = np.nan
+    if len(supply_locations_attraction) == 0 or supply_locations_attraction[0] is None:
+        supply_locations_attraction = []
+        supply_locations_attraction.append(config.DEFAULT_COLNAME_ATTRAC)
+        supply_locations_metadata["attraction_col"] = supply_locations_attraction
+        supply_locations_geodata_gpd_original[config.DEFAULT_COLNAME_ATTRAC] = np.nan
     
+    supply_location_cols = [supply_locations_unique_id] + supply_locations_attraction
+
     supply_locations_data = pd.merge(
         supply_locations_geodata_gpd,
-        supply_locations_geodata_gpd_original[[supply_locations_unique_id, supply_locations_attraction]],
+        supply_locations_geodata_gpd_original[supply_location_cols],
         left_on = supply_locations_unique_id,
         right_on = supply_locations_unique_id 
         )
-    supply_locations_data = supply_locations_data.rename(columns = {
-        supply_locations_unique_id: config.DEFAULT_COLNAME_SUPPLY_LOCATIONS,
-        supply_locations_attraction: config.DEFAULT_COLNAME_ATTRAC,
-        "geometry": f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_coords"
-        }
-        )
+    supply_locations_data = supply_locations_data.rename(
+        columns = {
+            supply_locations_unique_id: config.DEFAULT_COLNAME_SUPPLY_LOCATIONS,
+            supply_locations_metadata["attraction_col"][0]: config.DEFAULT_COLNAME_ATTRAC,
+            "geometry": f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_coords"
+            }
+            )
     
     if verbose:
         print("OK")
@@ -7610,6 +7762,7 @@ def weighting(
     c: float = None,
     a: float = 1.0
     ):
+
     """
     Apply a weighting function to a vector of values.
 
@@ -7620,13 +7773,14 @@ def weighting(
     Parameters
     ----------
     values : pandas.Series
-        Numeric series providing the input values to be weighted (e.g.
-        transport costs).
+        Numeric series providing the input values to be weighted 
+        (e.g., transport costs).
     func : str
-        Key identifying the weighting function to use (must be one of
-        `config.PERMITTED_WEIGHTING_FUNCTIONS_LIST`).
-    b : float
-        Primary parameter for the weighting function (e.g. lambda).
+        Key identifying the weighting function to use.
+    b : float or list
+        Primary parameter(s) for the weighting function.
+        If the function requires two parameters (e.g., `func`="logistic"),
+        a list with two numeric entries is required.
     c : float, optional
         Additional parameter required by some weighting functions.
     a : float, optional
@@ -7649,7 +7803,6 @@ def weighting(
     Example
     --------
     >>> w = weighting(df['t_ij'], func='power', b=-2.2)
-
     """
     
     if func is None:
@@ -7665,13 +7818,100 @@ def weighting(
     
     calc_formula = config.PERMITTED_WEIGHTING_FUNCTIONS[func]["function"]
     
-    calc_dict = {"a": a, "b": b, "values": values, "np": np}
+    calc_dict = {
+        "a": a, 
+        "b": b, 
+        "values": values, 
+        "np": np
+        }
     
-    if "c" in calc_formula:
-        if c is None:
-            raise ValueError("Parameter 'c' must be provided for this function")
+    if "c" in calc_formula:        
         calc_dict["c"] = c
         
     result = eval(calc_formula, {}, calc_dict)
     
     return result
+
+def check_weighting(
+    name: str = "",
+    func: str = "power",
+    param = 1.0
+    ):
+
+    """
+    Validate a weighting function specification.
+
+    Checks that the provided weighting function name and parameter(s)
+    conform to the built-in weighting functions.
+
+    Parameters
+    ----------
+    name : str, optional
+        Name of the variable.
+    func : str, optional
+        Weighting function key to validate (default: "power").
+    param : float or list, optional
+        Parameter(s) for the weighting function. May be a single numeric
+        value or a list of numeric values depending on the function
+        (default: 1.0).
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    WeightingError
+        If there is any error in the weightings definition, e.g.
+        - If `func` is not in the list of permitted weighting functions.
+        - If `param` is not of the expected type for the selected function.
+        - If `param` contains non-numeric values.    
+    """
+    
+    weighting_errors = []
+    
+    if func not in config.PERMITTED_WEIGHTING_FUNCTIONS_LIST:
+
+        if func is None:
+            weighting_errors.append(f"Weighting function was not defined. Available weighting functions: {', '.join(config.PERMITTED_WEIGHTING_FUNCTIONS_LIST)}.")
+        else:
+            weighting_errors.append(f"Weighting function '{func}' is unknown. Available weighting functions: {', '.join(config.PERMITTED_WEIGHTING_FUNCTIONS_LIST)}.")
+    
+    else:
+    
+        param_data_type = config.PERMITTED_WEIGHTING_FUNCTIONS[func]["type"]
+            
+        if not isinstance(param, param_data_type):
+
+            if param_data_type == float and not isinstance(param, int):
+                weighting_errors.append(f"Weighting function '{func}' requires weighting of type {str(param_data_type.__name__)}.")
+            
+        else:
+            
+            if isinstance(param, list):
+                
+                no_params = config.PERMITTED_WEIGHTING_FUNCTIONS[func]["no_params"]
+                
+                if len(param) != no_params:
+                    weighting_errors.append(f"Weighting function '{func}' requires weighting of type {str(param_data_type.__name__)} with {no_params} entries, not {len(param)}.")
+                        
+                par_non_numeric = []
+
+                for key, par in enumerate(param):
+                    try:
+                        param[key] = float(par)
+                    except:
+                        par_non_numeric.append(par)
+
+                if len(par_non_numeric) > 0:
+                    weighting_errors.append(f"Weighting parameters for function '{func}' include non-numeric values: {', '.join(par_non_numeric)}.")
+            
+            else:
+            
+                try:
+                    param = float(param)
+                except:
+                    weighting_errors.append(f"Weighting parameter for function '{func}' is non-numeric: {param}.")
+
+    if len(weighting_errors) > 0:
+        raise WeightingError(f"Error(s) in weighting definition of '{name}': {' '.join(weighting_errors)}")

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.9
-# Last update: 2026-03-11 19:27
+# Version:     1.0.11
+# Last update: 2026-03-21 10:38
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -181,11 +181,11 @@ def load_geodata(
         geodata_gpd_original[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_update"] = 0    
 
         geodata_object = SupplyLocations(
-            geodata_gpd, 
-            geodata_gpd_original, 
-            metadata,
-            None,
-            None
+            geodata_gpd = geodata_gpd, 
+            geodata_gpd_original = geodata_gpd_original, 
+            metadata = metadata,
+            isochrones_gdf = None,
+            buffers_gdf = None
             )
         
     helper.add_timestamp(

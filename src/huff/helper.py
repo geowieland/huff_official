@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.20
-# Last update: 2026-03-07 08:42
+# Version:     1.1.22
+# Last update: 2026-03-21 10:35
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -141,10 +141,13 @@ def check_numeric_series(values):
     if not isinstance(values, pd.Series):
         values = pd.Series(values)
 
-    if not pd.api.types.is_numeric_dtype(values):
-        return False
-    else:
+    try:
+        
+        pd.to_numeric(values, errors='raise')
         return True
+    
+    except (ValueError, TypeError):
+        return False
     
 def check_constant_values(values):
 

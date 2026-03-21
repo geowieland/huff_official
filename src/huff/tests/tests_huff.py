@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.6.1
-# Last update: 2026-02-13 18:37
+# Version:     1.6.4
+# Last update: 2026-03-21 09:11
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -83,9 +83,6 @@ Haslach_supermarkets = load_geodata(
     )
 # Loading supply locations (shapefile)
 
-Haslach_supermarkets.summary()
-# Summary of supply locations
-
 Haslach_supermarkets.define_attraction("VKF_qm")
 # Defining attraction variable
 
@@ -93,6 +90,10 @@ Haslach_supermarkets.define_attraction_weighting(
     param_gamma=0.9
     )
 # Define attraction weighting (gamma)
+
+Haslach_supermarkets.summary()
+# Summary of supply locations
+
 
 Haslach_supermarkets.isochrones(
     segments=[2, 4, 6],

@@ -23,7 +23,7 @@ A software paper describing the library is available at [arXiv](https://arxiv.or
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.5) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.6) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -214,12 +214,12 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation.
 
 
-## What's new (v1.8.5)
+## What's new (v1.8.6)
 
-- Extensions
-  - Local optimization of attraction algorithm is now implemented via models.HuffModel.optimize_attraction()
 - Bugfixes
-  - goodness_of_fit.modelfit_plot(): Default value for label when parameter 'label_prefixes' is None
-  - models.MarketAreas.add_to_model(): Market areas total column is passed to new object's metadata
-  - data_management.load_interaction_matrix(): Added update flag for supply locations
-  - Correction and harmonization of documentation texts
+  - Check for correct weighting definitions in models.InteractionMatrix.utility(), models.SupplyLocations.define_attraction_weighting(), models.SupplyLocations.add_var(), models.CustomerOrigins.define_transportcosts_weighting(), and models.InteractionMatrix.define_weightings()
+  - In models.InteractionMatrix.utility(), attraction weighting with two-param weighting function is now accepted
+  - In models.create_interaction_matrix(), processing >= 2 attraction variables is now possible
+  - In SupplyLocations.add_var(), column name and format of added attraction variable is now checked
+  - helper.check_numeric_series() now checks conversion to numeric instead of dtype
+  - Division by zero in goodness_of_fit.modelfit() is prevented in all cases
