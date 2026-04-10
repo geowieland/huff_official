@@ -86,7 +86,7 @@
 Freiburg, Germany\\
 ORCID: 0000-0001-5168-9846\\
 EMail: geowieland@googlemail.com}
-\date{02 March 2026}
+\date{10 April 2026}
 
 \begin{document}
 \maketitle
@@ -215,6 +215,9 @@ features:
   analysis (especially empirical estimation of weighting parameters),
   namely \emph{Hansen accessibility} (Hansen 1959) and \emph{Two-step
   floating catchment area analysis (2SFCA)} (Luo and Wang 2003).
+  Competitor accessibility/concentration may also be calculated directly
+  in order to extend the Huff model in terms of the \emph{Competing
+  Destinations Model} (Fotheringham 1985).
 \item
   \emph{GIS tools}: The library also includes auxiliary GIS functions
   for market area analysis (buffer, distance matrix, overlay statistics)
@@ -314,13 +317,13 @@ Due to data confidentiality requirements, the early development of the
 \texttt{huff} library took place in a private repository; the public
 repository was initialized more recently to provide open access for
 reproducibility and review. The \texttt{huff} Python package has been
-publicly developed and published via the {[}Python Package Index{]}
-(https://pypi.org/project/huff/) since April 2025. As of submission, it
-has undergone 44 releases, showing continuous improvement and feature
-additions. The library is actively used: since its first release
-(version 1.0.0) in April 2025, it has been downloaded approximately
-23,700 times from the Python Package Index (source:
-\href{https://pepy.tech/project/huff}{pepy.tech}, accessed March 02,
+publicly developed and published via the
+\href{https://pypi.org/project/huff/}{Python Package Index} since April
+2025. As of submission, it has undergone 46 releases, showing continuous
+improvement and feature additions. The library is actively used: since
+its first release (version 1.0.0) in April 2025, it has been downloaded
+approximately 26,200 times from the Python Package Index (source:
+\href{https://pepy.tech/project/huff}{pepy.tech}, accessed April 10,
 2026).
 
 \textbf{AI usage disclosure}
@@ -384,6 +387,42 @@ The inverse log-centering transformation is (Nakanishi and Cooper 1982):
 where \(\hat{p}_{ij}\) is the estimated interaction probability (or
 market share) of origin \(i\) with respect to location \(j\).
 
+Hansen accessibility is formalized as follows (Hansen 1959):
+
+\[A_i = \sum_{j=1}^J O_j f(d_{ij})\]
+
+where \(A_i\) is the weighted accessibility from origin \(i\), \(O_j\)
+is the number of opportunities at location \(j\) (\(j=1,2,...,J\)), and
+\(d_{ij}\) is the distance or travel time between \(i\) and \(j\).
+
+The basic two-step floating catchment area analysis is calculated as
+follows (Luo and Wang 2003):
+
+Step 1: \[R_j = \frac{S_j}{\sum_{k \in \{d_{kj} \leq d_0\}} P_k}\]
+
+where \(R_j\) is the supply-to-demand ratio at location \(j\) which is
+within the catchment threshold, \(P_k\) is the population of origin
+\(k\) which is within the catchment threshold, \(S_j\) is the number of
+opportunities at location \(j\), \(d_{kj}\) is the distance or travel
+time between \(k\) and \(j\), and \(d_0\) is the catchment threshold.
+
+Step 2: \[A_i^F = \sum_{j \in \{d_{ij} \leq d_0\}} R_j\]
+
+where \(A_i^F\) is the accessibility at origin \(i\) and \(d_{ij}\) is
+the travel time or distance between \(i\) and \(j\).
+
+The Competing Destinations Model has the following probability equation
+(Fotheringham 1985):
+
+\[p_{ij} = \frac{A_j^{\gamma} \exp{-\lambda t_{ij}} C_j^{\beta}}{\sum_{j=1}^J A_j^{\gamma} \exp{-\lambda t_{ij}} C_j^{\beta}}\]
+
+with \(C_j\) being the relative location of supplier \(j\) with respect
+to all \(K\) competitors (\(k=1,2,...,K\), \(j \neq k\)), and \(\beta\)
+being th corresponding weighting. The clustering indicator is calculated
+as follows:
+
+\[C_j = \sum_{k=1, j \neq k}^K \frac{A_k^{\alpha}}{t_{jk}^{\delta}}\]
+
 \textbf{References}
 
 \protect\phantomsection\label{refs}
@@ -422,6 +461,11 @@ den Autobahnlückenschluß der A 49 Kassel-Gießen - Zur empirischen
 Relevanz der New Economic Geography in wirtschaftsgeographischen
 Fragestellungen}.''} Dissertation, Georg-August-Universität Göttingen.
 \url{https://doi.org/10.53846/goediss-3024}.
+
+\bibitem[\citeproctext]{ref-fotheringham1985}
+Fotheringham, A. Stewart. 1985. {``{Spatial Competition and
+Agglomeration in Urban Modelling}.''} \emph{Environment and Planning A:
+Economy and Space} 17: 213--30. \url{https://doi.org/10.1068/a170213}.
 
 \bibitem[\citeproctext]{ref-fuelop2011}
 Fülop, Gerhard, Pascal Kopetsch, and Christian Schöpe. 2011.
@@ -474,6 +518,7 @@ Huff, David L. 1964. {``{Defining and estimating a trading area}.''}
 \bibitem[\citeproctext]{ref-huff2003}
 Huff, David L. 2003. {``{Parameter Estimation in the Huff Model}.''}
 \emph{ArcUser} 6: 34--36.
+\url{https://stg.esri.com/news/arcuser/1003/files/huff.pdf}.
 
 \bibitem[\citeproctext]{ref-huff2008}
 Huff, David L., and Bradley McCallum. 2008. \emph{{Calibrating the Huff

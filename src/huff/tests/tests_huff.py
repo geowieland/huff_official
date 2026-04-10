@@ -5,7 +5,7 @@
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
 # Version:     1.6.4
-# Last update: 2026-03-21 09:11
+# Last update: 2026-04-10 18:56
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ Haslach.plot(
         "alpha": 1,
         "size": 15,
     },
-    polygon_style= {
+    polygon_style = {
         "name": "Buffers",
         "color": {
             "buffer": {
@@ -83,6 +83,9 @@ Haslach_supermarkets = load_geodata(
     )
 # Loading supply locations (shapefile)
 
+Haslach_supermarkets.summary()
+# Summary of supply locations
+
 Haslach_supermarkets.define_attraction("VKF_qm")
 # Defining attraction variable
 
@@ -91,9 +94,29 @@ Haslach_supermarkets.define_attraction_weighting(
     )
 # Define attraction weighting (gamma)
 
-Haslach_supermarkets.summary()
-# Summary of supply locations
+# Calculation of competitor accessibility:
+Haslach_supermarkets.competitor_accessibility(
+    network=False,
+    destinations=[12,25,46],
+    verbose = True
+)
+# Only supermarkets
 
+print(Haslach_supermarkets.get_competitor_concentration())
+
+Haslach_supermarkets.competitor_accessibility(
+    network=False,
+    destinations=[1,5,30,38,59],
+    verbose = True
+)
+# Only discounters
+
+Haslach_supermarkets.concentration(verbose=True)
+# Calculation of competitor clustering
+
+Haslach_supermarkets.summary()
+
+Haslach_supermarkets.show_log()
 
 Haslach_supermarkets.isochrones(
     segments=[2, 4, 6],

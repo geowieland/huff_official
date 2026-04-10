@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.8.5
-# Last update: 2026-03-21 10:34
+# Version:     1.8.7
+# Last update: 2026-04-10 18:52
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -269,7 +269,7 @@ class CustomerOrigins:
             )
 
         if verbose:
-            print(f"Set market size variable to column {marketsize_col}")
+            print(f"Set market size variable to column '{marketsize_col}'")
 
         return self
 
@@ -727,6 +727,8 @@ class SupplyLocations:
         Isochrones related to the supply locations, if available.
     buffers_gdf : geopandas.GeoDataFrame or None
         Buffers around supply locations, if available.
+    competitor_concentration : CompetitorConcentration or None
+        Competitor concentration data related to supply locations, if available.
     """
 
     def __init__(
@@ -735,7 +737,8 @@ class SupplyLocations:
         geodata_gpd_original, 
         metadata,
         isochrones_gdf,
-        buffers_gdf
+        buffers_gdf,
+        competitor_concentration
         ):
 
         self.geodata_gpd = geodata_gpd
@@ -743,6 +746,7 @@ class SupplyLocations:
         self.metadata = metadata
         self.isochrones_gdf = isochrones_gdf
         self.buffers_gdf = buffers_gdf
+        self.competitor_concentration = competitor_concentration
 
     def get_geodata_gpd(self):
 
@@ -816,6 +820,19 @@ class SupplyLocations:
 
         return self.buffers_gdf
 
+    def get_competitor_concentration(self):
+
+        """
+        Return the competitor concentration data for supply locations.
+
+        Returns
+        -------
+        CompetitorConcentration or None
+            Competitor concentration data if available, otherwise None.
+        """
+
+        return self.competitor_concentration
+    
     def summary(self):
 
         """
@@ -844,13 +861,19 @@ class SupplyLocations:
             metadata["no_points"]
         )
 
+        attrac_cols_no = 0
+
         if metadata["attraction_col"][0] is not None:
+
             if isinstance(metadata["attraction_col"], list):
                 attrac_cols = ', '.join(str(x) for x in metadata["attraction_col"])
             elif isinstance(metadata["attraction_col"], str):
                 attrac_cols = ', '.join([metadata["attraction_col"]])
             else:
                 attrac_cols = metadata["attraction_col"]
+
+            attrac_cols_no = len(metadata["attraction_col"])
+
         else:
             attrac_cols = None
 
@@ -859,8 +882,13 @@ class SupplyLocations:
             attrac_cols
         )
         
+        weightings_no = 0
+
         if len(metadata["weighting"]) > 0 and metadata["weighting"][0]["func"] is not None:
+
             print("Weightings")
+
+            weightings_no = len(metadata["weighting"])
 
         for key, value in metadata["weighting"].items():
 
@@ -912,7 +940,15 @@ class SupplyLocations:
             "YES" if self.buffers_gdf is not None else "NO"
         )
 
+        helper.print_summary_row(
+            "Competitor Concentration",
+            "YES" if self.competitor_concentration is not None else "NO"
+        )
+
         print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
+
+        if weightings_no < attrac_cols_no:
+            print(f"NOTE: {attrac_cols_no - weightings_no} attraction column(s) do not have a weighting defined.")
 
         return metadata
 
@@ -968,7 +1004,7 @@ class SupplyLocations:
             )
 
         if attraction_col not in geodata_gpd_original.columns:
-            raise KeyError (f"Error while defining attraction variable: Column {attraction_col} not in data")
+            raise KeyError (f"Error while defining attraction variable: Column '{attraction_col}' not in data")
         else:
             metadata["attraction_col"][0] = attraction_col
         
@@ -979,7 +1015,7 @@ class SupplyLocations:
             )
 
         if verbose:
-            print(f"Set attraction variable to column {attraction_col}")
+            print(f"Set attraction variable to column '{attraction_col}'")
 
         return self
     
@@ -1533,6 +1569,578 @@ class SupplyLocations:
             function="models.SupplyLocations.buffers",
             process=f"Created buffers for {len(segments_distance)} segments"
             )
+        
+        return self
+
+    def competitor_accessibility(
+        self,
+        network: bool = True,        
+        destinations: list = None,
+        range_type: str = "time",
+        distance_unit: str = "kilometers",
+        time_unit: str = "minutes",
+        profile: str = "driving-car",        
+        ors_server: str = "https://api.openrouteservice.org/v2/",
+        ors_auth: str = None,
+        timeout: int = 10,
+        remove_duplicates: bool = True,
+        verbose: bool = False
+        ):
+
+        """
+        Calculate transport-cost-based competitor accessibility for supply locations.
+
+        This method builds a transport-costs matrix between supply locations
+        (origins) and supply locations (destinations) and stores the result as
+        a `CompetitorConcentration` instance in `self.competitor_concentration`.
+        The transport-costs matrix can be computed using OpenRouteService
+        (network=True) or as straight-line distances (network=False).
+
+        Parameters
+        ----------
+        network : bool, optional
+            If True (default), use the ORS network matrix; if False, compute
+            euclidean distances and convert to the requested unit.
+        destinations : list or None, optional
+            List of destination unique IDs to limit destination set. If None,
+            all supply locations are used (default: None).
+        range_type : str, optional
+            Column name for transport costs to return ("time" or "distance").
+            Default is "time".
+        distance_unit : str, optional
+            Unit for distance calculations when `network=False` (default
+            "kilometers").
+        time_unit : str, optional
+            Unit label for time values (default "minutes").
+        profile : str, optional
+            ORS routing profile to use when `network=True` (default
+            "driving-car").
+        ors_server : str, optional
+            ORS API base URL (default "https://api.openrouteservice.org/v2/").
+        ors_auth : str or None, optional
+            ORS API key (default: None).
+        timeout : int, optional
+            Request timeout in seconds for ORS calls (default: 10).
+        remove_duplicates : bool, optional
+            If True, remove duplicate supply locations before matrix
+            calculation (default: True).
+        verbose : bool, optional
+            If True, print informational messages during processing.
+
+        Returns
+        -------
+        self
+            SupplyLocations instance with `competitor_concentration` set to a
+            `CompetitorConcentration` object that contains the computed
+            accessibility matrices and metadata.
+
+        Example
+        -------
+        >>> Haslach_supermarkets = load_geodata(
+        ...     "data/Haslach_supermarkets.shp",
+        ...     location_type="destinations",
+        ...     unique_id="LFDNR"
+        ...     )
+        >>> Haslach_supermarkets.define_attraction("VKF_qm")
+        >>> Haslach_supermarkets.define_attraction_weighting(
+        ...     param_gamma=0.9
+        ...     )
+        >>> Haslach_supermarkets.competitor_accessibility(
+        ...     network=False,
+        ...     destinations=[12,25,46],
+        ...     )
+        >>> Haslach_supermarkets.competitor_accessibility(
+        ...     network=False,
+        ...     destinations=[1,5,30,38,59]
+        ...     )
+        >>> Haslach_supermarkets.concentration()
+        """
+
+        if self.competitor_concentration is not None:
+            
+            competitor_accessibility = self.competitor_concentration.get_competitor_accessibility_list()            
+            competitor_concentration_key = len(competitor_accessibility)
+            
+            competitor_accessibility.append([None])
+            
+            competitor_concentration_metadata = self.competitor_concentration.get_metadata()
+            
+            competitor_concentration_weightings = self.competitor_concentration.get_weightings()
+            
+            competitor_relative_location = self.competitor_concentration.get_competitor_relative_location_list()
+            
+            if verbose:
+                print(f"NOTE: SupplyLocations instance already includes {len(competitor_accessibility)} competitor accessibility calculations.")                      
+            
+        else:
+            
+            competitor_accessibility=[None]
+            
+            competitor_concentration_key = 0
+            
+            competitor_concentration_metadata = {"calculation_input": {0: None}}
+            
+            competitor_concentration_weightings = {}
+            
+            competitor_relative_location = []
+            
+            if verbose:
+                print("NOTE: SupplyLocations does not yet include competitor accessibility calculations.")
+
+        if destinations is None:
+            destinations = []
+
+        if not network and range_type == "time":
+            
+            print ("NOTE: Calculating euclidean distances (network = False). Setting range_type = 'distance'")
+            range_type = "distance"
+        
+        if verbose:
+            if remove_duplicates:
+                print("Preparing data for transport costs matrix calculation, including removing duplicates", end = " ... ")
+            else:
+                print("Preparing data for transport costs matrix calculation", end = " ... ")
+
+        supply_locations_geodata_gpd = self.get_geodata_gpd().copy()
+        
+        supply_locations_metadata = self.get_metadata()
+        supply_locations_uniqueid = supply_locations_metadata["unique_id"]
+
+        if remove_duplicates:
+            supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop_duplicates(subset=supply_locations_uniqueid)
+        
+        supply_locations_coords_sources = [[point.x, point.y] for point in supply_locations_geodata_gpd.geometry]
+        supply_locations_ids_sources = supply_locations_geodata_gpd[supply_locations_uniqueid].tolist()
+        
+        if len(destinations) > 0:
+            
+            destinations = [str(destination) for destination in destinations]
+
+            supply_locations_geodata_gpd = supply_locations_geodata_gpd.loc[supply_locations_geodata_gpd[supply_locations_uniqueid].astype(str).isin(destinations)]
+        
+            supply_locations_coords_destinations = [[point.x, point.y] for point in supply_locations_geodata_gpd.geometry]
+            supply_locations_ids_destinations = supply_locations_geodata_gpd[supply_locations_uniqueid].tolist()
+                    
+        else:
+            
+            supply_locations_coords_destinations = [[point.x, point.y] for point in supply_locations_geodata_gpd.geometry]
+            supply_locations_ids_destinations = supply_locations_geodata_gpd[supply_locations_uniqueid].tolist()
+
+        locations_coords = supply_locations_coords_sources + supply_locations_coords_destinations        
+        
+        locations_origins_index = list(range(len(supply_locations_coords_sources)))
+        locations_destinations_index = list(range(len(locations_origins_index), len(locations_coords)))
+        
+        locations_origins_map = pd.DataFrame(
+            {
+                "index": locations_origins_index,
+                f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_ORIGINS_SUFFIX}": supply_locations_ids_sources
+                }
+            )      
+        
+        locations_destinations_map = pd.DataFrame(
+            {
+                "index": locations_destinations_index,
+                f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_DESTINATIONS_SUFFIX}": supply_locations_ids_destinations
+                }
+            )
+
+        if verbose:
+            print("OK")
+            if len(destinations) > 0:
+                print(f"NOTE: Destinations are limited to {len(destinations)} locations.")
+
+        error_message = ""
+
+        if network:
+
+            ors_client = Client(
+                server = ors_server,
+                auth = ors_auth
+                )
+            time_distance_matrix = ors_client.matrix(
+                locations = locations_coords,                
+                sources = locations_origins_index,
+                destinations = locations_destinations_index,
+                range_type = range_type,
+                profile = profile,
+                timeout = timeout,
+                save_output = False,
+                verbose = verbose
+                )
+            
+            transport_costs_matrix = time_distance_matrix.get_matrix()            
+
+            if transport_costs_matrix is None:
+
+                print("WARNING: No transport costs matrix was built. Probably ORS server error. Check output above and try again later.")
+
+                error_message = "Error: No transport costs matrix was built. Probably ORS server error."
+            
+            else:
+
+                transport_costs_matrix[config.MATRIX_COL_SOURCE] = transport_costs_matrix[config.MATRIX_COL_SOURCE].astype(int)
+                transport_costs_matrix[config.MATRIX_COL_SOURCE] = transport_costs_matrix[config.MATRIX_COL_SOURCE].map(dict(enumerate(supply_locations_ids_sources)))
+                
+                transport_costs_matrix[config.MATRIX_COL_DESTINATION] = transport_costs_matrix[config.MATRIX_COL_DESTINATION].astype(int)
+                transport_costs_matrix[config.MATRIX_COL_DESTINATION] = transport_costs_matrix[config.MATRIX_COL_DESTINATION].map(dict(enumerate(supply_locations_ids_destinations)))
+                
+                transport_costs_matrix[f"{config.MATRIX_COL_SOURCE}_{config.MATRIX_COL_DESTINATION}"] = transport_costs_matrix[config.MATRIX_COL_SOURCE].astype(str)+config.MATRIX_OD_SEPARATOR+transport_costs_matrix[config.MATRIX_COL_DESTINATION].astype(str)
+                
+                transport_costs_matrix = transport_costs_matrix[
+                    [
+                        f"{config.MATRIX_COL_SOURCE}_{config.MATRIX_COL_DESTINATION}", 
+                        range_type
+                        ]
+                        ]
+
+        else:
+
+            distance_matrix_result = distance_matrix(
+                sources = supply_locations_coords_sources,
+                destinations = supply_locations_coords_destinations,
+                sources_uid = locations_origins_index,
+                destinations_uid = locations_destinations_index,
+                unit = distance_unit,                
+                save_output = False,
+                verbose = verbose
+                )
+            
+            transport_costs_matrix = distance_matrix_result[1]
+            
+            transport_costs_matrix = transport_costs_matrix.merge(
+                locations_origins_map,
+                how="inner",
+                left_on=f"{config.MATRIX_COL_SOURCE}{config.DEFAULT_UNIQUE_ID_SUFFIX}",
+                right_on="index"
+            )
+            transport_costs_matrix = transport_costs_matrix.merge(
+                locations_destinations_map,
+                how="inner",
+                left_on=f"{config.MATRIX_COL_DESTINATION}{config.DEFAULT_UNIQUE_ID_SUFFIX}",
+                right_on="index"
+            )
+            
+            transport_costs_matrix = transport_costs_matrix[
+                [
+                    f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_ORIGINS_SUFFIX}",
+                    f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_DESTINATIONS_SUFFIX}", 
+                    range_type
+                    ]
+                    ]
+
+        competitor_accessibility[competitor_concentration_key] = transport_costs_matrix
+        
+        competitor_concentration_metadata["calculation_input"][competitor_concentration_key] = {
+            "network": network,
+            "destinations": destinations,
+            "range_type": range_type,
+            "distance_unit": distance_unit,
+            "time_unit": time_unit,
+            "profile": profile
+        }
+    
+        competitor_concentration_instance = CompetitorConcentration(
+            competitor_accessibility=competitor_accessibility,
+            competitor_relative_location=competitor_relative_location,
+            weightings=competitor_concentration_weightings,
+            metadata=competitor_concentration_metadata
+        )
+        
+        unit = distance_unit if range_type == "distance" else time_unit
+        
+        helper.add_timestamp(
+            competitor_concentration_instance,
+            function="models.SupplyLocations.competitor_accessibility",
+            process=f"Calculated competitor accessibility #{competitor_concentration_key+1} with {len(supply_locations_ids_destinations)} destinations ({range_type}, {unit})",
+            status="OK" if error_message == "" else error_message
+            )
+
+        self.competitor_concentration = competitor_concentration_instance
+
+        helper.add_timestamp(
+            self,
+            function="models.SupplyLocations.competitor_accessibility",
+            process=f"Calculated competitor accessibility #{competitor_concentration_key+1} with {len(supply_locations_ids_destinations)} destinations ({range_type}, {unit})",
+            status="OK" if error_message == "" else error_message
+            )
+
+        return self
+
+    def concentration(
+        self,
+        weightings: dict = None,
+        conc_variable_names: list = None,
+        add_to_attraction_vars: bool = True,
+        verbose: bool = False
+        ): 
+        """
+        Calculate competitor concentration variables from accessibility matrices.
+
+        This method calculates concentration variables (a.k.a. "relative location")
+        for each origin by applying attraction and transport-cost weightings. 
+        See Fotheringham (1985) for the derivation of the concentration variable.
+
+        Parameters
+        ----------
+        weightings : dict, optional
+            Dictionary of weighting specifications for each competitor
+            accessibility calculation. If None, default weightings are used.
+            Each weighting entry must provide an `attraction` and a
+            `transport_costs` dict with `func` and `param` keys.
+        conc_variable_names : list, optional
+            List of names to use for the generated concentration variables.
+            If None, default names are created automatically.
+        add_to_attraction_vars : bool, optional
+            If True (default), add the generated concentration variable(s) to
+            the supply locations' attraction columns and update
+            `self.geodata_gpd_original` and `self.metadata`.
+        verbose : bool, optional
+            If True, print informational messages during processing.
+
+        Returns
+        -------
+        self
+            SupplyLocations instance with concentration variables computed and
+            (optionally) added to `geodata_gpd_original` and `metadata`.
+
+        Raises
+        ------
+        KeyError
+            If no competitor accessibility calculations are present. Run
+            `SupplyLocations.competitor_accessibility()` first.
+
+        Example
+        -------
+        >>> Haslach_supermarkets = load_geodata(
+        ...     "data/Haslach_supermarkets.shp",
+        ...     location_type="destinations",
+        ...     unique_id="LFDNR"
+        ...     )
+        >>> Haslach_supermarkets.define_attraction("VKF_qm")
+        >>> Haslach_supermarkets.define_attraction_weighting(
+        ...     param_gamma=0.9
+        ...     )
+        >>> Haslach_supermarkets.competitor_accessibility(
+        ...     network=False,
+        ...     destinations=[12,25,46],
+        ...     )
+        >>> Haslach_supermarkets.competitor_accessibility(
+        ...     network=False,
+        ...     destinations=[1,5,30,38,59]
+        ...     )
+        >>> Haslach_supermarkets.concentration()
+        """
+
+        if self.competitor_concentration is None:
+            raise KeyError("SupplyLocations object does not contain any competitor accessibility calculations. Run SupplyLocations.competitor_accessibility() first.")
+        
+        supply_locations_metadata = self.get_metadata().copy()
+        supply_locations_uniqueid = supply_locations_metadata["unique_id"]
+        supply_locations_attraction_col = supply_locations_metadata["attraction_col"][0]
+        
+        supply_locations_geodata_gpd_original = self.get_geodata_gpd_original()
+        supply_locations_geodata_gpd_original = supply_locations_geodata_gpd_original.copy()
+        
+        competitor_accessibility = self.competitor_concentration.get_competitor_accessibility_list()
+        
+        if verbose:
+            print(f"NOTE: SupplyLocations instance includes {len(competitor_accessibility)} competitor accessibility calculations.")            
+        
+        competitor_concentration_metadata = self.competitor_concentration.get_metadata()
+        
+        if weightings is not None and len(weightings) != len(competitor_accessibility):
+            raise KeyError(f"There are {len(competitor_accessibility)} competitor accessibility calculations but {len(weightings)} weightings were stated.")
+        if conc_variable_names is not None and len(conc_variable_names) != len(competitor_accessibility):
+            raise KeyError(f"There are {len(competitor_accessibility)} competitor accessibility calculations but {len(conc_variable_names)} variable names were stated.")
+
+        weighting_errors = []
+        
+        if weightings is None:
+            
+            print("NOTE: Parameter 'weightings' was not stated. Using default weightings.")
+            
+            weightings = {}
+            
+            for key, competitor_accessibility_calculation in enumerate(competitor_accessibility):
+                
+                weightings[key] = {
+                "attraction": {                    
+                    "func": "power",
+                    "param": 1
+                    },
+                "transport_costs": {
+                    "func": "power",
+                    "param": -2
+                    },                
+                }
+        
+        else:            
+            
+            for key, conc_weighting in enumerate(weightings):
+                
+                if len(conc_weighting) != 2:
+                    weighting_errors.append(f"Two weightings (attraction, transport costs) are required, but weighting dict {key} contains {len(conc_weighting)}.")
+                
+                if "attraction" in conc_weighting:
+                    if conc_weighting["attraction"]["func"] not in config.PERMITTED_WEIGHTING_FUNCTIONS_LIST:
+                        weighting_errors.append(f"Parameter 'func' is equal to {conc_weighting['attraction']['func']}, but must be one of these: {', '.join(config.PERMITTED_WEIGHTING_FUNCTIONS_LIST)}")
+                else:
+                    weighting_errors.append(f"An attraction weighting is required.")
+                    
+                if "transport_costs" in conc_weighting:
+                    if conc_weighting["transport_costs"]["func"] not in config.PERMITTED_WEIGHTING_FUNCTIONS_LIST:
+                        weighting_errors.append(f"Parameter 'func' is equal to {conc_weighting['transport_costs']['func']}, but must be one of these: {', '.join(config.PERMITTED_WEIGHTING_FUNCTIONS_LIST)}")
+                else:
+                    weighting_errors.append(f"An transport costs weighting is required.")
+                        
+            if len(weighting_errors) > 0:
+                raise WeightingError(f"Error(s) in definition of weightings for concentration calculation: {' '.join(weighting_errors)}")
+                
+        if conc_variable_names is None:
+            
+            conc_variable_names = []
+                        
+            for key, competitor_accessibility_calculation in enumerate(competitor_accessibility):
+                conc_variable_names.append(f"{config.DEFAULT_COLNAME_CONCENTRATION}_{key+1}")
+
+            print(f"NOTE: Parameter 'conc_variable_names' was not stated. Using default names: {', '.join(conc_variable_names)}.")
+        
+        competitor_relative_location = []        
+        
+        for key, competitor_accessibility_calculation in enumerate(competitor_accessibility):
+            
+            conc_variable_name = conc_variable_names[key]
+
+            if verbose:
+                print(f"Calculating concentration variable '{conc_variable_name}'", end = " ... ")
+
+            competitor_accessibility_calculation = competitor_accessibility_calculation.loc[competitor_accessibility_calculation[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_DESTINATIONS_SUFFIX}"] != competitor_accessibility_calculation[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_ORIGINS_SUFFIX}"]]
+            
+            competitor_accessibility_calculaton_metadata = competitor_concentration_metadata["calculation_input"][key]
+            tc_col = competitor_accessibility_calculaton_metadata["range_type"]
+            
+            weighting_key = weightings[key]
+            
+            attraction_func = weighting_key["attraction"]["func"]
+            attraction_param = weighting_key["attraction"]["param"]
+            
+            transport_costs_func = weighting_key["transport_costs"]["func"]
+            transport_costs_param = weighting_key["transport_costs"]["param"]
+            
+            supply_locations_col = f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_DESTINATIONS_SUFFIX}"
+            
+            competitor_accessibility_calculation = competitor_accessibility_calculation.merge(
+                supply_locations_geodata_gpd_original[[supply_locations_uniqueid, supply_locations_attraction_col]],
+                how="inner",
+                left_on=supply_locations_col,
+                right_on=supply_locations_uniqueid
+            )
+            
+            check_weighting(
+                name = config.DEFAULT_COLNAME_TC,
+                func = transport_costs_func,
+                param = transport_costs_param
+                )
+                    
+            if config.PERMITTED_WEIGHTING_FUNCTIONS[transport_costs_func]["no_params"] > 1:
+                competitor_accessibility_calculation[tc_col] = weighting(
+                    values = competitor_accessibility_calculation[tc_col],
+                    func = transport_costs_func,
+                    b = transport_costs_param[0],
+                    c = transport_costs_param[1]
+                    )
+            else:                     
+                competitor_accessibility_calculation[config.DEFAULT_COLNAME_TC_WEIGHTED] = weighting(
+                    values = competitor_accessibility_calculation[tc_col],
+                    func = transport_costs_func,
+                    b = transport_costs_param
+                    )
+
+            check_weighting(
+                name = config.DEFAULT_COLNAME_ATTRAC_WEIGHTED,
+                func = attraction_func,
+                param = attraction_param
+                )
+                
+            if config.PERMITTED_WEIGHTING_FUNCTIONS[attraction_func]["no_params"] > 1:
+                competitor_accessibility_calculation[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED] = weighting(
+                    values = competitor_accessibility_calculation[supply_locations_attraction_col],
+                    func = attraction_func,
+                    b = attraction_param[0],
+                    c = attraction_param[1]
+                    )
+            else:            
+                competitor_accessibility_calculation[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED] = weighting(
+                    values = competitor_accessibility_calculation[supply_locations_attraction_col],
+                    func = attraction_func,
+                    b = attraction_param
+                    )
+                
+            competitor_accessibility_calculation[config.DEFAULT_COLNAME_CONCENTRATION_UTILITY] = competitor_accessibility_calculation[config.DEFAULT_COLNAME_ATTRAC_WEIGHTED]*competitor_accessibility_calculation[config.DEFAULT_COLNAME_TC_WEIGHTED]
+
+            utility_jk = pd.DataFrame(competitor_accessibility_calculation.groupby(f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_ORIGINS_SUFFIX}")[config.DEFAULT_COLNAME_CONCENTRATION_UTILITY].sum())
+            utility_jk = utility_jk.rename(columns = {config.DEFAULT_COLNAME_CONCENTRATION_UTILITY: conc_variable_name})
+
+            competitor_accessibility_calculation = competitor_accessibility_calculation.merge(
+                utility_jk,
+                left_on=f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_ORIGINS_SUFFIX}",
+                right_on=f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_ORIGINS_SUFFIX}"
+            )            
+            
+            competitor_accessibility_calculation = competitor_accessibility_calculation.drop(
+                columns=[
+                    f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_DESTINATIONS_SUFFIX}",
+                    tc_col,
+                    config.DEFAULT_COLNAME_ATTRAC_WEIGHTED,
+                    config.DEFAULT_COLNAME_TC_WEIGHTED,
+                    supply_locations_uniqueid,
+                    supply_locations_attraction_col,
+                    config.DEFAULT_COLNAME_CONCENTRATION_UTILITY
+                    ]
+                )
+            
+            competitor_accessibility_calculation = competitor_accessibility_calculation.rename(
+                columns = {
+                    f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}{config.DEFAULT_ORIGINS_SUFFIX}": config.DEFAULT_COLNAME_SUPPLY_LOCATIONS
+                }
+            )
+            
+            competitor_accessibility_calculation = competitor_accessibility_calculation.drop_duplicates()
+           
+            competitor_relative_location.append(competitor_accessibility_calculation)
+
+            if verbose:
+                print("OK")
+                        
+            if add_to_attraction_vars:
+                
+                attraction_cols_no = len(supply_locations_metadata["attraction_col"])+1
+
+                if verbose:
+                    print(f"Adding concentration variable '{conc_variable_name}' as attraction variable #{attraction_cols_no} to supply locations data", end = " ... ")
+
+                supply_locations_metadata["attraction_col"].append(conc_variable_name)
+
+                supply_locations_geodata_gpd_original = supply_locations_geodata_gpd_original.merge(
+                    competitor_accessibility_calculation,
+                    left_on = supply_locations_uniqueid,
+                    right_on = config.DEFAULT_COLNAME_SUPPLY_LOCATIONS
+                )
+
+                self.geodata_gpd_original = supply_locations_geodata_gpd_original
+                
+                helper.add_timestamp(
+                    self,
+                    function="models.SupplyLocations.concentration",
+                    process=f"Added '{conc_variable_name}' as attraction variable #{attraction_cols_no} to supply locations data",
+                    status="OK"
+                    )
+                
+                if verbose:
+                    print("OK")
+                
+        self.metadata = supply_locations_metadata
         
         return self
 
@@ -2499,7 +3107,7 @@ class InteractionMatrix:
                 values = interaction_matrix_df[config.DEFAULT_COLNAME_TC],
                 func = tc_weighting["func"],
                 b = tc_weighting["param"]
-                )     
+                )
         
         supply_locations = self.supply_locations
         supply_locations_metadata = supply_locations.get_metadata()
@@ -3170,7 +3778,7 @@ class InteractionMatrix:
         if use_attraction:
             
             if config.DEFAULT_COLNAME_ATTRAC not in interaction_matrix_df.columns:
-                raise InteractionMatrixError(f"Error in {config.MODELS['2SFCA']['description']}: Interaction matrix does not contain attraction variable {config.DEFAULT_COLNAME_ATTRAC}")
+                raise InteractionMatrixError(f"Error in {config.MODELS['2SFCA']['description']}: Interaction matrix does not contain attraction variable '{config.DEFAULT_COLNAME_ATTRAC}'")
             if interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC].isna().all():
                 print(f"NOTE: No attraction definition in {config.MODELS['2SFCA']['description']}. Set attraction as constant = 1.")
                 
@@ -4488,7 +5096,8 @@ class InteractionMatrix:
             geodata_gpd_original=supply_locations_geodata_gpd_original_new,
             metadata=supply_locations.metadata,
             isochrones_gdf=supply_locations.isochrones_gdf,
-            buffers_gdf=supply_locations.buffers_gdf
+            buffers_gdf=supply_locations.buffers_gdf,
+            competitor_concentration = None
         )
 
         interaction_matrix_new = create_interaction_matrix(
@@ -4991,7 +5600,111 @@ class MarketAreas:
             print(f"{model_object_type} was added to {output_model} model object")
             
         return model
+
+class CompetitorConcentration:
     
+    """
+    Container for competitor concentration metrics.
+
+    Holds computed measures describing the concentration and spatial
+    distribution of competitors around each supply location. This includes
+    accessibility-based measures, relative-location indicators (e.g. nearby
+    competitor counts or proximity metrics), the weighting parameters used
+    to derive those measures and related metadata.
+
+    Parameters
+    ----------
+    competitor_accessibility : pandas.DataFrame or dict
+        Accessibility measures for competitors per supply location. 
+    competitor_relative_location : pandas.DataFrame or dict
+        Relative-location measures per supply location.
+    weightings : dict
+        Weighting parameters or functions used when computing the
+        concentration measures.
+    metadata : dict
+        Metadata describing inputs, computation settings, timestamps and
+        provenance information for the competitor concentration results.
+
+    Methods
+    -------
+    get_competitor_accessibility_list()
+        Return the competitor accessibility data.
+    get_competitor_relative_location_list()
+        Return the competitor relative-location data.
+    get_weightings()
+        Return the weighting parameters.
+    get_metadata()
+        Return the metadata dictionary.
+    """
+
+    def __init__(
+        self, 
+        competitor_accessibility,
+        competitor_relative_location,
+        weightings,
+        metadata
+        ):
+
+        self.competitor_accessibility = competitor_accessibility
+        self.competitor_relative_location = competitor_relative_location
+        self.weightings = weightings
+        self.metadata = metadata
+        
+    def get_competitor_accessibility_list(self):
+
+        """
+        Return competitor accessibility measures.
+
+        Returns
+        -------
+        list
+            Accessibility scores or summaries for competitors per supply
+            location.
+        """
+
+        return self.competitor_accessibility
+    
+    def get_competitor_relative_location_list(self):
+
+        """
+        Return relative-location indicators for competitors.
+
+        Returns
+        -------
+        list
+            Proximity metrics (e.g. nearby competitor counts, distances)
+            per supply location.
+        """
+
+        return self.competitor_relative_location
+    
+    def get_weightings(self):
+
+        """
+        Return weighting parameters used to compute concentration metrics.
+
+        Returns
+        -------
+        dict
+            Weighting functions or parameter values (e.g. decay, attraction)
+            applied when deriving the competitor concentration measures.
+        """
+
+        return self.weightings
+    
+    def get_metadata(self):
+
+        """
+        Get the metadata dictionary.
+        
+        Returns
+        -------
+        dict
+            Metadata associated with the competitor concentration calculation.
+        """
+
+        return self.metadata
+        
 class HuffModel:
 
     """
@@ -6649,9 +7362,9 @@ class MCIModel:
         interaction_matrix_metadata = interaction_matrix.get_metadata()
 
         if interaction_matrix_df[config.DEFAULT_COLNAME_TC].isna().all():
-            raise ValueError(f"Error in utility calculation: {config.DEFAULT_NAME_TC} variable {config.DEFAULT_COLNAME_TC} is not defined")
+            raise ValueError(f"Error in utility calculation: {config.DEFAULT_NAME_TC} variable '{config.DEFAULT_COLNAME_TC}' is not defined")
         if interaction_matrix_df[config.DEFAULT_COLNAME_ATTRAC].isna().all():
-            raise ValueError(f"Error in utility calculation: {config.DEFAULT_NAME_ATTRAC} variable {config.DEFAULT_COLNAME_ATTRAC} is not defined")
+            raise ValueError(f"Error in utility calculation: {config.DEFAULT_NAME_ATTRAC} variable '{config.DEFAULT_COLNAME_ATTRAC}' is not defined")
 
         if check_df_vars:
             helper.check_vars(
@@ -7736,7 +8449,7 @@ def log_centering_transformation(
             
             df[var+suffix] = df[var]
             
-            print (f"Column {var} is a dummy variable and requires/allows no log-centering transformation")
+            print (f"Column '{var}' is a dummy variable and requires/allows no log-centering transformation")
             
             continue
 
@@ -7744,7 +8457,7 @@ def log_centering_transformation(
             
             df[var+suffix] = float("nan")
             
-            print (f"Column {var} contains values <= 0. No log-centering transformation possible.")
+            print (f"Column '{var}' contains values <= 0. No log-centering transformation possible.")
             
             continue
 

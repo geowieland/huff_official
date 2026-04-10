@@ -7,8 +7,8 @@ author:
     ORCID: 0000-0001-5168-9846  
     EMail: geowieland@googlemail.com
 bibliography: paper.bib
-date: 02 March 2026
-version: 1.1.0
+date: 10 April 2026
+version: 1.2.0
 ---
 
 
@@ -39,7 +39,7 @@ The huff package for Python v1.8.x essentially provides the following features:
 
   - *Parameter estimation based on empirical data*: Given empirical data on customer flows, regional market shares, or total sales, users may estimate weighting parameters of market area models. Model parametrization may be undergone using the econometric approach in the *MCI model* (if regional market shares are available) or by Maximum Likelihood optimization using regional market shares, customer flows, or total market areas. 
 
-  - *Accessibility analysis*: The package includes methods of accessibility analysis, which may be combined with market area analysis (especially empirical estimation of weighting parameters), namely *Hansen accessibility* [@hansen1959] and *Two-step floating catchment area analysis (2SFCA)* [@luo2003].
+  - *Accessibility analysis*: The package includes methods of accessibility analysis, which may be combined with market area analysis (especially empirical estimation of weighting parameters), namely *Hansen accessibility* [@hansen1959] and *Two-step floating catchment area analysis (2SFCA)* [@luo2003]. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* [@fotheringham1985].
 
   - *GIS tools*: The library also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService [@neis2008] and OpenStreetMap [@haklay2008] for simple maps, with all of them being implemented in the market area analysis functions but are also able to be used stand-alone.
 
@@ -65,7 +65,7 @@ The `huff` package is currently used in a health geography project at the Wuerzb
 
 **Software development history statement**
 
-Due to data confidentiality requirements, the early development of the `huff` library took place in a private repository; the public repository was initialized more recently to provide open access for reproducibility and review. The `huff` Python package has been publicly developed and published via the [Python Package Index] (https://pypi.org/project/huff/) since April 2025. As of submission, it has undergone 44 releases, showing continuous improvement and feature additions. The library is actively used: since its first release (version 1.0.0) in April 2025, it has been downloaded approximately 23,700 times from the Python Package Index (source: [pepy.tech](https://pepy.tech/project/huff), accessed March 02, 2026).
+Due to data confidentiality requirements, the early development of the `huff` library took place in a private repository; the public repository was initialized more recently to provide open access for reproducibility and review. The `huff` Python package has been publicly developed and published via the [Python Package Index](https://pypi.org/project/huff/) since April 2025. As of submission, it has undergone 46 releases, showing continuous improvement and feature additions. The library is actively used: since its first release (version 1.0.0) in April 2025, it has been downloaded approximately 26,200 times from the Python Package Index (source: [pepy.tech](https://pepy.tech/project/huff), accessed April 10, 2026).
 
 
 **AI usage disclosure**
@@ -112,6 +112,30 @@ The inverse log-centering transformation is [@nakanishi1982]:
 $$\hat{p}_{ij} = \frac{\exp{\sum_{h=1}^H \hat{\gamma}_h \log \frac{A_{h_j}}{\widetilde{A}_{h_j}}}} {\sum_{j=1}^J \exp{\sum_{h=1}^H \hat{\gamma}_h \log \frac{A_{h_j}}{\widetilde{A}_{h_j}}}}$$
 
 where $\hat{p}_{ij}$ is the estimated interaction probability (or market share) of origin $i$ with respect to location $j$.
+
+Hansen accessibility is formalized as follows [@hansen1959]:
+
+$$A_i = \sum_{j=1}^J O_j f(d_{ij})$$
+
+where $A_i$ is the weighted accessibility from origin $i$, $O_j$ is the number of opportunities at location $j$ ($j=1,2,...,J$), and $d_{ij}$ is the distance or travel time between $i$ and $j$.
+
+The basic two-step floating catchment area analysis is calculated as follows [@luo2003]:
+
+Step 1: $$R_j = \frac{S_j}{\sum_{k \in \{d_{kj} \leq d_0\}} P_k}$$
+
+where $R_j$ is the supply-to-demand ratio at location $j$ which is within the catchment threshold, $P_k$ is the population of origin $k$ which is within the catchment threshold, $S_j$ is the number of opportunities at location $j$, $d_{kj}$ is the distance or travel time between $k$ and $j$, and $d_0$ is the catchment threshold.
+
+Step 2: $$A_i^F = \sum_{j \in \{d_{ij} \leq d_0\}} R_j$$
+
+where $A_i^F$ is the accessibility at origin $i$ and $d_{ij}$ is the travel time or distance between $i$ and $j$.
+
+The Competing Destinations Model has the following probability equation [@fotheringham1985]:
+
+$$p_{ij} = \frac{A_j^{\gamma} \exp{-\lambda t_{ij}} C_j^{\beta}}{\sum_{j=1}^J A_j^{\gamma} \exp{-\lambda t_{ij}} C_j^{\beta}}$$
+
+with $C_j$ being the relative location of supplier $j$ with respect to all $K$ competitors ($k=1,2,...,K$, $j \neq k$), and $\beta$ being th corresponding weighting. The clustering indicator is calculated as follows:
+
+$$C_j = \sum_{k=1, j \neq k}^K \frac{A_k^{\alpha}}{t_{jk}^{\delta}}$$
 
 
 **References**

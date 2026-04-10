@@ -2,7 +2,7 @@
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
-This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
+This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985). Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
 
 
 ## Author
@@ -23,7 +23,7 @@ A software paper describing the library is available at [arXiv](https://arxiv.or
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.6) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.7) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -188,6 +188,7 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 
   - Cooper LG, Nakanishi M (1983) Standardizing Variables in Multiplicative Choice Models. *Journal of Consumer Research* 10(1): 96–108. [10.1086/208948](https://doi.org/10.1086/208948)
   - De Beule M, Van den Poel D, Van de Weghe N (2014) An extended Huff-model for robustly benchmarking and predicting retail network performance. *Applied Geography* 46(1): 80–89. [10.1016/j.apgeog.2013.09.026](https://doi.org/10.1016/j.apgeog.2013.09.026)
+  - Fotheringham AS (1985) Spatial Competition and Agglomeration in Urban Modelling. *Environment and Planning A: Economy and Space* 17(2): 213-230. [10.1068/a170213](https://doi.org/10.1068/a170213)
   - Güssefeldt J (2002) Zur Modellierung von räumlichen Kaufkraftströmen in unvollkommenen Märkten. *Erdkunde* 56(4): 351–370. [10.3112/erdkunde.2002.04.02](https://doi.org/10.3112/erdkunde.2002.04.02)
   - Haines Jr GH, Simon LS, Alexis M (1972) Maximum Likelihood Estimation of Central-City Food Trading Areas. *Journal of Marketing Research* 9(2): 154-159. [10.2307/3149948](https://doi.org/10.2307/3149948)
   - Hansen WG (1959) How Accessibility Shapes Land Use. *Journal of the American Institute of Planners* 25(2): 73-76. [10.1080/01944365908978307](https://doi.org/10.1080/01944365908978307)
@@ -214,12 +215,11 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation.
 
 
-## What's new (v1.8.6)
+## What's new (v1.8.7)
 
+- Extensions
+  - Calculation of competitor accessibility and relative location via models.SupplyLocations.competitor_accessibility() and models.SupplyLocations.concentration(); storage in new class CompetitorConcentration  
+  
 - Bugfixes
-  - Check for correct weighting definitions in models.InteractionMatrix.utility(), models.SupplyLocations.define_attraction_weighting(), models.SupplyLocations.add_var(), models.CustomerOrigins.define_transportcosts_weighting(), and models.InteractionMatrix.define_weightings()
-  - In models.InteractionMatrix.utility(), attraction weighting with two-param weighting function is now accepted
-  - In models.create_interaction_matrix(), processing >= 2 attraction variables is now possible
-  - In SupplyLocations.add_var(), column name and format of added attraction variable is now checked
-  - helper.check_numeric_series() now checks conversion to numeric instead of dtype
-  - Division by zero in goodness_of_fit.modelfit() is prevented in all cases
+  - data_management.load_geodata() and data_management.load_interaction_matrix() now thorougly checks correctness of geometry col(s) in input data 
+  - data_management.load_interaction_matrix() now treats input data correctly when input coord col is "geometry"

@@ -5,7 +5,7 @@ authors:
   given-names: "Thomas"
   orcid: "https://orcid.org/0000-0001-5168-9846"
 title: "huff: Market Area Analysis in Python"
-version: 1.8.6
+version: 1.8.7
 doi: 10.5281/zenodo.18639559
-date-released: 2026-03-21
+date-released: 2026-04-10
 url: "https://github.com/geowieland/huff_official"

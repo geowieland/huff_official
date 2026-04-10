@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.13
-# Last update: 2026-03-21 09:59
+# Version:     1.0.14
+# Last update: 2026-03-29 09:38
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.8.6"
+PACKAGE_VERSION = "1.8.7"
 
 # Basic config:
 
@@ -74,6 +74,8 @@ DEFAULT_COLNAME_TOTAL_MARKETAREA = "T_j"
 DEFAULT_COLNAME_UTILITY_SUPPLY = "U_ji"
 DEFAULT_COLNAME_ACCESSIBILITY_ORIGINS = "A_i"
 DEFAULT_COLNAME_SD_RATIO = "R_j"
+DEFAULT_COLNAME_CONCENTRATION = "C_j"
+DEFAULT_COLNAME_CONCENTRATION_UTILITY = "U_jk"
 
 # Default column name suffixes:
 DEFAULT_LCT_SUFFIX = "__LCT"

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.11
-# Last update: 2026-03-21 10:38
+# Version:     1.0.14
+# Last update: 2026-03-28 13:55
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -14,7 +14,7 @@ import pandas as pd
 import geopandas as gp
 from shapely import wkt
 from shapely.geometry import Point
-from huff.models import SupplyLocations, CustomerOrigins, InteractionMatrix, MarketAreas, market_shares
+from huff.models import SupplyLocations, CustomerOrigins, InteractionMatrix, MarketAreas, InteractionMatrixError, market_shares
 import huff.helper as helper
 import huff.config as config
 
@@ -92,38 +92,67 @@ def load_geodata(
     ... )
     """
     
+    crs_output = config.WGS84_CRS
+
     if location_type is None or (location_type not in config.PERMITTED_LOCATION_TYPES):
         raise ValueError (f"Error while loading geodata: Argument location_type must be one of the following: {', '.join(config.PERMITTED_LOCATION_TYPES)}")
 
     if isinstance(data, gp.GeoDataFrame):
+
         geodata_gpd_original = data
+
         if not all(geodata_gpd_original.geometry.geom_type == "Point"):
-            raise TypeError ("Error while loading geodata: Input geopandas.GeoDataFrame must be of type 'Point'")
+            raise TypeError("Error while loading geodata: Input geopandas.GeoDataFrame must be of type 'Point'")
+        
         crs_input = geodata_gpd_original.crs
+
+        geodata_gpd = geodata_gpd_original.to_crs(crs_output)
+        geodata_gpd = geodata_gpd[[unique_id, "geometry"]] 
+
     elif isinstance(data, pd.DataFrame):
+
         geodata_tab = data
+
     elif isinstance(data, str):
+
         if data_type == "shp":
+
             geodata_gpd_original = gp.read_file(data)
+
             if not all(geodata_gpd_original.geometry.geom_type == "Point"):
                 raise TypeError ("Error while loading geodata: Input shapefile must be of type 'Point'")
+            
             crs_input = geodata_gpd_original.crs
+
+            geodata_gpd = geodata_gpd_original.to_crs(crs_output)
+            geodata_gpd = geodata_gpd[[unique_id, "geometry"]] 
+
         elif data_type == "csv" or data_type == "xlsx":
+
+            coord_cols_missing = []
             if x_col is None:
-                raise ValueError ("Error while loading geodata: Missing value for X coordinate column")
+                coord_cols_missing.append("X coordinate column")
             if y_col is None:
-                raise ValueError ("Error while loading geodata: Missing value for Y coordinate column")
-        elif data_type == "csv":
-            geodata_tab = pd.read_csv(
-                data, 
-                sep = csv_sep, 
-                decimal = csv_decimal, 
-                encoding = csv_encoding
-                ) 
-        elif data_type == "xlsx":
-            geodata_tab = pd.read_excel(data)
+                coord_cols_missing.append("Y coordinate column")
+            if len(coord_cols_missing) > 0:
+                raise ValueError(f"Missing value for {', '.join(coord_cols_missing)}.")
+            
+            if data_type == "csv":
+
+                geodata_tab = pd.read_csv(
+                    data, 
+                    sep = csv_sep, 
+                    decimal = csv_decimal, 
+                    encoding = csv_encoding
+                    ) 
+                
+            if data_type == "xlsx":
+
+                geodata_tab = pd.read_excel(data)
+
         else:
             raise TypeError("Error while loading geodata: Unknown type of data")
+        
     else:
         raise TypeError("Error while loading geodata: Param 'data' must be pandas.DataFrame, geopandas.GeoDataFrame or file (.csv, .xlsx, .shp)")
 
@@ -131,22 +160,29 @@ def load_geodata(
         
         helper.check_vars(
             df = geodata_tab,
-            cols = [x_col, y_col]
+            cols = [x_col, y_col],
+            check_constant = False
             )
-        
-        geodata_gpd_original = gp.GeoDataFrame(
-            geodata_tab, 
-            geometry = gp.points_from_xy(
-                geodata_tab[x_col], 
-                geodata_tab[y_col]
-                ), 
-            crs = crs_input
-            )
-        
-    crs_output = config.WGS84_CRS
 
-    geodata_gpd = geodata_gpd_original.to_crs(crs_output)
-    geodata_gpd = geodata_gpd[[unique_id, "geometry"]]   
+        try:
+        
+            geodata_gpd_original = gp.GeoDataFrame(
+                geodata_tab, 
+                geometry = gp.points_from_xy(
+                    geodata_tab[x_col], 
+                    geodata_tab[y_col]
+                    ), 
+                crs = crs_input
+                )
+
+            geodata_gpd = geodata_gpd_original.to_crs(crs_output)
+            geodata_gpd = geodata_gpd[[unique_id, "geometry"]]   
+            
+        except Exception as e:
+
+            print(f"WARNING: Invalid geometry information in {location_type} input data. Object is imported as pandas.DataFrame without geometry. Error: {str(e)}")
+
+            geodata_gpd = geodata_gpd[[unique_id]]    
     
     metadata = {
         "location_type": location_type,
@@ -185,7 +221,8 @@ def load_geodata(
             geodata_gpd_original = geodata_gpd_original, 
             metadata = metadata,
             isochrones_gdf = None,
-            buffers_gdf = None
+            buffers_gdf = None,
+            competitor_concentration = None
             )
         
     helper.add_timestamp(
@@ -318,34 +355,58 @@ def load_interaction_matrix(
     """
     
     if isinstance(data, pd.DataFrame):
+        
         interaction_matrix_df = data
+
     elif isinstance(data, str):
+
         if data_type not in ["csv", "xlsx"]:
+
             raise ValueError ("Error while loading interaction matrix: param 'data_type' must be 'csv' or 'xlsx'")
+        
         if data_type == "csv":
+
             interaction_matrix_df = pd.read_csv(
                 data, 
                 sep = csv_sep, 
                 decimal = csv_decimal, 
                 encoding = csv_encoding
-                )    
+                )
+                
         elif data_type == "xlsx":
+
             if xlsx_sheet is not None:
+
                 interaction_matrix_df = pd.read_excel(
                     data, 
                     sheet_name=xlsx_sheet
                     )
+                
             else:
+
                 interaction_matrix_df = pd.read_excel(data)
         else:
-            raise TypeError("Error while loading interaction matrix: Unknown type of data")
+
+            raise ValueError("Error while loading interaction matrix: Unknown type of data")
+        
     else:
-        raise TypeError("Error while loading interaction matrix: param 'data' must be pandas.DataFrame or file (.csv, .xlsx)")
+        raise ValueError("Error while loading interaction matrix: param 'data' must be pandas.DataFrame or file (.csv, .xlsx)")
     
+    import_key_errors = []   
     if customer_origins_col not in interaction_matrix_df.columns:
-        raise KeyError (f"Error while loading interaction matrix: Column {customer_origins_col} not in data")
+        import_key_errors.append(f"Column {customer_origins_col} not in data.")
     if supply_locations_col not in interaction_matrix_df.columns:
-        raise KeyError (f"Error while loading interaction matrix: Column {supply_locations_col} not in data")
+        import_key_errors.append(f"Column {supply_locations_col} not in data.")
+    if len(import_key_errors) > 0:
+        raise InteractionMatrixError(f"Error(s) while importing interaction matrix: {' '.join(import_key_errors)}.")
+
+    import_col_errors = []
+    if attraction_col is None or (isinstance(attraction_col, list) and len(attraction_col) == 0):
+        import_col_errors.append(f"No attraction column(s) stated.")
+    if transport_costs_col is None or (isinstance(transport_costs_col, list) and len(transport_costs_col) == 0):
+        import_col_errors.append(f"No transport costs column stated.")
+    if len(import_col_errors) > 0:
+        raise InteractionMatrixError(f"Error(s) while importing interaction matrix: {' '.join(import_col_errors)}.")
     
     cols_check = attraction_col + [transport_costs_col]
     if flows_col is not None:
@@ -359,48 +420,76 @@ def load_interaction_matrix(
         helper.check_vars(
             interaction_matrix_df,
             cols = cols_check
-            )   
+            )
+        
+    type_errors_customer_origins = []
     
     if customer_origins_coords_col is not None:
 
         if isinstance(customer_origins_coords_col, str):
 
-            if customer_origins_coords_col not in interaction_matrix_df.columns:
-                raise KeyError (f"Error while loading interaction matrix: Column {customer_origins_coords_col} not in data.")    
+            if check_df_vars:
+                
+                helper.check_vars(
+                    interaction_matrix_df,
+                    cols = [customer_origins_coords_col],
+                    check_constant = False
+                    )
             
-            customer_origins_geodata_tab = interaction_matrix_df[[customer_origins_col, customer_origins_coords_col]]
-            customer_origins_geodata_tab = customer_origins_geodata_tab.drop_duplicates()
-            customer_origins_geodata_tab["geometry"] = customer_origins_geodata_tab[customer_origins_coords_col].apply(lambda x: wkt.loads(x))
+            if customer_origins_coords_col == "geometry":
+                customer_origins_geodata_tab = interaction_matrix_df[[customer_origins_col, "geometry"]]
             
-            customer_origins_geodata_gpd = gp.GeoDataFrame(
-                customer_origins_geodata_tab, 
-                geometry="geometry",
-                crs = crs_input
-                )
-            
-            customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop(
-                columns = customer_origins_coords_col
-                )
+            else:
 
+                customer_origins_geodata_tab = interaction_matrix_df[[customer_origins_col, customer_origins_coords_col]]
+                
+                try:
+                    customer_origins_geodata_tab["geometry"] = customer_origins_geodata_tab[customer_origins_coords_col].apply(lambda x: wkt.loads(x))                                    
+                except Exception as e:
+                    type_errors_customer_origins.append(f"No valid geometry information in column '{customer_origins_coords_col}' for customer origins: {str(e)}.")             
+        
         elif isinstance(customer_origins_coords_col, list):
 
             if len(customer_origins_coords_col) != 2:
                 raise ValueError (f"Error while loading interaction matrix: Column {customer_origins_coords_col} must be a geometry column OR TWO columns with X and Y")
             
-            helper.check_vars (
-                df = interaction_matrix_df, 
-                cols = customer_origins_coords_col
-                )
-
+            if check_df_vars:
+                helper.check_vars (
+                    df = interaction_matrix_df, 
+                    cols = customer_origins_coords_col,
+                    check_constant=False
+                    )
+            
             customer_origins_geodata_tab = interaction_matrix_df[[customer_origins_col, customer_origins_coords_col[0], customer_origins_coords_col[1]]]
+
+            try:
+                customer_origins_geodata_tab["geometry"] = customer_origins_geodata_tab.apply(lambda row: Point(row[customer_origins_coords_col[0]], row[customer_origins_coords_col[1]]), axis=1)
+            except Exception as e:
+                type_errors_customer_origins.append(f"No valid geometry information in columns {', '.join(customer_origins_coords_col)} for customer origins: {str(e)}.")
+                    
+        if len(type_errors_customer_origins) == 0:
+
+            customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop(columns = customer_origins_coords_col)
+            
             customer_origins_geodata_tab = customer_origins_geodata_tab.drop_duplicates()
-            customer_origins_geodata_tab["geometry"] = customer_origins_geodata_tab.apply(lambda row: Point(row[customer_origins_coords_col[0]], row[customer_origins_coords_col[1]]), axis=1)
-            customer_origins_geodata_gpd = gp.GeoDataFrame(
-                customer_origins_geodata_tab, 
-                geometry="geometry"
-                )
-                      
-        customer_origins_geodata_gpd.set_crs(crs_output, inplace=True)
+            
+            try:
+
+                customer_origins_geodata_gpd = gp.GeoDataFrame(
+                    customer_origins_geodata_tab, 
+                    geometry="geometry",
+                    crs = crs_input
+                    )
+                
+                customer_origins_geodata_gpd.set_crs(crs_output, inplace=True)
+
+            except Exception as e:
+                type_errors_customer_origins.append(f"No valid geometry information for customer origins: {str(e)}.")
+                  
+        else:
+
+            customer_origins_geodata_gpd = interaction_matrix_df[customer_origins_col]
+            customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop_duplicates()
 
     else:
 
@@ -421,25 +510,28 @@ def load_interaction_matrix(
         
     customer_origins_geodata_original_tab = interaction_matrix_df[customer_origins_cols].drop_duplicates()
     
-    if isinstance(customer_origins_coords_col, list):
-        customer_origins_geodata_original_tab["geometry"] = customer_origins_geodata_original_tab.apply(lambda row: Point(row[customer_origins_coords_col[0]], row[customer_origins_coords_col[1]]), axis=1)
-    elif isinstance(customer_origins_coords_col, str):
-        customer_origins_geodata_original_tab = customer_origins_geodata_original_tab.rename(
-            columns = {
-                customer_origins_coords_col: "geometry"
-            }
-        )
+    if len(customer_origins_coords_col_list) > 0 and len(type_errors_customer_origins) == 0:
+
+        if isinstance(customer_origins_coords_col, list):
+            customer_origins_geodata_original_tab["geometry"] = customer_origins_geodata_original_tab.apply(lambda row: Point(row[customer_origins_coords_col[0]], row[customer_origins_coords_col[1]]), axis=1)
+        
+        elif isinstance(customer_origins_coords_col, str):
+            customer_origins_geodata_original_tab = customer_origins_geodata_original_tab.rename(
+                columns = {
+                    customer_origins_coords_col: "geometry"
+                }
+            )
 
     customer_origins_geodata_gpd_original = customer_origins_geodata_original_tab
 
-    if len(customer_origins_coords_col_list) > 0:
+    if len(customer_origins_coords_col_list) > 0 and len(type_errors_customer_origins) == 0:
         
         customer_origins_geodata_gpd_original = gp.GeoDataFrame(
             customer_origins_geodata_original_tab, 
             geometry="geometry",
             crs = crs_input
             )
-            
+                
     customer_origins_metadata = {
         "location_type": "origins",
         "unique_id": customer_origins_col,
@@ -464,47 +556,86 @@ def load_interaction_matrix(
         isochrones_gdf = None,
         buffers_gdf = None
         )
+    
+    status = "OK"
+    if len(type_errors_customer_origins) > 0:
+        status = f"{' '.join(type_errors_customer_origins)}"
      
     helper.add_timestamp(
         customer_origins,
         function="data_management.load_interaction_matrix",
-        process = "Creation by import"
+        process = "Creation by import",
+        status=status
         )
+
+    type_errors_supply_locations = []
 
     if supply_locations_coords_col is not None:
 
         if isinstance(supply_locations_coords_col, str):
 
-            if supply_locations_coords_col not in interaction_matrix_df.columns:
-                raise KeyError (f"Error while loading interaction matrix: Column {supply_locations_coords_col} not in data.")    
-            
-            supply_locations_geodata_tab = interaction_matrix_df[[supply_locations_col, supply_locations_coords_col]]
-            supply_locations_geodata_tab = supply_locations_geodata_tab.drop_duplicates()
-            supply_locations_geodata_tab["geometry"] = supply_locations_geodata_tab[supply_locations_coords_col].apply(lambda x: wkt.loads(x))
-            supply_locations_geodata_gpd = gp.GeoDataFrame(
-                supply_locations_geodata_tab, 
-                geometry="geometry",
-                crs = crs_input)
-            supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop(
-                columns = supply_locations_coords_col
-                )
+            if check_df_vars:
+                
+                helper.check_vars(
+                    interaction_matrix_df,
+                    cols = [supply_locations_coords_col],
+                    check_constant = False
+                    )
 
-        if isinstance(supply_locations_coords_col, list):
+            if supply_locations_coords_col == "geometry":
+                supply_locations_geodata_tab = interaction_matrix_df[[supply_locations_col, "geometry"]]
+
+            else:
+
+                supply_locations_geodata_tab = interaction_matrix_df[[supply_locations_col, supply_locations_coords_col]]
+
+                try:
+                    supply_locations_geodata_tab["geometry"] = supply_locations_geodata_tab[supply_locations_coords_col].apply(lambda x: wkt.loads(x))
+                except Exception as e:
+                    type_errors_supply_locations.append(f"No valid geometry information in column '{supply_locations_coords_col}' for supply locations: {str(e)}.")
+
+        elif isinstance(supply_locations_coords_col, list):
 
             if len(supply_locations_coords_col) != 2:
                 raise ValueError (f"Error while loading interaction matrix: Column {supply_locations_coords_col} must be a geometry column OR TWO columns with X and Y")
             
-            helper.check_vars (
-                df = interaction_matrix_df, 
-                cols = supply_locations_coords_col
-                )
+            if check_df_vars:
+                helper.check_vars (
+                    df = interaction_matrix_df, 
+                    cols = supply_locations_coords_col,
+                    check_constant=False
+                    )
 
             supply_locations_geodata_tab = interaction_matrix_df[[supply_locations_col, supply_locations_coords_col[0], supply_locations_coords_col[1]]]
+
+            try:
+                supply_locations_geodata_tab["geometry"] = supply_locations_geodata_tab.apply(lambda row: Point(row[supply_locations_coords_col[0]], row[supply_locations_coords_col[1]]), axis=1)
+            except Exception as e:
+                type_errors_supply_locations.append(f"No valid geometry information in columns '{', '.join(supply_locations_coords_col)}' for supply locations: {str(e)}.")
+
+        if len(type_errors_supply_locations) == 0:
+
+            supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop(columns = customer_origins_coords_col)
+            
             supply_locations_geodata_tab = supply_locations_geodata_tab.drop_duplicates()
-            supply_locations_geodata_tab["geometry"] = supply_locations_geodata_tab.apply(lambda row: Point(row[supply_locations_coords_col[0]], row[supply_locations_coords_col[1]]), axis=1)
-            supply_locations_geodata_gpd = gp.GeoDataFrame(supply_locations_geodata_tab, geometry="geometry")
-                      
-        supply_locations_geodata_gpd.set_crs(crs_output, inplace=True)
+            
+            try:
+
+                supply_locations_geodata_gpd = gp.GeoDataFrame(
+                    supply_locations_geodata_tab, 
+                    geometry="geometry",
+                    crs = crs_input
+                    )
+                
+                supply_locations_geodata_gpd.set_crs(crs_output, inplace=True)
+
+            except Exception as e:
+                type_errors_supply_locations.append(f"No valid geometry information for supply locations: {str(e)}.")
+                  
+        else:
+
+            supply_locations_geodata_gpd = interaction_matrix_df[supply_locations_col]
+            supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop_duplicates()
 
     else:
 
@@ -525,18 +656,21 @@ def load_interaction_matrix(
         
     supply_locations_geodata_original_tab = interaction_matrix_df[supply_locations_cols].drop_duplicates()
     
-    if isinstance(supply_locations_coords_col, list):
-        supply_locations_geodata_original_tab["geometry"] = supply_locations_geodata_original_tab.apply(lambda row: Point(row[supply_locations_coords_col[0]], row[supply_locations_coords_col[1]]), axis=1)
-    elif isinstance(supply_locations_coords_col, str):
-        supply_locations_geodata_original_tab = supply_locations_geodata_original_tab.rename(
-            columns = {
-                supply_locations_coords_col: "geometry"
-            }
-        )
+    if len(supply_locations_coords_col_list) > 0 and len(type_errors_supply_locations) == 0: 
+
+        if isinstance(supply_locations_coords_col, list):
+            supply_locations_geodata_original_tab["geometry"] = supply_locations_geodata_original_tab.apply(lambda row: Point(row[supply_locations_coords_col[0]], row[supply_locations_coords_col[1]]), axis=1)
+        
+        elif isinstance(supply_locations_coords_col, str):
+            supply_locations_geodata_original_tab = supply_locations_geodata_original_tab.rename(
+                columns = {
+                    supply_locations_coords_col: "geometry"
+                }
+            )
 
     supply_locations_geodata_gpd_original = supply_locations_geodata_original_tab
     
-    if len(supply_locations_coords_col_list) > 0:        
+    if len(supply_locations_coords_col_list) > 0 and len(type_errors_supply_locations) == 0:        
         
         supply_locations_geodata_gpd_original = gp.GeoDataFrame(
             supply_locations_geodata_original_tab, 
@@ -568,13 +702,19 @@ def load_interaction_matrix(
         geodata_gpd_original = supply_locations_geodata_gpd_original,
         metadata = supply_locations_metadata,
         isochrones_gdf = None,
-        buffers_gdf = None
+        buffers_gdf = None,
+        competitor_concentration = None
         )
-        
+    
+    status = "OK"
+    if len(type_errors_supply_locations) > 0:
+        status = f"{' '.join(type_errors_supply_locations)}"
+
     helper.add_timestamp(
         supply_locations,
         function="data_management.load_interaction_matrix",
-        process = "Creation by import"
+        process = "Creation by import",
+        status=status
         )
     
     interaction_matrix_df = interaction_matrix_df.rename(
@@ -627,10 +767,17 @@ def load_interaction_matrix(
         metadata=metadata
         )
     
+    status = "OK"
+    coord_type_errors = type_errors_customer_origins + type_errors_supply_locations
+    if len(coord_type_errors) > 0:
+        print(f"WARNING: No import as geodata due to invalid geometry information in input data: {' '.join(coord_type_errors)}")
+        status = f"No import as geodata due to invalid geometry information in input data: {' '.join(coord_type_errors)}"
+    
     helper.add_timestamp(
         interaction_matrix,
         function="data_management.load_interaction_matrix",
-        process = "Creation by import"
+        process = "Creation by import",
+        status = status
         )
     
     return interaction_matrix
