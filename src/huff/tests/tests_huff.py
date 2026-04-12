@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.6.4
-# Last update: 2026-04-10 18:56
+# Version:     1.6.5
+# Last update: 2026-04-12 14:01
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -93,26 +93,6 @@ Haslach_supermarkets.define_attraction_weighting(
     param_gamma=0.9
     )
 # Define attraction weighting (gamma)
-
-# Calculation of competitor accessibility:
-Haslach_supermarkets.competitor_accessibility(
-    network=False,
-    destinations=[12,25,46],
-    verbose = True
-)
-# Only supermarkets
-
-print(Haslach_supermarkets.get_competitor_concentration())
-
-Haslach_supermarkets.competitor_accessibility(
-    network=False,
-    destinations=[1,5,30,38,59],
-    verbose = True
-)
-# Only discounters
-
-Haslach_supermarkets.concentration(verbose=True)
-# Calculation of competitor clustering
 
 Haslach_supermarkets.summary()
 
@@ -634,3 +614,37 @@ distance_matrix = distance_matrix_from_gdf(
     )
 
 print(distance_matrix)
+
+
+# Calculation of competitor accessibility:
+Haslach_supermarkets.competitor_accessibility(
+    network=False,
+    destinations=[12,25,46],
+    verbose = True
+)
+# Only supermarkets
+
+print(Haslach_supermarkets.get_competitor_concentration())
+
+Haslach_supermarkets.competitor_accessibility(
+    network=False,
+    destinations=[1,5,30,38,59],
+    verbose = True
+)
+# Only discounters
+
+Haslach_supermarkets.concentration(verbose=True)
+# Calculation of competitor clustering
+
+Haslach_supermarkets.add_var(
+    var = "C_j_1",
+    func = "power",
+    param = 0.5
+)
+
+Haslach_supermarkets.add_var(
+    var = "C_j_2",
+    func = "power",
+    param = 0.3
+)
+# Defining the concentration variables as attraction variables with weighting

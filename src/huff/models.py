@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.8.7
-# Last update: 2026-04-10 18:52
+# Version:     1.8.8
+# Last update: 2026-04-12 13:45
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -889,7 +889,7 @@ class SupplyLocations:
             print("Weightings")
 
             weightings_no = len(metadata["weighting"])
-
+       
         for key, value in metadata["weighting"].items():
 
             if value['name'] is not None and value['func'] is not None and value['param'] is not None:
@@ -1097,7 +1097,8 @@ class SupplyLocations:
         self,
         var: str = None,
         func: str = None,
-        param: float = None
+        param: float = None,
+        verbose: bool = False
         ):
 
         """
@@ -1111,6 +1112,8 @@ class SupplyLocations:
             Weighting function for the variable.
         param : float
             Parameter for the weighting function.
+        verbose : bool, optional
+            If True, print informational messages during processing.
 
         Returns
         -------
@@ -1172,7 +1175,16 @@ class SupplyLocations:
         no_attraction_vars = len(metadata["attraction_col"])
         new_key = no_attraction_vars
 
-        metadata["attraction_col"] = metadata["attraction_col"] + [var] 
+        if var not in metadata["attraction_col"]:
+            metadata["attraction_col"] = metadata["attraction_col"] + [var]
+        else:
+            print(f"NOTE: Variable '{var}' is already defined as attraction variable.")
+
+        for key, entry in metadata["weighting"].items():
+            if entry.get("name") == var:
+                new_key = key
+                print(f"NOTE: Variable '{var}' already has a weighting definition, which is overwritten.")
+                break
 
         metadata["weighting"][new_key] = {
             "name": var,
@@ -1188,6 +1200,9 @@ class SupplyLocations:
             function="models.SupplyLocations.add_var",
             process = f"Added '{var}' as attraction variable #{new_key}"
             )
+        
+        if verbose:
+            print(f"Added '{var}' as attraction variable #{new_key}")
         
         return self
     
@@ -1873,7 +1888,8 @@ class SupplyLocations:
         conc_variable_names: list = None,
         add_to_attraction_vars: bool = True,
         verbose: bool = False
-        ): 
+        ):
+        
         """
         Calculate competitor concentration variables from accessibility matrices.
 
@@ -1894,7 +1910,8 @@ class SupplyLocations:
         add_to_attraction_vars : bool, optional
             If True (default), add the generated concentration variable(s) to
             the supply locations' attraction columns and update
-            `self.geodata_gpd_original` and `self.metadata`.
+            `self.geodata_gpd_original` and `self.metadata`
+            with default weightings.
         verbose : bool, optional
             If True, print informational messages during processing.
 
@@ -2121,6 +2138,14 @@ class SupplyLocations:
                     print(f"Adding concentration variable '{conc_variable_name}' as attraction variable #{attraction_cols_no} to supply locations data", end = " ... ")
 
                 supply_locations_metadata["attraction_col"].append(conc_variable_name)
+
+                attraction_weightings = supply_locations_metadata["weighting"]
+                attrac_var_key = len(attraction_weightings)
+                attraction_weightings[attrac_var_key] = {
+                    "name": conc_variable_name,
+                    "func": config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0],
+                    "param": 1
+                }
 
                 supply_locations_geodata_gpd_original = supply_locations_geodata_gpd_original.merge(
                     competitor_accessibility_calculation,
@@ -3111,12 +3136,16 @@ class InteractionMatrix:
         
         supply_locations = self.supply_locations
         supply_locations_metadata = supply_locations.get_metadata()
-        
+      
         attrac_vars = supply_locations_metadata["attraction_col"]
         attrac_vars_no = len(attrac_vars)
         
-        attraction_weighting = supply_locations_metadata["weighting"][0]
+        attraction_weightings = supply_locations_metadata["weighting"]
+        attraction_weighting = attraction_weightings[0]
         attrac_var_key = 0
+
+        if len(attraction_weightings) != attrac_vars_no:
+            raise WeightingError(f"There are {attrac_vars_no} attraction variables defined, but {len(attraction_weightings)} weightings defined.")
 
         check_weighting(
             name = config.DEFAULT_COLNAME_ATTRAC_WEIGHTED,

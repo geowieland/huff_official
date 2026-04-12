@@ -23,7 +23,7 @@ A software paper describing the library is available at [arXiv](https://arxiv.or
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.7) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.8) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -215,11 +215,9 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation.
 
 
-## What's new (v1.8.7)
+## What's new (v1.8.8)
 
-- Extensions
-  - Calculation of competitor accessibility and relative location via models.SupplyLocations.competitor_accessibility() and models.SupplyLocations.concentration(); storage in new class CompetitorConcentration  
-  
 - Bugfixes
-  - data_management.load_geodata() and data_management.load_interaction_matrix() now thorougly checks correctness of geometry col(s) in input data 
-  - data_management.load_interaction_matrix() now treats input data correctly when input coord col is "geometry"
+  - models.InteractionMatrix.utility() now checks for correct weighting definitions for all attraction variables and raises a WeightingError if weightings are missing
+  - models.SupplyLocations.add_var() now checks whether var is already defined as attraction variable and whether there is a weighting definition
+  - models.SupplyLocations.concentration() now automatically sets a default weighting for the concentration variable if add_to_attraction_vars is True
