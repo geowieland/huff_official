@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.14
-# Last update: 2026-03-28 13:55
+# Version:     1.0.16
+# Last update: 2026-04-19 13:12
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -30,6 +30,7 @@ def load_geodata(
     csv_decimal: str = ",", 
     csv_encoding: str = "unicode_escape", 
     crs_input: str = "EPSG:4326",
+    verbose: bool = False
     ) -> CustomerOrigins | SupplyLocations:
     
     """
@@ -156,6 +157,9 @@ def load_geodata(
     else:
         raise TypeError("Error while loading geodata: Param 'data' must be pandas.DataFrame, geopandas.GeoDataFrame or file (.csv, .xlsx, .shp)")
 
+    if verbose:
+        print(f"Checking and importing {location_type} data", end = " ... ")
+
     if data_type == "csv" or data_type == "xlsx" or (isinstance(data, pd.DataFrame) and not isinstance(data, gp.GeoDataFrame)):
         
         helper.check_vars(
@@ -184,6 +188,10 @@ def load_geodata(
 
             geodata_gpd = geodata_gpd[[unique_id]]    
     
+    if verbose:
+        print("OK")
+        print(f"Constructing instance of class for {location_type}", end = " ... ")
+
     metadata = {
         "location_type": location_type,
         "unique_id": unique_id,
@@ -200,7 +208,7 @@ def load_geodata(
         "crs_output": crs_output,
         "no_points": len(geodata_gpd),
         }
-      
+         
     if location_type == "origins":
 
         geodata_object = CustomerOrigins(
@@ -230,6 +238,9 @@ def load_geodata(
         function="data_management.load_geodata",
         process = "Creation by import"
         )
+    
+    if verbose:
+        print("OK")
 
     return geodata_object
 
@@ -255,6 +266,7 @@ def load_interaction_matrix(
     crs_input: str = "EPSG:4326",
     crs_output: str = "EPSG:4326",
     check_df_vars: bool = True,
+    verbose: bool = False
     ) -> InteractionMatrix:
     
     """    
@@ -417,14 +429,24 @@ def load_interaction_matrix(
         cols_check = cols_check + [market_size_col]
 
     if check_df_vars:
+
+        if verbose:
+            print(f"Checking input variables {', '.join(cols_check)}", end = " ... ")
+
         helper.check_vars(
             interaction_matrix_df,
             cols = cols_check
             )
         
+        if verbose:
+            print("OK")
+        
     type_errors_customer_origins = []
     
     if customer_origins_coords_col is not None:
+
+        if verbose:
+            print(f"Checking and processing customer origins coordinates", end = " ... ")
 
         if isinstance(customer_origins_coords_col, str):
 
@@ -491,10 +513,16 @@ def load_interaction_matrix(
             customer_origins_geodata_gpd = interaction_matrix_df[customer_origins_col]
             customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop_duplicates()
 
+        if verbose:
+            print("OK")
+
     else:
 
         customer_origins_geodata_gpd = interaction_matrix_df[customer_origins_col]
         customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop_duplicates()
+
+    if verbose:
+        print("Compiling customer origins data", end = " ... ")
 
     customer_origins_coords_col_list = []
     if customer_origins_coords_col is not None:
@@ -567,10 +595,16 @@ def load_interaction_matrix(
         process = "Creation by import",
         status=status
         )
+    
+    if verbose:
+        print("OK")
 
     type_errors_supply_locations = []
 
     if supply_locations_coords_col is not None:
+
+        if verbose:
+            print("Checking and processing supply locations coordinates", end = " ... ")
 
         if isinstance(supply_locations_coords_col, str):
 
@@ -637,10 +671,16 @@ def load_interaction_matrix(
             supply_locations_geodata_gpd = interaction_matrix_df[supply_locations_col]
             supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop_duplicates()
 
+        if verbose:
+            print("OK")
+
     else:
 
         supply_locations_geodata_gpd = interaction_matrix_df[supply_locations_col]
         supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop_duplicates()
+
+    if verbose:
+        print("Compiling supply locations data", end = " ... ")
 
     supply_locations_coords_col_list = []
     if supply_locations_coords_col is not None:
@@ -717,6 +757,10 @@ def load_interaction_matrix(
         status=status
         )
     
+    if verbose:
+        print("OK")
+        print("Compiling interaction matrix", end = " ... ")
+    
     interaction_matrix_df = interaction_matrix_df.rename(
         columns = {
             customer_origins_col: config.DEFAULT_COLNAME_CUSTOMER_ORIGINS,
@@ -780,6 +824,9 @@ def load_interaction_matrix(
         status = status
         )
     
+    if verbose:
+        print("OK")
+    
     return interaction_matrix
 
 def load_marketareas(
@@ -792,7 +839,7 @@ def load_marketareas(
     csv_encoding="unicode_escape",
     xlsx_sheet: str | None = None,
     check_df_vars: bool = True
-    ):
+    ) -> MarketAreas:
 
     """
     data : str or pandas.DataFrame
@@ -912,6 +959,7 @@ def survey_to_matrix(
     attraction_col: list[str] | None = None,
     transport_costs_col: str | None = None,
     flows_col: str | None = None,
+    aggregate_at_col: str | None = None,
     customer_origins_coords_col = None,
     supply_locations_coords_col = None,
     data_type = "csv", 
@@ -919,66 +967,106 @@ def survey_to_matrix(
     csv_decimal = ",", 
     csv_encoding="unicode_escape",
     xlsx_sheet: str | None = None,
-    check_df_vars: bool = True
+    check_df_vars: bool = True,
+    verbose: bool = False
     ) -> pd.DataFrame:
     
     """
     Convert survey data into a fully expanded origin-destination matrix.
 
-    This function takes survey data with information about customer origins
-    and supply locations and aggregates it into a complete interaction matrix
-    as a pandas DataFrame. Optional columns for attraction, transport costs,
-    flows, and coordinates are supported. Market shares are calculated automatically.
+    This function transforms a survey-style table of observed origin ->
+    destination choices into a complete origin-destination (OD) DataFrame
+    containing one row for every possible origin-destination pair that
+    occurs in the input. It aggregates counts (and optional observed flows),
+    computes market shares per origin, and attaches optional attributes such
+    as attraction values, transport costs and coordinates when available.
 
     Parameters
     ----------
     survey_data : str or pandas.DataFrame
-        Input survey data. Can be a CSV/XLSX file path or a pandas DataFrame.
+        Input survey data. Either a path to a CSV/XLSX file or a pandas
+        DataFrame already loaded into memory.
     customer_origins_col : str
-        Column identifying customer origins.
+        Column name that identifies the customer origin (unique origin id).
     supply_locations_col : str
-        Column identifying supply locations.
-    attraction_col : list of str, optional
-        Column(s) describing attraction values of supply locations.
+        Column name that identifies the supply location (unique destination id).
+    attraction_col : list[str], optional
+        Column name(s) providing attraction values for supply locations. If
+        provided, these columns are merged into the resulting OD table (one
+        record per supply location).
     transport_costs_col : str, optional
-        Column describing transport costs between origins and destinations.
+        Column name providing transport costs (distance or time) for the
+        observed OD pairs. When present, the column is joined to the result
+        by the OD identifier.
     flows_col : str, optional
-        Column containing observed flows.
-    customer_origins_coords_col : str or list of str, optional
-        Column(s) with coordinates of customer origins.
-        If a list, interpreted as `[x, y]`.
-    supply_locations_coords_col : str or list of str, optional
-        Column(s) with coordinates of supply locations.
-        If a list, interpreted as `[x, y]`.
+        Column name containing observed flows (e.g. trips, purchases). If
+        provided, flows are aggregated by OD and an additional market-share
+        column for the flows is computed named
+        `f"{config.DEFAULT_COLNAME_PROBABILITY}_{flows_col}"`.
+    aggregate_at_col : str, optional
+        Reserved parameter intended to indicate a column used to aggregate
+        supply locations prior to expansion (for example grouping outlets
+        into chains). Note: in the current implementation this parameter is
+        validated for existence but not otherwise used by the function.
+    customer_origins_coords_col : str or list[str], optional
+        Column name or two-element list of column names containing the
+        coordinates for customer origins. If a list is supplied it is
+        interpreted as `[x_col, y_col]`.
+    supply_locations_coords_col : str or list[str], optional
+        Column name or two-element list of column names containing the
+        coordinates for supply locations. If a list is supplied it is
+        interpreted as `[x_col, y_col]`.
     data_type : {"csv", "xlsx"}, default="csv"
-        File type if loading from disk.
+        File type when `survey_data` is a file path.
     csv_sep : str, default=";"
-        Column separator for CSV files.
-    csv_decimal : str, default=","
+        Separator for CSV files.
+    csv_decimal : str, default="," 
         Decimal mark for CSV files.
     csv_encoding : str, default="unicode_escape"
         Encoding for CSV files.
     xlsx_sheet : str, optional
-        Sheet name when loading from an XLSX file.
+        Sheet name for XLSX input.
     check_df_vars : bool, default=True
-        If True, validates required columns using `helper.check_vars`.
+        If True, performs presence and basic validity checks on required
+        columns using `helper.check_vars`.
+    verbose : bool, default=False
+        If True, print progress messages.
 
     Returns
     -------
     pandas.DataFrame
-        A fully expanded interaction matrix with one row per origin-destination
-        pair, including calculated market shares, optional flows, attraction
-        values, transport costs, and coordinates if provided.
-    
+        Expanded interaction matrix with one row per origin-destination
+        pair. The DataFrame always contains at least the following columns:
+        - the original `customer_origins_col` and `supply_locations_col`,
+        - the interaction identifier stored in `config.DEFAULT_COLNAME_INTERACTION`,
+        - `count`: aggregated number of observed occurrences for this OD pair,
+        - a market-share column per origin created by `market_shares()` using
+          the `count` column (the default market-share column name is
+          `config.DEFAULT_COLNAME_PROBABILITY`).
+
     Raises
     ------
     TypeError
-        If `survey_data` is not a DataFrame or recognized file type.
+        If `survey_data` is not a DataFrame or a supported file type.
     ValueError
-        If `data_type` is invalid or coordinate columns are incorrectly specified.
+        If `data_type` is invalid or coordinate arguments are provided in
+        an incorrect format.
     KeyError
-        If required columns (`customer_origins_col`, `supply_locations_col`, or
-        optional coordinate columns) are missing.
+        If required columns (e.g. `customer_origins_col` or
+        `supply_locations_col`) or user-specified coordinate columns are
+        missing from the input data.
+
+    Examples
+    --------
+    >>> df_od = survey_to_matrix(
+    ...     survey_data="data/survey.csv",
+    ...     customer_origins_col="origin_id",
+    ...     supply_locations_col="store_id",
+    ...     attraction_col=["floorspace"],
+    ...     transport_costs_col="drive_time",
+    ...     flows_col="trips",
+    ...     data_type="csv"
+    ... )
     """
 
     if attraction_col is None:
@@ -1065,7 +1153,20 @@ def survey_to_matrix(
                 supply_locations_coords_col = None
                 
                 print(f"WARNING: Parameter 'supply_locations_coords_col' was stated in an unknown format and is ignored: {supply_locations_coords_col}")
-                
+    
+    if aggregate_at_col is not None:
+
+        if aggregate_at_col not in data.columns:
+            raise KeyError(f"Column specified data to be aggregated {aggregate_at_col} is not in the data frame.")
+        
+        customer_origins_col = aggregate_at_col
+
+        if verbose:
+            print(f"NOTE: Survey data will be aggregated as the consumer aggregation column '{aggregate_at_col}'.")
+
+    if verbose:
+        print("Compiling survey data", end = " ... ")
+
     customer_origins = (
         data[[customer_origins_col]]
         .dropna()
@@ -1113,8 +1214,14 @@ def survey_to_matrix(
         ref_col = customer_origins_col,
         check_df_vars = False
         )
+
+    if verbose:
+        print("OK")
     
-    if flows_col is not None:       
+    if flows_col is not None:
+
+        if verbose:
+            print(f"Flows in column '{flows_col}' in survey data are compiled", end = " ... ")
         
         data_agg_flowscol = data.groupby(
             [
@@ -1148,7 +1255,10 @@ def survey_to_matrix(
             data_agg_flowscol[[config.DEFAULT_COLNAME_INTERACTION, flows_col, f"{config.DEFAULT_COLNAME_PROBABILITY}_{flows_col}"]],
             left_on = config.DEFAULT_COLNAME_INTERACTION,
             right_on = config.DEFAULT_COLNAME_INTERACTION
-        )        
+        )
+        
+        if verbose:
+            print("OK")
     
     data_agg = data_agg.sort_values(
         by = [
@@ -1159,6 +1269,9 @@ def survey_to_matrix(
     
     if len(attraction_col) > 0:
         
+        if verbose:
+            print(f"Checking and including {len(attraction_col)} attraction columns", end = " ... ")
+
         helper.check_vars(
             data,
             cols = attraction_col,
@@ -1171,9 +1284,15 @@ def survey_to_matrix(
             data_attraction,
             on = supply_locations_col,
             how = "left"
-        )        
+        ) 
+
+        if verbose:
+            print("OK")       
       
     if transport_costs_col is not None:
+
+        if verbose:
+            print(f"Checking and including transport costs column '{transport_costs_col}'", end = " ... ")
         
         helper.check_vars(
             data,
@@ -1191,7 +1310,13 @@ def survey_to_matrix(
             how="left"
         )        
         
+        if verbose:
+            print("OK")
+
     if customer_origins_coords_col is not None:
+
+        if verbose:
+            print(f"Checking and including customer origins coordinates", end = " ... ")
         
         helper.check_vars(
             data,
@@ -1205,9 +1330,15 @@ def survey_to_matrix(
             data_customer_origins_coords,
             on = customer_origins_col,
             how = "left"
-        )        
+        )
+        
+        if verbose:
+            print("OK")
         
     if supply_locations_coords_col is not None:
+
+        if verbose:
+            print(f"Checking and including supply locations coordinates", end = " ... ")
         
         helper.check_vars(
             data,
@@ -1221,6 +1352,9 @@ def survey_to_matrix(
             data_supply_locations_coords,
             on = supply_locations_col,
             how = "left"
-        )        
+        )
+        
+        if verbose:
+            print("OK")
     
     return data_agg

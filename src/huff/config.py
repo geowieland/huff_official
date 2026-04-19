@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.15
-# Last update: 2026-04-12 13:12
+# Version:     1.0.16
+# Last update: 2026-04-19 12:27
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.8.8"
+PACKAGE_VERSION = "1.8.9"
 
 # Basic config:
 

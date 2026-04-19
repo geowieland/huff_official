@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.6.5
-# Last update: 2026-04-12 14:01
+# Version:     1.6.6
+# Last update: 2026-04-19 12:38
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ Haslach_supermarkets.isochrones(
     # minutes or kilometers
     range_type = "time",
     # "time" or "distance" (default: "time")
-    profile = "driving-car",
+    profile = "foot-walking",
     save_output=True,
     ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
     # Authentification token FOR TESTING
@@ -214,7 +214,12 @@ huff_model.summary()
 huff_model.show_log()
 # Log of Huff model
 
-print(huff_model.get_market_areas_df())
+huff_model_interactionmatrix = huff_model.get_interaction_matrix_df()
+print(huff_model_interactionmatrix)
+# Showing interaction matrix
+
+huff_model_marketareas = huff_model.get_market_areas_df()
+print(huff_model_marketareas)
 # Showing total market areas
 
 

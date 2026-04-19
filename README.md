@@ -16,14 +16,16 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 - 💻 GitHub Repository: [huff_official](https://github.com/geowieland/huff_official)
 - 📄 DOI (Zenodo): [10.5281/zenodo.18639559](https://doi.org/10.5281/zenodo.18639559)
 
-A software paper describing the library is available at [arXiv](https://arxiv.org/abs/2602.17640)
+A software paper describing the library is available at [arXiv](https://arxiv.org/abs/2602.17640).
+
+A brief discussion of the included models and their application in this package may also be found in an article available at [Medium](https://medium.com/@geowieland/oldie-but-goodie-market-area-models-and-retail-location-analysis-in-python-9f6609355585?source=friends_link&sk=a0314d63cee214cda92aa8fd13d92b64).
 
 
 ## Citation
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.8) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.9) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -52,6 +54,7 @@ pip install git+https://github.com/geowieland/huff_official.git
   - Basic Huff Model analysis based on an interaction matrix
   - Different function types: power, exponential, logistic
   - Defining further attraction indicators in the utility function
+  - Extend Huff Model to Competing Destinations Model by calculating and including competitor concentration variables
   - Huff model parameter estimation via Maximum Likelihood (ML) by probalities, customer flows, and total market areas
   - Huff model fit via local optimization of attraction
   - Huff model market simulation
@@ -212,12 +215,13 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 
 ## AI Usage Statement
 
-This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation.
+This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.8.8)
+## What's new (v1.8.9)
 
-- Bugfixes
-  - models.InteractionMatrix.utility() now checks for correct weighting definitions for all attraction variables and raises a WeightingError if weightings are missing
-  - models.SupplyLocations.add_var() now checks whether var is already defined as attraction variable and whether there is a weighting definition
-  - models.SupplyLocations.concentration() now automatically sets a default weighting for the concentration variable if add_to_attraction_vars is True
+- Extensions
+  - Added verbose option to import functions in data_management module
+  - Function survey_to_matrix() includes an option to aggregate customer origins
+- Other
+  - Extensions to README and docstring documentation
