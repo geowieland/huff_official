@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.22
-# Last update: 2026-03-21 10:35
+# Version:     1.1.23
+# Last update: 2026-05-06 21:23
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -416,6 +416,14 @@ def print_weightings(interaction_matrix):
     customer_origins_metadata = interaction_matrix.get_customer_origins().get_metadata()
     supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
     interaction_matrix_metadata = interaction_matrix.get_metadata()
+    
+    if supply_locations_metadata["weighting"] is None or customer_origins_metadata["weighting"] is None:
+        
+        return [
+            customer_origins_metadata,
+            supply_locations_metadata,
+            interaction_matrix_metadata
+            ]
     
     if (supply_locations_metadata["weighting"][0]["name"] is not None and supply_locations_metadata["weighting"][0]["func"] is not None and supply_locations_metadata["weighting"][0]["param"] is not None) or (customer_origins_metadata['weighting'][0]['param'] is not None):
     

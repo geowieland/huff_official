@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.16
-# Last update: 2026-04-19 12:27
+# Version:     1.0.18
+# Last update: 2026-05-09 14:53
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.8.9"
+PACKAGE_VERSION = "1.9.0"
 
 # Basic config:
 
@@ -50,12 +50,19 @@ MODELS = {
     },
     "Hansen": {
         "description": "Hansen Accessibility",
-        "metadata_model_type": "Hansen"
+        "metadata_model_type": "Hansen",
+        "fit_function": None
     },
     "2SFCA": {
         "description": "Two-step floating catchment area analysis",
-        "metadata_model_type": "2SFCA"
+        "metadata_model_type": "2SFCA",
+        "fit_function": None
     },
+    "ML": {
+        "description": "Machine learning market area model",
+        "metadata_model_type": "ML",
+        "fit_function": "learn_fit"
+    }
 }
 MODELS_LIST = list(MODELS.keys())
 
@@ -67,6 +74,7 @@ DEFAULT_COLNAME_UTILITY_SUM = "U_i"
 DEFAULT_COLNAME_MARKETSIZE = "C_i"
 DEFAULT_COLNAME_PROBABILITY = "p_ij"
 DEFAULT_COLNAME_FLOWS = "E_ij"
+DEFAULT_COLNAME_FLOWS_TOTAL_ORIGINS = "E_i"
 DEFAULT_COLNAME_CUSTOMER_ORIGINS = "i"
 DEFAULT_COLNAME_SUPPLY_LOCATIONS = "j"
 DEFAULT_COLNAME_INTERACTION = "ij"
@@ -76,11 +84,13 @@ DEFAULT_COLNAME_ACCESSIBILITY_ORIGINS = "A_i"
 DEFAULT_COLNAME_SD_RATIO = "R_j"
 DEFAULT_COLNAME_CONCENTRATION = "C_j"
 DEFAULT_COLNAME_CONCENTRATION_UTILITY = "U_jk"
+DEFAULT_COLNAME_COUNT = "count"
 
 # Default column name suffixes:
 DEFAULT_LCT_SUFFIX = "__LCT"
 DEFAULT_WEIGHTED_SUFFIX = "_weighted"
 DEFAULT_OBSERVED_SUFFIX = "_emp"
+DEFAULT_PREDICTED_SUFFIX = "_pred"
 DEFAULT_TOTAL_SUFFIX = "_total"
 DEFAULT_COORDS_SUFFIX = "_coords"
 DEFAULT_UNIQUE_ID_SUFFIX = "_uid"
@@ -143,6 +153,7 @@ MCI_TRANSFORMATIONS = {
 MCI_TRANSFORMATIONS_LIST = list(MCI_TRANSFORMATIONS.keys())
 DEFAULT_MCI_TRANSFORMATION = MCI_TRANSFORMATIONS_LIST[0]
 
+# Goodness-of-fit metrics:
 
 APE_PREFIX = "APE"
 APE_MIN = 1
@@ -170,9 +181,41 @@ GOODNESS_OF_FIT = {
     #"Deviations < 50 %": f"{APE_PREFIX}50",
 }
 
+
+# Predictive models:
+
+PREDICTIVE_MODEL_DESCRIPTION = "Predictive model"
+
+MODEL_WRAPPER_SPLIT_PARAMS_DEFAULT = {
+    "test_size": 0.2,
+    "train_size": None,
+    "shuffle": True,
+    "stratify": None,
+    }
+
+# Machine learning models:
+MODEL_WRAPPER_AVAILABLE = {
+    "ols": "Ordinary Least Squares",
+    "olsbg": "Ordinary Least Squares with Bagging",
+    "dtbg": "Decision Trees with Bagging",
+    "rf": "Random Forest",
+    "gb": "Gradient Boosted Trees",
+    "knn": "K-nearest neighbor",
+    "xgb": "Extreme Gradient Boosting",
+    "lgbm": "LightGBM",
+    "svr": "Support-Vector Regression",
+    "mlp": "Multi-layer Perceptron"
+}
+MODEL_WRAPPER_AVAILABLE_LIST = list(MODEL_WRAPPER_AVAILABLE.keys())
+MODEL_WRAPPER_DEFAULT = MODEL_WRAPPER_AVAILABLE_LIST[0]
+
+
 # ORS config:
 
-ORS_SERVER = "https://api.openrouteservice.org/v2/"
+ORS_SERVER = "https://api.heigit.org/openrouteservice/v2/"
+# ORS_SERVER = "https://api.openrouteservice.org/v2/"
+# still active, but deprecated
+# https://ask.openrouteservice.org/t/deprecating-api-openrouteservice-org-in-favour-of-api-heigit-org/7912
 ORS_URL_RESTRICTIONS = "https://openrouteservice.org/restrictions/"
 
 ORS_HEADERS = {
@@ -251,6 +294,11 @@ ORS_RANGE_TYPES_LIST = ORS_RANGE_TYPES.keys()
 ORS_RANGE_TYPES_LIST_API = list(ORS_RANGE_TYPES.values())
 
 ORS_SEGMENT_COL = "segment"
+
+ORS_DEFAULT = [5, 10, 15]
+ORS_DEFAULT_SERVICE = [900, 600, 300]
+
+USE_ORS_DEFAULT = True
 
 
 # OSM config:

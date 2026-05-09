@@ -2,7 +2,7 @@
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
-This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985). Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
+This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985). Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003, Luo 2014). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
 
 
 ## Author
@@ -25,7 +25,7 @@ A brief discussion of the included models and their application in this package 
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.8.9) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -218,10 +218,20 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.8.9)
+## What's new (v1.9.0)
 
 - Extensions
-  - Added verbose option to import functions in data_management module
-  - Function survey_to_matrix() includes an option to aggregate customer origins
+  - Fit interaction matrix via machine learning models using models.InteractionMatrix.learn_fit(), which is processed in the new class models.LearnModel
+  - New module predictive_models, which is a generic wrapper tool for machine learning regression models
+- Bugfixes
+  - models.InteractionMatrix.mci_fit() and models.HuffModel.mci_fit() now set weightings of SupplyLocations and CustomerOrigins objects correctly
+  - Correct counting of included accessibility calculations in models.SupplyLocations.competitor_accessibility()
+  - ors.Client.isochrone() now checks input param 'segments' for correctness
+  - data_management.load_geodata() now explicitly checks input param 'unique_id'
+  - Fixed bug regarding wrong number of supply locations attraction cols in InteractionMatrix.mci_fit()
+  - InteractionMatrix.mci_fit() and HuffModel.mci_fit() now set correct timestamps in CustomerOrigins and SupplyLocations objects
 - Other
-  - Extensions to README and docstring documentation
+  - Replaced deprecated ORS API in defaults
+  - More specific progress messages, WARNINGs and NOTEs in several modules
+  - Cleanup and adjustment of requirements with respect to compatibility
+  - Completion of documentation

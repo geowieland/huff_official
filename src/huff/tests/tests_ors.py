@@ -1,11 +1,11 @@
 #-----------------------------------------------------------------------
-# Name:        tests:ors (huff package)
+# Name:        tests_ors (huff package)
 # Purpose:     Tests for ors module in the Huff Model package
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.0
-# Last update: 2026-02-13 18:44
+# Version:     1.0.1
+# Last update: 2026-05-02 12:06
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 

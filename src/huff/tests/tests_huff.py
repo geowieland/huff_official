@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.6.6
-# Last update: 2026-04-19 12:38
+# Version:     1.6.8
+# Last update: 2026-05-09 16:01
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -223,28 +223,28 @@ print(huff_model_marketareas)
 # Showing total market areas
 
 
-# Maximum Likelihood fit for Huff Model:
+# # Maximum Likelihood fit for Huff Model:
 
-haslach_interactionmatrix.huff_ml_fit(
-    initial_params=[1, -2],
-    method="trust-constr",
-    bounds = [(0.8, 0.9999),(-2.5, -1.5)]    
-)
-# Maximum Likelihood fit for Huff Model
+# haslach_interactionmatrix.huff_ml_fit(
+#     initial_params=[1, -2],
+#     method="trust-constr",
+#     bounds = [(0.8, 0.9999),(-2.5, -1.5)]    
+# )
+# # Maximum Likelihood fit for Huff Model
 
-haslach_interactionmatrix.summary()
-# Summary of fitted ML-fitted interaction matrix (Huff model)
+# haslach_interactionmatrix.summary()
+# # Summary of fitted ML-fitted interaction matrix (Huff model)
 
-huff_model_fit = haslach_interactionmatrix.marketareas()
-# Calculcation of total market areas
-# Result of class HuffModel
+# huff_model_fit = haslach_interactionmatrix.marketareas()
+# # Calculcation of total market areas
+# # Result of class HuffModel
 
-bootstrap_cis = huff_model_fit.confint(repeats=10)
-print(bootstrap_cis)
-# Confidence intervals for estimated parameters
+# bootstrap_cis = huff_model_fit.confint(repeats=10)
+# print(bootstrap_cis)
+# # Confidence intervals for estimated parameters
 
-huff_model_fit.summary()
-# Huff model summary
+# huff_model_fit.summary()
+# # Huff model summary
 
 
 # Adding new supply location:
@@ -306,6 +306,48 @@ mci_fit.get_market_areas_df()
 
 mci_fit.show_log()
 # Log of MCIModel object
+
+
+# Competing Destinations Model:
+
+Haslach_supermarkets.summary()
+
+# Calculation of competitor accessibility:
+Haslach_supermarkets.competitor_accessibility(
+    network=False,
+    destinations=[12,25,46],
+    verbose = True
+)
+# Only supermarkets
+
+Haslach_supermarkets.summary()
+
+Haslach_supermarkets.competitor_accessibility(
+    network=False,
+    destinations=[1,5,30,38,59],
+    verbose = True
+)
+# Only discounters
+
+Haslach_supermarkets.summary()
+
+Haslach_supermarkets.concentration(verbose=True)
+# Calculation of competitor clustering
+
+Haslach_supermarkets.add_var(
+    var = "C_j_1",
+    func = "power",
+    param = 0.5
+)
+
+Haslach_supermarkets.add_var(
+    var = "C_j_2",
+    func = "power",
+    param = 0.3
+)
+# Defining the concentration variables as attraction variables with weighting
+
+Haslach_supermarkets.summary()
 
 
 # Loading own interaction matrix:
@@ -619,37 +661,3 @@ distance_matrix = distance_matrix_from_gdf(
     )
 
 print(distance_matrix)
-
-
-# Calculation of competitor accessibility:
-Haslach_supermarkets.competitor_accessibility(
-    network=False,
-    destinations=[12,25,46],
-    verbose = True
-)
-# Only supermarkets
-
-print(Haslach_supermarkets.get_competitor_concentration())
-
-Haslach_supermarkets.competitor_accessibility(
-    network=False,
-    destinations=[1,5,30,38,59],
-    verbose = True
-)
-# Only discounters
-
-Haslach_supermarkets.concentration(verbose=True)
-# Calculation of competitor clustering
-
-Haslach_supermarkets.add_var(
-    var = "C_j_1",
-    func = "power",
-    param = 0.5
-)
-
-Haslach_supermarkets.add_var(
-    var = "C_j_2",
-    func = "power",
-    param = 0.3
-)
-# Defining the concentration variables as attraction variables with weighting

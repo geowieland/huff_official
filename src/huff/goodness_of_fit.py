@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.11
-# Last update: 2026-03-21 09:58
+# Version:     1.0.12
+# Last update: 2026-04-27 21:18
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -130,10 +130,13 @@ def modelfit(
     
     else:
         
+        value_errors = []
         if np.isnan(observed).any():
-            raise ValueError("Error while calculating fit metrics: Vector with observed data contains NaNs and 'remove_nan' is False")
+            value_errors.append("Vector with observed data contains NaNs and 'remove_nan' is False")
         if np.isnan(expected).any():
-            raise ValueError("Error while calculating fit metrics: Vector with expected data contains NaNs and 'remove_nan' is False")
+            value_errors.append("Vector with expected data contains NaNs and 'remove_nan' is False")
+        if len(value_errors) > 0:
+            raise ValueError(f"Error(s) while calculating fit metrics: {' '.join(value_errors)}")
        
     residuals = np.array(observed)-np.array(expected)
     residuals_sq = residuals**2

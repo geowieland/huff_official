@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.8.8
-# Last update: 2026-04-12 13:45
+# Version:     1.9.0
+# Last update: 2026-05-09 16:02
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -14,6 +14,7 @@ import pandas as pd
 import geopandas as gp
 import numpy as np
 import time
+import statsmodels.regression
 from statsmodels.formula.api import ols
 from scipy.optimize import minimize, Bounds, LinearConstraint, NonlinearConstraint
 import copy
@@ -22,6 +23,7 @@ import huff.config as config
 import huff.goodness_of_fit as gof
 from huff.ors import Client, TimeDistanceMatrix, Isochrone
 from huff.gistools import overlay_difference, distance_matrix, buffers, map_with_basemap, distance_matrix_from_gdf
+from huff.predictive_models import model_wrapper, PredictiveModel
 
 
 class CustomerOrigins:
@@ -364,7 +366,7 @@ class CustomerOrigins:
         intersections: str = "true",
         profile: str = "driving-car",
         donut: bool = True,
-        ors_server: str = "https://api.openrouteservice.org/v2/",
+        ors_server: str = config.ORS_SERVER,
         ors_auth: str = None,
         timeout: int = 10,
         delay: int = 1,
@@ -400,7 +402,7 @@ class CustomerOrigins:
             See https://openrouteservice.org/dev/#/api-docs/v2/isochrones/{profile}/post for available profiles.
         donut : bool, default=True
             If True, returns donut-shaped isochrones (rings instead of cumulative areas).
-        ors_server : str, default="https://api.openrouteservice.org/v2/"
+        ors_server : str, default=config.ORS_SERVER
             URL of the OpenRouteService API server.
         ors_auth : str, optional
             API key for OpenRouteService.
@@ -1378,7 +1380,7 @@ class SupplyLocations:
         intersections: str = "true",
         profile: str = "driving-car",
         donut: bool = True,
-        ors_server: str = "https://api.openrouteservice.org/v2/",
+        ors_server: str = config.ORS_SERVER,
         ors_auth: str = None,
         timeout: int = 10,
         delay: int = 1,
@@ -1414,7 +1416,7 @@ class SupplyLocations:
             See https://openrouteservice.org/dev/#/api-docs/v2/isochrones/{profile}/post for available profiles.
         donut : bool, default=True
             If True, returns donut-shaped isochrones (rings instead of cumulative areas).
-        ors_server : str, default="https://api.openrouteservice.org/v2/"
+        ors_server : str, default=config.ORS_SERVER
             URL of the OpenRouteService API server.
         ors_auth : str, optional
             API key for OpenRouteService.
@@ -1463,9 +1465,6 @@ class SupplyLocations:
         ...     delay=0.2
         ... )
         """
-
-        if segments is None:
-            segments = [5, 10, 15]
 
         geodata_gpd = self.get_geodata_gpd()
         metadata = self.get_metadata()
@@ -1595,7 +1594,7 @@ class SupplyLocations:
         distance_unit: str = "kilometers",
         time_unit: str = "minutes",
         profile: str = "driving-car",        
-        ors_server: str = "https://api.openrouteservice.org/v2/",
+        ors_server: str = config.ORS_SERVER,
         ors_auth: str = None,
         timeout: int = 10,
         remove_duplicates: bool = True,
@@ -1631,7 +1630,7 @@ class SupplyLocations:
             ORS routing profile to use when `network=True` (default
             "driving-car").
         ors_server : str, optional
-            ORS API base URL (default "https://api.openrouteservice.org/v2/").
+            ORS API base URL, default: config.ORS_SERVER.
         ors_auth : str or None, optional
             ORS API key (default: None).
         timeout : int, optional
@@ -1676,8 +1675,6 @@ class SupplyLocations:
             competitor_accessibility = self.competitor_concentration.get_competitor_accessibility_list()            
             competitor_concentration_key = len(competitor_accessibility)
             
-            competitor_accessibility.append([None])
-            
             competitor_concentration_metadata = self.competitor_concentration.get_metadata()
             
             competitor_concentration_weightings = self.competitor_concentration.get_weightings()
@@ -1686,6 +1683,8 @@ class SupplyLocations:
             
             if verbose:
                 print(f"NOTE: SupplyLocations instance already includes {len(competitor_accessibility)} competitor accessibility calculations.")                      
+            
+            competitor_accessibility.append([None])
             
         else:
             
@@ -1958,7 +1957,7 @@ class SupplyLocations:
         
         supply_locations_geodata_gpd_original = self.get_geodata_gpd_original()
         supply_locations_geodata_gpd_original = supply_locations_geodata_gpd_original.copy()
-        
+              
         competitor_accessibility = self.competitor_concentration.get_competitor_accessibility_list()
         
         if verbose:
@@ -2003,13 +2002,13 @@ class SupplyLocations:
                     if conc_weighting["attraction"]["func"] not in config.PERMITTED_WEIGHTING_FUNCTIONS_LIST:
                         weighting_errors.append(f"Parameter 'func' is equal to {conc_weighting['attraction']['func']}, but must be one of these: {', '.join(config.PERMITTED_WEIGHTING_FUNCTIONS_LIST)}")
                 else:
-                    weighting_errors.append(f"An attraction weighting is required.")
+                    weighting_errors.append("An attraction weighting is required.")
                     
                 if "transport_costs" in conc_weighting:
                     if conc_weighting["transport_costs"]["func"] not in config.PERMITTED_WEIGHTING_FUNCTIONS_LIST:
                         weighting_errors.append(f"Parameter 'func' is equal to {conc_weighting['transport_costs']['func']}, but must be one of these: {', '.join(config.PERMITTED_WEIGHTING_FUNCTIONS_LIST)}")
                 else:
-                    weighting_errors.append(f"An transport costs weighting is required.")
+                    weighting_errors.append("A transport costs weighting is required.")
                         
             if len(weighting_errors) > 0:
                 raise WeightingError(f"Error(s) in definition of weightings for concentration calculation: {' '.join(weighting_errors)}")
@@ -2332,14 +2331,14 @@ class InteractionMatrix:
     """
     Container for origin-destination interaction matrix used in spatial market models.
 
-    The InteractionMatrix stores all possible customer origin–supply location
+    The InteractionMatrix stores all possible customer origin-supply location
     combinations together with model inputs (e.g., travel times, distances,
     and attributes) and provides the basis for all implemented model analyses.
 
     Parameters
     ----------
     interaction_matrix_df : pandas.DataFrame
-        DataFrame containing origin–destination pairs and associated variables.
+        DataFrame containing origin-destination pairs and associated variables.
     customer_origins : CustomerOrigins
         CustomerOrigins object used to build the interaction matrix.
     supply_locations : SupplyLocations
@@ -2518,7 +2517,7 @@ class InteractionMatrix:
         profile: str = "driving-car",
         time_unit: str = "minutes",
         distance_unit: str = "kilometers",
-        ors_server: str = "https://api.openrouteservice.org/v2/",
+        ors_server: str = config.ORS_SERVER,
         ors_auth: str = None,
         save_output: bool = False,
         remove_duplicates: bool = True,
@@ -4149,7 +4148,7 @@ class InteractionMatrix:
 
     def mci_transformation(
         self,
-        cols: list = [config.DEFAULT_COLNAME_ATTRAC, config.DEFAULT_COLNAME_TC],
+        cols: list = None,
         verbose: bool = False
         ):
 
@@ -4207,6 +4206,10 @@ class InteractionMatrix:
         ...     ]
         ... )
         """
+
+        if cols is None:
+            cols = [config.DEFAULT_COLNAME_ATTRAC, config.DEFAULT_COLNAME_TC]
+            print(f"NOTE: No utility variables were specified for {config.MODELS['MCI']['description']} transformation. Using default: '{config.DEFAULT_COLNAME_ATTRAC}', '{config.DEFAULT_COLNAME_TC}'.")
 
         if verbose:
             print(f"Processing log-centering transformation of columns: {', '.join(cols)}", end = " ... ")
@@ -4386,6 +4389,7 @@ class InteractionMatrix:
 
         if cols is None:
             cols = [config.DEFAULT_COLNAME_ATTRAC, config.DEFAULT_COLNAME_TC]
+            print(f"NOTE: No utility variables were specified for {config.MODELS['MCI']['description']} estimation. Using default: '{config.DEFAULT_COLNAME_ATTRAC}', '{config.DEFAULT_COLNAME_TC}'.")
 
         supply_locations = self.get_supply_locations()
         supply_locations_metadata = supply_locations.get_metadata()
@@ -4401,7 +4405,8 @@ class InteractionMatrix:
 
         if f"{config.DEFAULT_COLNAME_PROBABILITY}{config.DEFAULT_LCT_SUFFIX}" not in interaction_matrix_df.columns:
             interaction_matrix = self.mci_transformation(
-                cols = cols
+                cols = cols,
+                verbose = verbose
                 )
             interaction_matrix_df = self.get_interaction_matrix_df()
 
@@ -4431,6 +4436,7 @@ class InteractionMatrix:
                 }
 
         customer_origins_metadata["weighting"][0] = {
+            "name": config.DEFAULT_COLNAME_TC,
             "func": config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0],
             "param": mci_ols_coefficients[f"{config.DEFAULT_COLNAME_TC}{config.DEFAULT_LCT_SUFFIX}"]
             }
@@ -4439,18 +4445,32 @@ class InteractionMatrix:
         for key, value in list(coefs2.items()):
             if value["Coefficient"] == config.DEFAULT_COLNAME_TC:
                 del coefs2[key]
-
+        
+        coefs2 = {i: value for i, (key, value) in enumerate(coefs2.items())}
+        
         for key, value in coefs2.items():
             supply_locations_metadata["weighting"][key] = {
+                "name": value["Coefficient"],
                 "func": config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0],
                 "param": value["Estimate"]
             }
 
-            supply_locations_metadata["attraction_col"].append(None)
             supply_locations_metadata["attraction_col"][key] = value["Coefficient"]
 
         customer_origins.metadata = customer_origins_metadata
         supply_locations.metadata = supply_locations_metadata
+        
+        helper.add_timestamp(
+            customer_origins,
+            function="models.InteractionMatrix.mci_fit",
+            process=f"Added weighting coefficients based on {config.MODELS['MCI']['description']} estimation"
+            )
+        
+        helper.add_timestamp(
+            supply_locations,
+            function="models.InteractionMatrix.mci_fit",
+            process=f"Added weighting coefficients based on {config.MODELS['MCI']['description']} estimation"
+            )
         
         if self.metadata is None:
         
@@ -4506,6 +4526,168 @@ class InteractionMatrix:
         
         return mci_model
 
+    def learn_fit(
+        self,
+        cols: list = None,
+        lct: bool = False,
+        model_type: str = "ols",
+        model_params: dict = None,
+        split_params: dict = None,
+        random_state: int = 71,
+        verbose: bool = False
+        ):
+        
+        if cols is None:
+            
+            cols = [
+                config.DEFAULT_COLNAME_ATTRAC, 
+                config.DEFAULT_COLNAME_TC
+                ]
+            
+            print(f"NOTE: No utility variables were specified for {config.PREDICTIVE_MODEL_DESCRIPTION} estimation. Using default: '{config.DEFAULT_COLNAME_ATTRAC}', '{config.DEFAULT_COLNAME_TC}'.")
+
+        interaction_matrix = copy.deepcopy(self)
+        interaction_matrix_df = interaction_matrix.get_interaction_matrix_df().copy()
+
+        y_col = config.DEFAULT_COLNAME_FLOWS
+        if config.DEFAULT_COLNAME_FLOWS_OBSERVED in interaction_matrix_df.columns:
+            y_col = config.DEFAULT_COLNAME_FLOWS_OBSERVED
+            
+        if y_col not in interaction_matrix_df.columns:
+            raise InteractionMatrixError("Interaction matrix does not include empirical customer flows")
+
+        print(f"NOTE: Column '{y_col}' in interaction matrix is treated as empirical customer flows")
+
+        cols.append(y_col)
+        y_col_untransformed = y_col
+
+        if lct:
+
+            cols_t = [col + config.DEFAULT_LCT_SUFFIX for col in cols]
+            y_col = f"{y_col}{config.DEFAULT_LCT_SUFFIX}"
+
+            interaction_matrix = interaction_matrix.mci_transformation(
+                cols = cols,
+                verbose=verbose
+                )
+            
+            if f"{config.DEFAULT_COLNAME_PROBABILITY}{config.DEFAULT_LCT_SUFFIX}" in cols_t:
+                cols_t.remove(f"{config.DEFAULT_COLNAME_PROBABILITY}{config.DEFAULT_LCT_SUFFIX}")
+            
+            cols = cols_t
+            
+            interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()
+      
+        predictive_model = model_wrapper(
+            y = interaction_matrix_df[y_col],
+            X = interaction_matrix_df[cols],
+            model_type = model_type,
+            model_params = model_params,
+            split_params = split_params,
+            random_state = random_state,
+            verbose = verbose    
+        )
+        
+        print(f"NOTE: {config.PREDICTIVE_MODEL_DESCRIPTION} type used: {config.MODEL_WRAPPER_AVAILABLE[model_type]}")
+        
+        if verbose:
+            print(f"Calculating predicted values of '{y_col}' and '{config.DEFAULT_COLNAME_PROBABILITY}'", end = " ... ")
+        
+        model = predictive_model.model
+        
+        model_runtime_error = predictive_model.runtime_error
+               
+        interaction_matrix_df[f"{y_col}{config.DEFAULT_PREDICTED_SUFFIX}"] = model.predict(interaction_matrix_df[cols])
+        
+        interaction_matrix.interaction_matrix_df = interaction_matrix_df
+        
+        if y_col in cols:
+            cols.remove(y_col)
+        
+        if interaction_matrix.metadata is None:
+        
+            interaction_matrix_metadata = {
+                "fit": {
+                    "function": "learn_fit",
+                    "fit_by": "flows",
+                    "method": model_type,
+                    }
+                }
+            
+        else:
+            
+            interaction_matrix_metadata = interaction_matrix.metadata
+
+            interaction_matrix_metadata["fit"] = {
+                "function": "learn_fit",
+                "fit_by": "flows",
+                "method": model_type,
+                }
+        
+        interaction_matrix.customer_origins.metadata["weighting"] = {
+            0: {
+                "name": None,
+                "func": None, 
+                "param": None
+                }
+            }
+        
+        interaction_matrix.supply_locations.metadata["weighting"] = {
+            0: {
+                "name": None,
+                "func": None, 
+                "param": None
+                }
+            }
+        
+        helper.add_timestamp(
+            interaction_matrix.customer_origins,
+            function="models.InteractionMatrix.learn_fit",
+            process="Dropped weighting coefficients"
+            )
+                
+        helper.add_timestamp(
+            interaction_matrix.supply_locations,
+            function="models.InteractionMatrix.learn_fit",
+            process="Dropped weighting coefficients"
+            )
+        
+        interaction_matrix.metadata = interaction_matrix_metadata
+            
+        helper.add_timestamp(
+            interaction_matrix,
+            function="models.InteractionMatrix.learn_fit",
+            process=f"Performed {config.MODEL_WRAPPER_AVAILABLE[model_type]} estimation of '{y_col}' with variables: {', '.join(cols)}"
+            )
+        
+        metadata = {}
+
+        metadata["E_ij"] = {
+            "emp": y_col,
+            "emp_untransformed": y_col_untransformed,
+            "pred": f"{y_col}{config.DEFAULT_PREDICTED_SUFFIX}"
+        }
+        
+        metadata["lct"] = lct
+        metadata["predictors"] = cols
+
+        learn_model = LearnModel(
+            interaction_matrix,
+            predictive_model,
+            metadata
+            )
+        
+        helper.add_timestamp(
+            learn_model,
+            function="models.InteractionMatrix.learn_fit",
+            process=f"Creation and {config.MODEL_WRAPPER_AVAILABLE[model_type]} estimation of '{y_col}' with variables: {', '.join(cols)}" if model_runtime_error is None else f"Creation and {config.MODEL_WRAPPER_AVAILABLE[model_type]} estimation of '{y_col}' with variables: {', '.join(cols)}. ML estimation failed: '{model_runtime_error}'"
+            )
+        
+        if verbose:
+            print("OK")
+            
+        return learn_model
+        
     def loglik(
         self,
         params,
@@ -5752,9 +5934,9 @@ class HuffModel:
 
     def __init__(
         self,
-        interaction_matrix, 
-        market_areas_df,
-        metadata
+        interaction_matrix: InteractionMatrix, 
+        market_areas_df: pd.DataFrame,
+        metadata: dict
         ):
 
         self.interaction_matrix = interaction_matrix
@@ -6095,6 +6277,7 @@ class HuffModel:
                 }
 
         customer_origins_metadata["weighting"][0] = {
+            "name": config.DEFAULT_COLNAME_TC,
             "func": config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0],
             "param": mci_ols_coefficients[f"{config.DEFAULT_COLNAME_TC}{config.DEFAULT_LCT_SUFFIX}"]
             }
@@ -6103,24 +6286,51 @@ class HuffModel:
         for key, value in list(coefs2.items()):
             if value["Coefficient"] == config.DEFAULT_COLNAME_TC:
                 del coefs2[key]
-
+        
+        coefs2 = {i: value for i, (key, value) in enumerate(coefs2.items())}
+        
         for key, value in coefs2.items():
             supply_locations_metadata["weighting"][(key)] = {
+                "name": value["Coefficient"],
                 "func": config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0],
                 "param": value["Estimate"]
             }
+            
             supply_locations_metadata["attraction_col"][key] = value["Coefficient"]
 
         customer_origins.metadata = customer_origins_metadata
         supply_locations.metadata = supply_locations_metadata
         
-        interaction_matrix_metadata = {
-            "fit": {
+        helper.add_timestamp(
+            customer_origins,
+            function="models.HuffModel.mci_fit",
+            process=f"Added weighting coefficients based on {config.MODELS['MCI']['description']} estimation"
+            )
+        
+        helper.add_timestamp(
+            supply_locations,
+            function="models.HuffModel.mci_fit",
+            process=f"Added weighting coefficients based on {config.MODELS['MCI']['description']} estimation"
+            )
+        
+        if interaction_matrix_metadata is None:
+
+            interaction_matrix_metadata = {
+                "fit": {
+                    "function": "mci_fit",
+                    "fit_by": "probabilities",
+                    "method": "OLS"
+                    }
+                }
+            
+        else:
+
+            interaction_matrix_metadata["fit"] = {
                 "function": "mci_fit",
                 "fit_by": "probabilities",
                 "method": "OLS"
                 }
-            }
+
         
         interaction_matrix = InteractionMatrix(
             interaction_matrix_df,
@@ -6971,7 +7181,7 @@ class HuffModel:
     def modelfit(
         self,
         by = "probabilities"
-        ):       
+        ):
         
         if by == "probabilities":
 
@@ -6991,12 +7201,13 @@ class HuffModel:
                     
                 except:
                     
-                    print("WARNING: Goodness-of-fit metrics could not be calculated due to NaN values.")
+                    print(f"WARNING: An error occured during the calculation of goodness-of-fit metrics for the {config.MODELS['Huff']['description']}: '{str(e)}'.")
+                    
                     return None
             
             else:
                 
-                print("WARNING: Goodness-of-fit metrics could not be calculated. No empirical values of probabilities in interaction matrix.")
+                print(f"WARNING: Goodness-of-fit metrics for the {config.MODELS['Huff']['description']} could not be calculated. No empirical values of probabilities in interaction matrix.")
 
                 return None
             
@@ -7080,9 +7291,9 @@ class MCIModel:
         self,
         interaction_matrix: InteractionMatrix,
         coefs: dict,
-        mci_ols_model,
-        market_areas_df,
-        metadata
+        mci_ols_model: statsmodels.regression.linear_model.RegressionResults,
+        market_areas_df: pd.DataFrame,
+        metadata: dict
         ):
 
         self.interaction_matrix = interaction_matrix
@@ -7180,6 +7391,7 @@ class MCIModel:
         return self.market_areas_df
 
     def modelfit(self):
+        
         """
         Compute goodness-of-fit metrics for the MCI model probabilities.
 
@@ -7199,21 +7411,26 @@ class MCIModel:
             
                 mci_modelfit = gof.modelfit(
                     interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY_OBSERVED],
-                    interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY]
+                    interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY],
+                    remove_nan=True
                 )
                 
                 return mci_modelfit
                 
-            except:
+            except Exception as e:
                 
-                print("WARNING: Goodness-of-fit metrics could not be calculated due to NaN values.")
+                print(f"WARNING: An error occured during the calculation of goodness-of-fit metrics for the {config.MODELS['MCI']['description']}: '{str(e)}'.")
+
                 return None
         
         else:
             
+            print(f"WARNING: Goodness-of-fit metrics for the {config.MODELS['MCI']['description']} could not be calculated. No empirical values of probabilities in interaction matrix.")
+            
             return None
         
     def summary(self):
+
         """
         Print a concise summary of the MCI model and return related metadata.
 
@@ -7449,11 +7666,12 @@ class MCIModel:
 
         return self
     
-    def probabilities (
+    def probabilities(
         self,
         transformation = config.DEFAULT_MCI_TRANSFORMATION,
         verbose: bool = False
         ):
+
         """
         Calculate probabilities for the MCI model based on computed utilities.
 
@@ -7474,26 +7692,22 @@ class MCIModel:
         interaction_matrix = self.interaction_matrix        
         interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()        
        
-        if config.DEFAULT_COLNAME_PROBABILITY in interaction_matrix_df.columns:
+        if config.DEFAULT_COLNAME_PROBABILITY_OBSERVED not in interaction_matrix_df.columns:
+        
+            print(f"NOTE: Probabilities in column '{config.DEFAULT_COLNAME_PROBABILITY}' in interaction matrix are treated as empirical probabilities")
             
-            if config.DEFAULT_COLNAME_PROBABILITY_OBSERVED not in interaction_matrix_df.columns:
+            interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY_OBSERVED] = interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY]
             
-                if verbose:
-                    print("NOTE: Probabilities in interaction matrix are treated as empirical probabilities")
-                
-                interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY_OBSERVED] = interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY]
-                
-                self.interaction_matrix.interaction_matrix_df = interaction_matrix_df
-                
-                helper.add_timestamp(
-                    self.interaction_matrix,
-                    function="models.MCIModel.probabilities",
-                    process=f"Saved observed market shares in column '{config.DEFAULT_COLNAME_PROBABILITY_OBSERVED}'"
-                    )
-                
-            else:
-                
-                raise InteractionMatrixError(f"Error in {config.MODELS['MCI']['description']} analysis: Interaction matrix does not contain probabilities.")
+            self.interaction_matrix.interaction_matrix_df = interaction_matrix_df
+            
+            helper.add_timestamp(
+                self.interaction_matrix,
+                function="models.MCIModel.probabilities",
+                process=f"Saved observed market shares in column '{config.DEFAULT_COLNAME_PROBABILITY_OBSERVED}'"
+                )
+            
+        else:
+            print(f"NOTE: Probabilities in column '{config.DEFAULT_COLNAME_PROBABILITY_OBSERVED}' in interaction matrix are treated as empirical probabilities")
 
         if config.DEFAULT_COLNAME_UTILITY not in interaction_matrix_df.columns:
             self.utility(transformation = transformation)
@@ -7525,7 +7739,7 @@ class MCIModel:
         helper.add_timestamp(
             self.interaction_matrix,
             function="models.MCIModel.probabilities",
-            process="Calculated probabilities"
+            process=f"Calculated probabilities in column '{config.DEFAULT_COLNAME_PROBABILITY}'"
             )
 
         return self
@@ -7635,9 +7849,9 @@ class HansenAccessibility:
 
     def __init__(
         self,
-        interaction_matrix, 
-        hansen_df,
-        metadata
+        interaction_matrix: InteractionMatrix, 
+        hansen_df: pd.DataFrame,
+        metadata: dict
         ):
 
         self.interaction_matrix = interaction_matrix
@@ -7777,11 +7991,27 @@ class HansenAccessibility:
 
 class FloatingCatchment:
 
+    """
+    Container for floating catchment area (2SFCA) accessibility analysis results.
+
+    Stores the interaction matrix and the computed accessibility scores from
+    the Two-Step Floating Catchment Area (2SFCA) method.
+
+    Attributes
+    ----------
+    interaction_matrix : InteractionMatrix
+        The interaction matrix object containing customer origins and supply locations.
+    fca_df : pandas.DataFrame
+        DataFrame containing floating catchment accessibility scores.
+    metadata : dict
+        Metadata about the floating catchment analysis.
+    """
+
     def __init__(
         self,
-        interaction_matrix, 
-        fca_df,
-        metadata
+        interaction_matrix: InteractionMatrix, 
+        fca_df: pd.DataFrame,
+        metadata: dict
         ):
 
         self.interaction_matrix = interaction_matrix
@@ -7789,6 +8019,16 @@ class FloatingCatchment:
         self.metadata = metadata
 
     def get_interaction_matrix_df(self):
+        
+        """
+        Return the interaction matrix DataFrame from the floating catchment analysis.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The interaction matrix DataFrame from the underlying
+            `InteractionMatrix` object.
+        """
 
         interaction_matrix = self.interaction_matrix
         interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()
@@ -7796,6 +8036,16 @@ class FloatingCatchment:
         return interaction_matrix_df
     
     def get_supply_locations(self):
+        
+        """
+        Return the supply locations object from the floating catchment analysis.
+
+        Returns
+        -------
+        SupplyLocations
+            The `SupplyLocations` object from the underlying
+            `InteractionMatrix`.
+        """
 
         interaction_matrix = self.interaction_matrix
         supply_locations = interaction_matrix.get_supply_locations()
@@ -7803,6 +8053,16 @@ class FloatingCatchment:
         return supply_locations
 
     def get_customer_origins(self):
+        
+        """
+        Return the customer origins object from the floating catchment analysis.
+
+        Returns
+        -------
+        CustomerOrigins
+            The `CustomerOrigins` object from the underlying
+            `InteractionMatrix`.
+        """
 
         interaction_matrix = self.interaction_matrix
         customer_origins = interaction_matrix.get_customer_origins()
@@ -7823,6 +8083,7 @@ class FloatingCatchment:
         return self.fca_df
     
     def summary(self):
+        
         """
         Print a concise summary of the floating catchment (2SFCA) analysis.
 
@@ -7914,6 +8175,374 @@ class FloatingCatchment:
 
         timestamp = helper.print_timestamp(self)
         return timestamp
+    
+
+class LearnModel:
+    
+    """
+    Container for predictive learning model results and metadata.
+
+    Stores the interaction matrix and the trained predictive model,
+    providing access to customer origins, supply locations, and model data.
+
+    Attributes
+    ----------
+    interaction_matrix : InteractionMatrix
+        The interaction matrix object containing customer origins and supply locations.
+    predictive_model : PredictiveModel
+        The trained predictive model instance.
+    metadata : dict
+        Metadata about the learning model.
+    """    
+    
+    def __init__(
+        self,
+        interaction_matrix: InteractionMatrix,
+        predictive_model: PredictiveModel,
+        metadata: dict
+        ):
+
+        self.interaction_matrix = interaction_matrix
+        self.predictive_model = predictive_model
+        self.metadata = metadata
+
+    def get_interaction_matrix_df(self):
+
+        """
+        Return the interaction matrix DataFrame used by the predictive model.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The interaction matrix DataFrame from the wrapped
+            `InteractionMatrix`.
+        """
+
+        interaction_matrix = self.interaction_matrix
+        interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()
+
+        return interaction_matrix_df
+    
+    def get_supply_locations(self):
+
+        """
+        Return the `SupplyLocations` object used by the predictive model.
+
+        Returns
+        -------
+        SupplyLocations
+            Supply locations instance from the underlying interaction matrix.
+        """
+
+        interaction_matrix = self.interaction_matrix
+        supply_locations = interaction_matrix.get_supply_locations()
+
+        return supply_locations
+
+    def get_customer_origins(self):
+
+        """
+        Return the `CustomerOrigins` object used by the predictive model.
+
+        Returns
+        -------
+        CustomerOrigins
+            Customer origins instance from the underlying interaction matrix.
+        """
+
+        interaction_matrix = self.interaction_matrix
+        customer_origins = interaction_matrix.get_customer_origins()
+
+        return customer_origins
+    
+    def get_predictive_model(self):
+
+        """
+        Return the underlying scikit-learn model object.
+
+        Returns
+        -------
+        object
+            The fitted predictive model used for estimation.
+        """
+
+        return self.predictive_model
+    
+    def modelfit(self):
+        
+        """
+        Compute goodness-of-fit metrics for the model probabilities.
+
+        Returns
+        -------
+        dict or None
+            Goodness-of-fit metrics as returned by `gof.modelfit`, or None if
+            empirical probability values are not present or cannot be computed.
+        """
+
+        interaction_matrix = self.interaction_matrix        
+        interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()
+        
+        p_ij_predicted_col = config.DEFAULT_COLNAME_PROBABILITY
+        p_ij_observed_col = config.DEFAULT_COLNAME_PROBABILITY_OBSERVED
+        
+        key_errors_pij = []
+        if p_ij_predicted_col not in interaction_matrix_df.columns:
+            key_errors_pij.append("No predicted probabilities in interaction matrix.")
+        if p_ij_observed_col not in interaction_matrix_df.columns:
+            key_errors_pij.append("No observed probabilities in interaction matrix.")
+        if len(key_errors_pij) > 0:
+            raise InteractionMatrixError(f"Calculation of model fit statistics in {config.MODELS['ML']['description']} not possible: {' '.join(key_errors_pij)}")
+
+        try:
+        
+            learnm_modelfit = gof.modelfit(
+                interaction_matrix_df[p_ij_observed_col],
+                interaction_matrix_df[p_ij_predicted_col]
+            )
+            
+            return learnm_modelfit
+            
+        except Exception as e:
+            
+            print(f"WARNING: An error occured during the calculation of goodness-of-fit metrics for the {config.MODELS['ML']['description']}: '{str(e)}'.")
+
+            return None
+        
+    def probabilities(
+        self,
+        verbose: bool = False
+        ):
+
+        """
+        Calculate market share probabilities from predicted customer flows.
+
+        This method computes market share probabilities for each customer-supply
+        location pair from the predicted customer flows stored in the interaction
+        matrix. If Log-Customer-Traffic (LCT) transformation was used during model
+        fitting, it applies the inverse transformation (ILCT) to recover probabilities.
+        Otherwise, it calculates market shares directly from the flows.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            If True, print progress messages.
+
+        Returns
+        -------
+        None
+            Updates the interaction matrix in-place with calculated probabilities
+            stored in the column specified by `config.DEFAULT_COLNAME_PROBABILITY`.
+
+        Raises
+        ------
+        InteractionMatrixError
+            If predicted customer flows column is missing from the interaction matrix.
+
+        Example
+        --------
+        >>> Haslach = load_geodata(
+        ...     "data/Haslach.shp",
+        ...     location_type="origins",
+        ...     unique_id="BEZEICHN"
+        ... )
+        >>> Haslach_supermarkets = load_geodata(
+        ...     "data/Haslach_supermarkets.shp",
+        ...     location_type="destinations",
+        ...     unique_id="LFDNR"
+        ... )
+        >>> haslach_interactionmatrix = create_interaction_matrix(
+        ...     Haslach,
+        ...     Haslach_supermarkets
+        ... )
+        >>> haslach_interactionmatrix.transport_costs(
+        ...     network=False,
+        ...     distance_unit="meters"
+        ... )
+        >>> mci_model = haslach_interactionmatrix.fit_model(
+        ...     model_type="MCI",
+        ...     method="OLS"
+        ... )
+        >>> mci_model.probabilities(verbose=True)
+        """
+
+        interaction_matrix = self.interaction_matrix        
+        
+        interaction_matrix_df = interaction_matrix.get_interaction_matrix_df()        
+        
+        interaction_matrix_metadata = interaction_matrix.get_metadata()
+        fit = interaction_matrix_metadata["fit"]
+        fit_method = fit['method']
+        
+        E_ij_pred = self.metadata["E_ij"]["pred"]
+        lct = self.metadata["lct"]
+        
+        if E_ij_pred not in interaction_matrix_df.columns:
+            raise InteractionMatrixError(f"Interaction matrix does not contain predicted customer flows '{E_ij_pred}'")
+               
+        if config.DEFAULT_COLNAME_PROBABILITY_OBSERVED not in interaction_matrix_df.columns:
+        
+            print(f"NOTE: Probabilities in column '{config.DEFAULT_COLNAME_PROBABILITY}' in interaction matrix are treated as empirical probabilities")
+            
+            interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY_OBSERVED] = interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY]
+            
+            self.interaction_matrix.interaction_matrix_df = interaction_matrix_df
+            
+            helper.add_timestamp(
+                self.interaction_matrix,
+                function="models.MCIModel.probabilities",
+                process=f"Saved observed market shares in column '{config.DEFAULT_COLNAME_PROBABILITY_OBSERVED}'"
+                )
+            
+        else:
+            print(f"NOTE: Probabilities in column '{config.DEFAULT_COLNAME_PROBABILITY_OBSERVED}' in interaction matrix are treated as empirical probabilities")
+
+        if lct:
+            
+            print(f"NOTE: {config.MODEL_WRAPPER_AVAILABLE[fit_method]} estimation was conducted with {config.MCI_TRANSFORMATIONS['LCT']}. Applying {config.MCI_TRANSFORMATIONS['ILCT']} for calculation of probabilites.")
+            
+            if verbose:
+                print(f"Calculating probabilties from predicted customer flows", end = " ... ")
+            
+            interaction_matrix_df[f"{E_ij_pred}_10pow"] = 10**interaction_matrix_df[E_ij_pred]
+            
+            ms_refcol = pd.DataFrame(interaction_matrix_df.groupby(config.DEFAULT_COLNAME_CUSTOMER_ORIGINS)[f"{E_ij_pred}_10pow"].sum())
+            ms_refcol = ms_refcol.reset_index()
+            ms_refcol = ms_refcol.rename(columns = {f"{E_ij_pred}_10pow": config.DEFAULT_COLNAME_FLOWS_TOTAL_ORIGINS})
+            
+            interaction_matrix_df = interaction_matrix_df.merge(
+                ms_refcol,
+                left_on = config.DEFAULT_COLNAME_CUSTOMER_ORIGINS,
+                right_on = config.DEFAULT_COLNAME_CUSTOMER_ORIGINS
+            )
+            
+            interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY] = interaction_matrix_df[f"{E_ij_pred}_10pow"]/interaction_matrix_df[config.DEFAULT_COLNAME_FLOWS_TOTAL_ORIGINS]
+            
+            interaction_matrix_df = interaction_matrix_df.drop(
+                columns = [
+                    config.DEFAULT_COLNAME_FLOWS_TOTAL_ORIGINS,
+                    f"{E_ij_pred}_10pow"
+                ]
+            )
+            
+            if verbose:
+                print("OK")
+            
+        else:
+
+            if verbose:
+                print(f"Calculating probabilties from predicted customer flows", end = " ... ")
+                
+            interaction_matrix_df = market_shares(
+                interaction_matrix_df,
+                turnover_col = E_ij_pred,
+                ref_col = config.DEFAULT_COLNAME_CUSTOMER_ORIGINS,
+                marketshares_col = config.DEFAULT_COLNAME_PROBABILITY,
+                check_df_vars = False
+            )
+            
+            if verbose:
+                print ("OK")
+
+        interaction_matrix.interaction_matrix_df = interaction_matrix_df
+        self.interaction_matrix = interaction_matrix
+
+        helper.add_timestamp(
+            self.interaction_matrix,
+            function="models.LearnModel.probabilities",
+            process=f"Calculated probabilities in column '{config.DEFAULT_COLNAME_PROBABILITY}'"
+            )
+
+    def summary(self):
+        
+        """
+        Print a concise summary of the predictive model and return related metadata.
+
+        Returns
+        -------
+        list
+            [customer_origins_metadata, supply_locations_metadata,
+            interaction_matrix_metadata, mci_modelfit]
+        """
+
+        interaction_matrix = self.interaction_matrix
+
+        customer_origins_metadata = interaction_matrix.get_customer_origins().get_metadata()
+        supply_locations_metadata = interaction_matrix.get_supply_locations().get_metadata()
+        interaction_matrix_metadata = interaction_matrix.get_metadata()
+
+        print(config.MODELS["ML"]["description"])
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
+
+        helper.print_summary_row(
+            config.DEFAULT_NAME_SUPPLY_LOCATIONS,
+            supply_locations_metadata["no_points"]
+        )
+        helper.print_summary_row(
+            config.DEFAULT_NAME_CUSTOMER_ORIGINS,
+            customer_origins_metadata["no_points"]
+        )
+
+        helper.print_interaction_matrix_info(interaction_matrix)
+        
+        # print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
+        
+        # print("Weighting estimates")
+ 
+        # coefficients_rows = []
+
+        # for key, value in coefs.items():
+
+        #     coefficient_name = value["Coefficient"]
+        #     if coefficient_name == config.DEFAULT_COLNAME_ATTRAC:
+        #         coefficient_name = config.DEFAULT_NAME_ATTRAC
+        #     if coefficient_name == config.DEFAULT_COLNAME_TC:
+        #         coefficient_name = config.DEFAULT_NAME_TC
+
+        #     coefficients_rows.append({
+        #         "": coefficient_name,
+        #         "Estimate": round(value["Estimate"], config.FLOAT_ROUND),
+        #         "SE": round(value["SE"], config.FLOAT_ROUND),
+        #         "t": round(value["t"], config.FLOAT_ROUND),
+        #         "p": round(value["p"], config.FLOAT_ROUND),
+        #         "CI lower": round(value["CI_lower"], config.FLOAT_ROUND),
+        #         "CI upper": round(value["CI_upper"], config.FLOAT_ROUND)
+        #     })
+
+        # coefficients_df = pd.DataFrame(coefficients_rows)
+        
+        # print(coefficients_df.to_string(index=False))
+        
+        learn_modelfit = None
+
+        learn_modelfit = self.modelfit()
+
+        if learn_modelfit is not None:
+
+            print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
+            
+            print ("Goodness-of-fit for probabilities")
+
+            helper.print_modelfit(learn_modelfit)            
+
+        print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
+
+        return [
+            customer_origins_metadata,
+            supply_locations_metadata,
+            interaction_matrix_metadata,
+            learn_modelfit
+            ]
+    
+    def show_log(self):
+        
+        """
+        Shows all timestamp logs of the LearnModel object
+        """
+
+        timestamp = helper.print_timestamp(self)
+        return timestamp 
+
 
 def create_interaction_matrix(
     customer_origins,
@@ -8112,6 +8741,7 @@ def market_shares(
     drop_total_col: bool = True,
     check_df_vars: bool = True
     ):
+
     """
     Calculate market shares for turnover within a reference area.
 
@@ -8200,12 +8830,12 @@ def market_shares(
 def get_isochrones(
     geodata_gpd: gp.GeoDataFrame,
     unique_id_col: str,
-    segments: list = [5, 10, 15],
+    segments: list = None,
     range_type: str = "time",
     intersections: str = "true",
     profile: str = "driving-car",
     donut: bool = True,
-    ors_server: str = "https://api.openrouteservice.org/v2/",
+    ors_server: str = config.ORS_SERVER,
     ors_auth: str = None,    
     timeout = 10,
     delay = 1,
@@ -8270,6 +8900,17 @@ def get_isochrones(
     --------
     >>> isos = get_isochrones(Haslach.get_geodata_gpd(), unique_id_col='BEZEICHN', segments=[5,10])
     """
+
+    if segments is None:
+            
+        if config.USE_ORS_DEFAULT:
+        
+            segments = config.ORS_DEFAULT
+            print(f"NOTE: No segments were stated. Using default: {config.ORS_DEFAULT}")
+            
+        else:
+            
+            raise ValueError("No segments for isochrones were specified")
 
     coords = [(point.x, point.y) for point in geodata_gpd.geometry]
     

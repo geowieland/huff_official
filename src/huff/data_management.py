@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.16
-# Last update: 2026-04-19 13:12
+# Version:     1.0.18
+# Last update: 2026-05-02 11:05
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -63,6 +63,8 @@ def load_geodata(
         Encoding used in CSV files.
     crs_input : str, default="EPSG:4326"
         Coordinate reference system of the input data.
+    verbose : bool, optional
+        If True, print progress messages.
 
     Returns
     -------
@@ -96,9 +98,15 @@ def load_geodata(
     crs_output = config.WGS84_CRS
 
     if location_type is None or (location_type not in config.PERMITTED_LOCATION_TYPES):
-        raise ValueError (f"Error while loading geodata: Argument location_type must be one of the following: {', '.join(config.PERMITTED_LOCATION_TYPES)}")
+        raise ValueError (f"Error while loading geodata: Param 'location_type' must be one of the following: {', '.join(config.PERMITTED_LOCATION_TYPES)}")
+
+    assert unique_id is not None, "Error while loading geodata: Param 'unique_id' is mandatory."
+    assert isinstance(unique_id, str), "Error while loading geodata: Param 'unique_id' must be a string."
+    assert unique_id != "", "Error while loading geodata: Param 'unique_id' must not be an empty string."    
 
     if isinstance(data, gp.GeoDataFrame):
+        
+        assert unique_id in data.columns, f"Error while loading geodata: unique_id '{unique_id}' not found in data columns."
 
         geodata_gpd_original = data
 
@@ -111,6 +119,8 @@ def load_geodata(
         geodata_gpd = geodata_gpd[[unique_id, "geometry"]] 
 
     elif isinstance(data, pd.DataFrame):
+        
+        assert unique_id in data.columns, f"Error while loading geodata: unique_id '{unique_id}' not found in data columns."
 
         geodata_tab = data
 
@@ -119,6 +129,8 @@ def load_geodata(
         if data_type == "shp":
 
             geodata_gpd_original = gp.read_file(data)
+            
+            assert unique_id in geodata_gpd_original.columns, f"Error while loading geodata: unique_id '{unique_id}' not found in data columns."
 
             if not all(geodata_gpd_original.geometry.geom_type == "Point"):
                 raise TypeError ("Error while loading geodata: Input shapefile must be of type 'Point'")
@@ -145,11 +157,15 @@ def load_geodata(
                     sep = csv_sep, 
                     decimal = csv_decimal, 
                     encoding = csv_encoding
-                    ) 
+                    )
+                
+                assert unique_id in geodata_tab.columns, f"Error while loading geodata: unique_id '{unique_id}' not found in data columns."
                 
             if data_type == "xlsx":
 
                 geodata_tab = pd.read_excel(data)
+                
+                assert unique_id in geodata_tab.columns, f"Error while loading geodata: unique_id '{unique_id}' not found in data columns."
 
         else:
             raise TypeError("Error while loading geodata: Unknown type of data")
@@ -190,7 +206,7 @@ def load_geodata(
     
     if verbose:
         print("OK")
-        print(f"Constructing instance of class for {location_type}", end = " ... ")
+        print(f"Constructing instance of class for {location_type} with {len(geodata_gpd_original)} input points", end = " ... ")
 
     metadata = {
         "location_type": location_type,
@@ -236,7 +252,7 @@ def load_geodata(
     helper.add_timestamp(
         geodata_object,
         function="data_management.load_geodata",
-        process = "Creation by import"
+        process = f"Creation by import ({location_type} with {len(geodata_gpd_original)} input points)"
         )
     
     if verbose:
@@ -326,6 +342,8 @@ def load_interaction_matrix(
         Target coordinate reference system for geospatial data.
     check_df_vars : bool, default=True
         If True, validates that required columns exist using `helper.check_vars`.
+    verbose : bool, optional
+        If True, print progress messages.
 
     Returns
     -------
@@ -431,7 +449,7 @@ def load_interaction_matrix(
     if check_df_vars:
 
         if verbose:
-            print(f"Checking input variables {', '.join(cols_check)}", end = " ... ")
+            print(f"Checking input columns {', '.join(cols_check)}", end = " ... ")
 
         helper.check_vars(
             interaction_matrix_df,
@@ -592,7 +610,7 @@ def load_interaction_matrix(
     helper.add_timestamp(
         customer_origins,
         function="data_management.load_interaction_matrix",
-        process = "Creation by import",
+        process = f"Creation by import (origins with {len(customer_origins_geodata_gpd_original)} input points)",
         status=status
         )
     
@@ -753,7 +771,7 @@ def load_interaction_matrix(
     helper.add_timestamp(
         supply_locations,
         function="data_management.load_interaction_matrix",
-        process = "Creation by import",
+        process = f"Creation by import (destinations with {len(supply_locations_geodata_gpd_original)} input points)",
         status=status
         )
     
@@ -820,7 +838,7 @@ def load_interaction_matrix(
     helper.add_timestamp(
         interaction_matrix,
         function="data_management.load_interaction_matrix",
-        process = "Creation by import",
+        process = f"Creation by import (interaction matrix with {len(interaction_matrix_df)} rows)",
         status = status
         )
     
@@ -838,7 +856,8 @@ def load_marketareas(
     csv_decimal = ",", 
     csv_encoding="unicode_escape",
     xlsx_sheet: str | None = None,
-    check_df_vars: bool = True
+    check_df_vars: bool = True,
+    verbose: bool = False
     ) -> MarketAreas:
 
     """
@@ -862,6 +881,8 @@ def load_marketareas(
     check_df_vars : bool, default=True
         If True, checks whether required columns are present in the input data
         using helper.check_vars.
+    verbose : bool, optional
+        If True, print progress messages.
 
     Returns
     -------
@@ -925,7 +946,10 @@ def load_marketareas(
             market_areas_df,
             cols = [total_col]
             )    
-   
+    
+    if verbose:
+        print("Compiling market areas data", end = " ... ")
+    
     market_areas_df = market_areas_df.rename(
         columns = {
             supply_locations_col: config.DEFAULT_COLNAME_SUPPLY_LOCATIONS,
@@ -947,8 +971,11 @@ def load_marketareas(
     helper.add_timestamp(
         market_areas,
         function="data_management.load_marketareas",
-        process = "Creation by import"
+        process = f"Creation by import (market areas with {len(market_areas_df)} input locations)"
         )
+    
+    if verbose:
+        print("OK")
     
     return market_areas
 
@@ -1029,7 +1056,7 @@ def survey_to_matrix(
     check_df_vars : bool, default=True
         If True, performs presence and basic validity checks on required
         columns using `helper.check_vars`.
-    verbose : bool, default=False
+    verbose : bool, optional
         If True, print progress messages.
 
     Returns
@@ -1187,7 +1214,7 @@ def survey_to_matrix(
         )
     origins_x_locations[config.DEFAULT_COLNAME_INTERACTION] = origins_x_locations[customer_origins_col].astype(str)+config.MATRIX_OD_SEPARATOR+origins_x_locations[supply_locations_col].astype(str)
     
-    data["count"] = 1
+    data[config.DEFAULT_COLNAME_COUNT] = 1
     
     data_agg = data.groupby(
         [
@@ -1195,28 +1222,29 @@ def survey_to_matrix(
             supply_locations_col
             ],
         as_index=False
-        )["count"].sum()
+        )[config.DEFAULT_COLNAME_COUNT].sum()
     
     data_agg[config.DEFAULT_COLNAME_INTERACTION] = data_agg[customer_origins_col].astype(str)+config.MATRIX_OD_SEPARATOR+data_agg[supply_locations_col].astype(str)
     
     data_agg = origins_x_locations.merge(
-        data_agg[[config.DEFAULT_COLNAME_INTERACTION, "count"]],
+        data_agg[[config.DEFAULT_COLNAME_INTERACTION, config.DEFAULT_COLNAME_COUNT]],
         left_on = config.DEFAULT_COLNAME_INTERACTION,
         right_on=config.DEFAULT_COLNAME_INTERACTION,
         how = "left"
     )
     
-    data_agg["count"] = data_agg["count"].fillna(0)
+    data_agg[config.DEFAULT_COLNAME_COUNT] = data_agg[config.DEFAULT_COLNAME_COUNT].fillna(0)
     
     data_agg = market_shares(
         df = data_agg,
-        turnover_col = "count",
+        turnover_col = config.DEFAULT_COLNAME_COUNT,
         ref_col = customer_origins_col,
         check_df_vars = False
         )
 
     if verbose:
         print("OK")
+        print("NOTE: Each entry of a unique origin-destination pair in the input data is treated as an empirical interaction.")
     
     if flows_col is not None:
 

@@ -4,11 +4,13 @@ purpose: Generate standardized Python docstrings in the huff package
 author: Thomas Wieland  
         ORCID 0000-0001-5168-9846  
         mail geowieland@googlemail.com    
-version: 1.0.1  
-last_update: 2026-04-19 12:37  
+version: 1.0.2  
+last_update: 2026-05-02 12:05  
 ---
 
 # Agent: Python Docstring Generator
+
+This document contains instructions for generating docstrings by agents.
 
 This workspace contains a Python library for market area analyses using the Huff model and its extensions, such as the Multiplicative Competitive Interaction (MCI) model. 
 

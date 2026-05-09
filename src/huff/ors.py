@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.4
-# Last update: 2026-03-07 08:57
+# Version:     1.5.6
+# Last update: 2026-05-03 10:32
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -511,11 +511,20 @@ class Client:
         """
 
         if segments is None:
-            segments = [900, 600, 300]
+            
+            if config.USE_ORS_DEFAULT:
+            
+                segments = config.ORS_DEFAULT_SERVICE
+                print(f"NOTE: No segments were stated. Using default: {config.ORS_DEFAULT_SERVICE}")
+                
+            else:
+                
+                raise ValueError("No segments for isochrones were specified")
         
         check_params(
             range_type,
             profile,
+            segments=segments
         )
 
         assert len(segments) <= config.ORS_ENDPOINTS["Isochrones"]["Restrictions"]["Intervals"], f"ORS client does not allow >{config.ORS_ENDPOINTS['Isochrones']['Restrictions']['Intervals']} intervals in an Isochrones query. See {config.ORS_URL_RESTRICTIONS}."
@@ -912,7 +921,8 @@ class Client:
     
 def check_params(
     range_type,
-    profile
+    profile,
+    segments: list = None
     ):
 
     """
@@ -922,3 +932,25 @@ def check_params(
         
     assert range_type in config.ORS_RANGE_TYPES_LIST_API, f"Parameter 'range_type' must be one of these: {', '.join(config.ORS_RANGE_TYPES_LIST_API)}."
     assert profile in config.ORS_PROFILES_LIST_API, f"Parameter 'profile' must be one of these: {', '.join(config.ORS_PROFILES_LIST_API)}."
+    
+    if segments is not None:
+        
+        assert isinstance(segments, list), f"Parameter 'segments' requires a list with integer values, but not: {segments}"
+        
+        if len(segments) > 1:
+            
+            prev = None
+
+            for i, segment in enumerate(segments):
+                
+                try:
+                    segment = int(segment)
+                except:
+                    raise ValueError(f"Segment {i} is not an integer value: {segment}")
+                
+                if prev is not None and segment <= prev:
+                    raise ValueError(
+                        f"Segments must be strictly increasing, not: {segments}"
+                    )
+                
+                prev = segment
