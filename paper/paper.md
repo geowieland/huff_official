@@ -7,8 +7,8 @@ author:
     ORCID: 0000-0001-5168-9846  
     EMail: geowieland@googlemail.com
 bibliography: paper.bib
-date: 10 April 2026
-version: 1.2.0
+date: 07 June 2026
+version: 1.2.1
 ---
 
 
@@ -60,12 +60,12 @@ This structure was chosen to ensure a consistent workflow and a unified data str
 
 **Research impact statement**
 
-The `huff` package is currently used in a health geography project at the Wuerzburg university hospital which deals with the catchment areas of pediatric oncology care; a paper on this topic is currently in the review process. Given the rising number of scientific studies using market area models - particularly for non-retail purposes such as health geography - and the widespread use of Python as a programming language, it is to be expected that the `huff` library will see frequent adoption in related research projects.
+The `huff` package has  been used in a health geography project at the Wuerzburg university hospital towards modeling the catchment areas of pediatric oncology care [@kapitza2026]. Given the rising number of scientific studies using market area models - particularly for non-retail purposes such as health geography - and the widespread use of Python as a programming language, it is to be expected that the `huff` library will see frequent adoption in related research projects.
 
 
 **Software development history statement**
 
-Due to data confidentiality requirements, the early development of the `huff` library took place in a private repository; the public repository was initialized more recently to provide open access for reproducibility and review. The `huff` Python package has been publicly developed and published via the [Python Package Index](https://pypi.org/project/huff/) since April 2025. As of submission, it has undergone 46 releases, showing continuous improvement and feature additions. The library is actively used: since its first release (version 1.0.0) in April 2025, it has been downloaded approximately 26,200 times from the Python Package Index (source: [pepy.tech](https://pepy.tech/project/huff), accessed April 10, 2026).
+Due to data confidentiality requirements, the early development of the `huff` library took place in a private repository. The public repository was initialized more recently to provide open access for reproducibility and review. The `huff` Python package has been publicly developed and published via the [Python Package Index](https://pypi.org/project/huff/) since April 2025. As of submission, it has undergone 49 releases, showing continuous improvement and feature additions. The library is actively used: since its first release (version 1.0.0) in April 2025, it has been downloaded 31,807 times from the Python Package Index (source: [pepy.tech](https://pepy.tech/project/huff), accessed June 7, 2026).
 
 
 **AI usage disclosure**
