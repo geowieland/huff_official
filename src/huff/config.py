@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.18
-# Last update: 2026-05-09 14:53
+# Version:     1.0.19
+# Last update: 2026-06-11 17:07
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.0"
+PACKAGE_VERSION = "1.9.1"
 
 # Basic config:
 
@@ -20,6 +20,8 @@ FLOAT_ROUND = 3
 SUMMARY_WIDTH = 26
 SUMMARY_SECTION_SEP_LINELENGTH = SUMMARY_WIDTH*2
 SUMMARY_NOT_DEFINED = "Not defined"
+
+REQUESTS_VERIFY = True
 
 VERBOSE = False
 

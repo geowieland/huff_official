@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.12
-# Last update: 2026-03-07 08:57
+# Version:     1.4.13
+# Last update: 2026-06-11 17:06
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -16,8 +16,7 @@ import tempfile
 import time
 from PIL import Image
 import huff.config as config
-
-
+   
 class Client:
 
     """
@@ -79,7 +78,8 @@ class Client:
             response = requests.get(
                 osm_url, 
                 headers = self.headers,
-                timeout = timeout
+                timeout = timeout,
+                verify=config.REQUESTS_VERIFY
                 )
 
             if response.status_code == 200:

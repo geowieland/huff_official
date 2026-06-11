@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.6
-# Last update: 2026-05-03 10:32
+# Version:     1.5.7
+# Last update: 2026-06-11 17:06
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -16,7 +16,6 @@ import geopandas as gp
 from shapely.geometry import shape
 import huff.config as config
 import huff.helper as helper
-
 
 class Isochrone:
 
@@ -553,15 +552,21 @@ class Client:
             "ors_url": ors_url,
             "auth": auth
             }
+        
+        status_code = 99999
+        response_reason = ""
 
         try:
-
+                
             response = requests.post(
                 ors_url, 
                 headers=headers, 
                 json=body,
-                timeout=timeout
+                timeout=timeout,
+                verify=config.REQUESTS_VERIFY
                 )
+            
+            status_code = response.status_code
             
         except Exception as e:
 
@@ -570,6 +575,8 @@ class Client:
             print (error_message)
             
             status_code = 99999
+            response_reason = error_message
+            
             isochrones_gdf = None 
             metadata = {}
 
@@ -582,9 +589,7 @@ class Client:
                 )
             
             return isochrone_output
-
-        status_code = response.status_code
-
+        
         if status_code == 200:
 
             if verbose:
@@ -623,7 +628,7 @@ class Client:
 
         else:
             
-            error_message = f"Error while accessing ORS server. Status code: {status_code} - {response.reason}"
+            error_message = f"Error while accessing ORS server. Status code: {status_code} - {response_reason}"
             
             print(error_message)
             
@@ -771,27 +776,32 @@ class Client:
             "destinations": len(destinations) if len(destinations) > 0 else None,
         }
 
+        status_code = 99999
+        response_reason = ""
+        
         try:
-
+            
             response = requests.post(
                 ors_url, 
                 headers=headers, 
                 json=body,
-                timeout=timeout
+                timeout=timeout,
+                verify=config.REQUESTS_VERIFY
                 )
             
+            status_code = response.status_code
+                        
         except Exception as e:
             
             error_message = f"Error while accessing ORS server: {str(e)}"
 
             print (error_message)
             
-            status_code = 99999
+            response_reason = error_message
+                        
             matrix_df = None
             metadata = {}
-
-        status_code = response.status_code
-
+        
         if status_code == 200:
 
             if verbose:
@@ -892,7 +902,7 @@ class Client:
 
         else:
 
-            error_message = f"Error while accessing ORS server. Status code: {status_code} - {response.reason}"
+            error_message = f"Error while accessing ORS server. Status code: {status_code} - {response_reason}"
             
             print(error_message)
 

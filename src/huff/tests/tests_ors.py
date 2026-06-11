@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.1
-# Last update: 2026-05-02 12:06
+# Version:     1.0.2
+# Last update: 2026-06-11 17:06
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -31,6 +31,7 @@ Freiburg_main_station_iso = ors_client.isochrone(
     verbose = True
 )
 # Retrieve isochrones
+# This MUST produce a ValueError
 
 Freiburg_main_station_iso.summary(ors_info=False)
 # Summary of isochrones

@@ -25,15 +25,21 @@ A brief discussion of the included models and their application in this package 
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
 
-To install the package from the Python Package Index (PyPI), use `pip`:
+To install the current version of the package from the Python Package Index (PyPI), use `pip`:
 
 ```bash
 pip install huff
+```
+
+Please note: huff versions >=1.9.1 are designed to be compatible with Python 3.13, while versions <=1.9.1 were developed under Python 3.11. However, according to tests, it still works with Python 3.11. To install the previous version, use `pip`:
+
+```bash
+pip install huff==1.9.0
 ```
 
 To install the package from GitHub with `pip`: 
@@ -218,20 +224,9 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.0)
+## What's new (v1.9.1)
 
-- Extensions
-  - Fit interaction matrix via machine learning models using models.InteractionMatrix.learn_fit(), which is processed in the new class models.LearnModel
-  - New module predictive_models, which is a generic wrapper tool for machine learning regression models
+- General
+  - Update of dependencies to be compatible with Python 3.13 (still works with Python 3.11) while avoiding incompatibility conflict of statsmodels and scipy
 - Bugfixes
-  - models.InteractionMatrix.mci_fit() and models.HuffModel.mci_fit() now set weightings of SupplyLocations and CustomerOrigins objects correctly
-  - Correct counting of included accessibility calculations in models.SupplyLocations.competitor_accessibility()
-  - ors.Client.isochrone() now checks input param 'segments' for correctness
-  - data_management.load_geodata() now explicitly checks input param 'unique_id'
-  - Fixed bug regarding wrong number of supply locations attraction cols in InteractionMatrix.mci_fit()
-  - InteractionMatrix.mci_fit() and HuffModel.mci_fit() now set correct timestamps in CustomerOrigins and SupplyLocations objects
-- Other
-  - Replaced deprecated ORS API in defaults
-  - More specific progress messages, WARNINGs and NOTEs in several modules
-  - Cleanup and adjustment of requirements with respect to compatibility
-  - Completion of documentation
+  - Fixed bug with respect to lacking response reason in ors functions

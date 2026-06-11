@@ -7,7 +7,7 @@ def read_README():
     
 setup(
     name='huff',
-    version='1.9.0',
+    version='1.9.1',
     description='huff: Market Area Analysis in Python',
     packages=find_packages(where="src"),
     package_dir={"": "src"},
@@ -21,20 +21,20 @@ setup(
         'huff': ['tests/data/*'],
     },
     install_requires=[
-        'geopandas>=0.14,<0.15',
-        'pandas>=2.0,<2.3',
-        'numpy>=1.26,<2.0',
-        'statsmodels==0.14.2',
-        'scipy==1.15.3',
-        'scikit-learn>=1.3,<1.6',
-        'xgboost>=3.1.0,<=3.2.0',
-        'lightgbm==4.6.0',
-        'shapely>=2.0,<2.1',
-        'requests>=2.31,<3.0',
-        'matplotlib>=3.8,<3.9',
-        'pillow>=10,<11',
-        'contextily>=1.4,<1.6',
-        'openpyxl>=3.1,<3.2'
+        'geopandas',
+        'pandas',
+        'numpy',
+        'statsmodels>=0.14.5',
+        'scipy>=1.17',
+        'scikit-learn',
+        'xgboost',
+        'lightgbm',
+        'shapely',
+        'requests<3.0',
+        'matplotlib',
+        'pillow',
+        'contextily',
+        'openpyxl'
     ],
     test_suite='huff.tests',
 )
