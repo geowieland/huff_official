@@ -25,7 +25,7 @@ A brief discussion of the included models and their application in this package 
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.2) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -69,10 +69,13 @@ pip install git+https://github.com/geowieland/huff_official.git
   - Fitting MCI model with >= 2 independent variables in the utility function
   - Huff-like MCI model market simulation
   - MCI model market simulation with inverse log-centering transformation
-- **Hansen accessibility**:
+- **Machine Learning Based Market Area Models**: 
+  - Fitting customer flows model with >= 2 independent variables in the utility function
+  - Huff-like model market simulation
+- **Hansen Accessibility**:
   - Calculating basic Hansen accessibility based on an interaction matrix
   - Calculating multivariate and (empirically) weighted Hansen accessibility based on an interaction matrix
-- **Two-step floating catchment area analysis**:
+- **Two-Step Floating Catchment Area (2SFCA) Analysis**:
   - Calculating basic 2SFCA analysis based on an interaction matrix
   - Calculating multivariate and (empirically) weighted 2SFCA analysis based on an interaction matrix
 - **GIS tools**:
@@ -145,6 +148,7 @@ haslach_interactionmatrix = create_interaction_matrix(
 
 haslach_interactionmatrix.transport_costs(
     ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
+    # API token FOR TESTING
     network=True,
     )
 # Obtaining transport costs (default: driving-car)
@@ -207,6 +211,7 @@ For detailed examples, see the /examples folder in the [public GitHub repository
   - Huff DL (2003) Parameter Estimation in the Huff Model. *ArcUser* 6(4): 34–36. https://stg.esri.com/news/arcuser/1003/files/huff.pdf
   - Huff DL, Batsell RR (1975) Conceptual and Operational Problems with Market Share Models of Consumer Spatial Behavior. *Advances in Consumer Research* 2(1): 165-172. 
   - Huff DL, McCallum BM (2008) Calibrating the Huff Model using ArcGIS Business Analyst. ESRI White Paper, September 2008. https://www.esri.com/library/whitepapers/pdfs/calibrating-huff-model.pdf.
+  - Kapitza J, Wieland T, Metzler M (2026) Modeling hospital catchment areas in pediatric oncology using an empirically parameterized extended Huff model. *International Journal of Health Geographics*. [10.1186/s12942-026-00478-2](https://doi.org/10.1186/s12942-026-00478-2)
   - Luo W, Wang F (2003) Measures of spatial accessibility to health care in a GIS environment: synthesis and a case study in the Chicago region. *Environment and Planning B: Planning and Design* 30: 865-884. [10.1068/b29120](https://doi.org/10.1068/b29120)
   - Luo J (2014) Integrating the Huff Model and Floating Catchment Area Methods to Analyze Spatial Access to Healthcare Services. *Transactions in GIS* 18(3): 436-448. [10.1111/tgis.12096](https://doi.org/10.1111/tgis.12096)
   - Nakanishi M, Cooper LG (1974) Parameter estimation for a Multiplicative Competitive Interaction Model: Least squares approach. *Journal of Marketing Research* 11(3): 303–311. [10.2307/3151146](https://doi.org/10.2307/3151146).
@@ -221,12 +226,13 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 
 ## AI Usage Statement
 
-This software was developed without the use of AI-generated code. The Continue Agent in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
+This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.1)
+## What's new (v1.9.2)
 
-- General
-  - Update of dependencies to be compatible with Python 3.13 (still works with Python 3.11) while avoiding incompatibility conflict of statsmodels and scipy
+- Extensions
+  - New gistools function polygon_neighbors()
 - Bugfixes
-  - Fixed bug with respect to lacking response reason in ors functions
+  - (Optional) Closing of matplotlib figures in gistools.map_with_basemap() and goodness_of_fit.modelfit_plot()
+  - Correct check whether statistics have to be saved in gistools.point_spatial_join()

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.25
-# Last update: 2026-03-07 08:40
+# Version:     1.4.26
+# Last update: 2026-06-16 19:18
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -789,11 +789,174 @@ def overlay_difference(
 
     return polygon_gdf_difference
 
+def polygon_neighbors(
+    polygon_gdf: gp.GeoDataFrame,
+    id_col: str,
+    stat_col: str | None = None,
+    exclude_same: bool = True,
+    save_output: bool = False,
+    output_filepath_join: str = "polygon_neighbors_gdf.shp",
+    output_filepath_stat: str = "polygon_neighbors_stat.csv",
+    output_crs: str = "EPSG:4326",
+    verbose: bool = False
+    ):
+
+    """
+    Identify neighboring polygons and optionally compute neighbor statistics.
+
+    This function performs a spatial self-join on a polygon GeoDataFrame to
+    determine which polygons touch each other (adjacency). It returns the
+    join result, a dictionary mapping polygon IDs to lists of neighbor IDs,
+    and —optionally— aggregated statistics for a specified attribute from
+    neighboring polygons.
+
+    Parameters
+    ----------
+    polygon_gdf : geopandas.GeoDataFrame
+        GeoDataFrame containing the polygon geometries to analyze.
+    id_col : str
+        Column name in ``polygon_gdf`` that contains unique polygon IDs.
+    stat_col : str or None, optional
+        Column name of a numeric attribute in ``polygon_gdf`` for which
+        neighbor statistics (count, sum, min, max, mean) will be computed.
+        If ``None``, no statistics are calculated. Default is ``None``.
+    exclude_same : bool, default True
+        If True, exclude self-adjacencies (a polygon touching itself) from
+        the neighbor lists. Default is True.
+    save_output : bool, default False
+        If True, saves the adjacency join GeoDataFrame and the statistics
+        (if computed) to disk using ``output_filepath_join`` and
+        ``output_filepath_stat``. Default is False.
+    output_filepath_join : str, default "polygon_neighbors_gdf.shp"
+        File path to save the adjacency join shapefile when ``save_output``
+        is True.
+    output_filepath_stat : str, default "polygon_neighbors_stat.csv"
+        File path to save neighbor statistics CSV when ``save_output`` is True.
+    output_crs : str, default "EPSG:4326"
+        Coordinate reference system to use when writing output files.
+    verbose : bool, optional
+        If True, print progress messages. Default is False.
+
+    Returns
+    -------
+    list
+        A list with three elements:
+        - ``polygon_adjacencies`` (GeoDataFrame): result of the spatial join
+          containing adjacency pairs and associated attributes.
+        - ``polygon_adjacencies_dict`` (dict): mapping of polygon ID (as
+          string) to a list of neighboring polygon IDs (as strings).
+        - ``polygon_neighbors_stat`` (pandas.DataFrame or None): aggregated
+          neighbor statistics indexed by the left ID column, or ``None`` if
+          ``stat_col`` was not provided.
+
+    Raises
+    ------
+    ValueError
+        If ``polygon_gdf`` is ``None``.
+    KeyError
+        If ``id_col`` is not found in ``polygon_gdf`` columns.
+
+    Examples
+    --------
+    >>> polygon_neighbors(polygons_gdf, "id")
+    """
+
+    if polygon_gdf is None:
+        raise ValueError("Parameter 'polygon_gdf' is None")
+    if id_col not in polygon_gdf.columns:
+        raise KeyError(f"Column '{id_col}' not in polygon GeoDataFrame")
+    
+    if verbose:
+        print(f"Identifying neighbors of {len(polygon_gdf)} polygons", end = " ... ")
+
+    polygon_adjacencies = polygon_gdf.sjoin(
+        polygon_gdf, 
+        how="inner", 
+        predicate="touches"
+        )
+    
+    if exclude_same:
+        polygon_adjacencies = polygon_adjacencies[polygon_adjacencies.index != polygon_adjacencies['index_right']]
+
+    polygon_adjacencies_dict = {}
+    polygons_ids = list(polygon_gdf[id_col].unique())
+
+    id_col_left = f"{id_col}_left"
+    id_col_right = f"{id_col}_right"
+
+    for polygon_id in polygons_ids:
+        neighbors = list(polygon_adjacencies.loc[polygon_adjacencies[id_col_left] == polygon_id, id_col_right].astype(str).unique())
+        polygon_adjacencies_dict[str(polygon_id)] = neighbors
+
+    if verbose:
+        print("OK")
+
+    polygon_neighbors_stat = None
+
+    if stat_col is not None:
+
+        stat_col = f"{stat_col}_right"
+
+        if stat_col not in polygon_gdf.columns:
+            print(f"Column '{stat_col} not in polygon GeoDataFrame. No statistics are calculated.")
+
+        if verbose:
+            print("Calculation neighbor statistics", end = " ... ")
+
+        polygon_neighbors_count = polygon_adjacencies.groupby(id_col_left)[stat_col].count()
+        polygon_neighbors_sum = polygon_adjacencies.groupby(id_col_left)[stat_col].sum()
+        polygon_neighbors_min = polygon_adjacencies.groupby(id_col_left)[stat_col].min()
+        polygon_neighbors_max = polygon_adjacencies.groupby(id_col_left)[stat_col].max()
+        polygon_neighbors_mean = polygon_adjacencies.groupby(id_col_left)[stat_col].mean()
+        
+        polygon_neighbors_count = polygon_neighbors_count.rename("count").to_frame()
+        polygon_neighbors_sum = polygon_neighbors_sum.rename("sum").to_frame()
+        polygon_neighbors_min = polygon_neighbors_min.rename("min").to_frame()
+        polygon_neighbors_max = polygon_neighbors_max.rename("max").to_frame()
+        polygon_neighbors_mean = polygon_neighbors_mean.rename("mean").to_frame()
+
+        polygon_neighbors_stat = polygon_neighbors_count.join(
+            [
+                polygon_neighbors_sum, 
+                polygon_neighbors_min, 
+                polygon_neighbors_max,
+                polygon_neighbors_mean
+                ]
+            )
+        
+        if verbose:
+            print("OK")
+
+    if save_output:        
+        
+        polygon_adjacencies = polygon_adjacencies.to_crs(crs = output_crs)        
+        
+        try:
+            polygon_adjacencies.to_file(output_filepath_join)        
+            if verbose:       
+                print (f"Saved join data as {output_filepath_join}")
+        except Exception as e:
+            print(f"WARNING: Saving join data as {output_filepath_join} failed. Error message: {str(e)}")        
+        
+        if polygon_neighbors_stat is not None:                
+            try:
+                polygon_neighbors_stat.to_csv(output_filepath_stat)
+                if verbose:       
+                    print (f"Saved statistics as {output_filepath_stat}")
+            except Exception as e:
+                print(f"WARNING: Saving statistics as {output_filepath_stat} failed. Error message: {str(e)}")
+
+    return [
+        polygon_adjacencies,
+        polygon_adjacencies_dict,
+        polygon_neighbors_stat
+        ]
+
 def point_spatial_join(
     polygon_gdf: gp.GeoDataFrame,
     point_gdf: gp.GeoDataFrame,
     join_type: str = "inner",
-    polygon_ref_cols: list = [],
+    polygon_ref_cols: list = None,
     point_stat_col: str | None = None,
     check_polygon_ref_cols: bool = False,
     save_output: bool = True,
@@ -819,7 +982,7 @@ def point_spatial_join(
         Type of spatial join: "inner", "left", or "right".
     polygon_ref_cols : list of str, optional
         Column(s) in `polygon_gdf` used for grouping when calculating statistics.
-        Default is empty list.
+        Default is None.
     point_stat_col : str, optional
         Column in `point_gdf` for which statistics (count, sum, min, max, mean) are calculated.
         Default is None.
@@ -856,6 +1019,9 @@ def point_spatial_join(
     ... )
     """
     
+    if polygon_ref_cols is None:
+        polygon_ref_cols = []
+
     if polygon_gdf is None:
         raise ValueError("Parameter 'polygon_gdf' is None")
     if point_gdf is None:
@@ -927,7 +1093,7 @@ def point_spatial_join(
         except Exception as e:
             print(f"WARNING: Saving join data as {output_filepath_join} failed. Error message: {str(e)}")        
         
-        if polygon_ref_cols != [] and point_stat_col is not None:                
+        if spatial_join_stat is not None:                
             try:
                 spatial_join_stat.to_csv(output_filepath_stat)
                 if verbose:       
@@ -955,6 +1121,7 @@ def map_with_basemap(
     legend: bool = True,
     map_title: str = "Map with OSM basemap",
     show_plot: bool = True,
+    close_plot: bool = True,
     verbose: bool = False
     ):
 
@@ -996,6 +1163,8 @@ def map_with_basemap(
         Title of the map.
     show_plot : bool, default True
         Whether to display the plot interactively.
+    close_plot : bool, optional
+        If True, plot is closed after saving (in save_as is not None).
     verbose : bool, optional
         If True, print informational messages during processing.
 
@@ -1389,7 +1558,8 @@ def map_with_basemap(
     if show_plot:
         plt.show()
 
-    plt.close()
+    if close_plot:
+        plt.close()
     
     if os.path.exists(config.DEFAULT_FILENAME_ORS_TMP):
         try:

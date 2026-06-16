@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.12
-# Last update: 2026-04-27 21:18
+# Version:     1.0.13
+# Last update: 2026-06-16 18:30
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -231,6 +231,7 @@ def modelfit_plot(
     save_as: str = "scatterplot.png",
     save_dpi: int = 300,
     show_plot: bool = False,
+    close_plot: bool = True,
     verbose: bool = False
     ):
     
@@ -289,6 +290,8 @@ def modelfit_plot(
         DPI used when saving the figure.
     show_plot : bool, optional
         If True, display the plot using matplotlib.
+    close_plot : bool, optional
+        If True, plot is closed after saving (in save_as is not None).
     verbose : bool, optional
         If True, print informational messages during processing.
 
@@ -381,14 +384,18 @@ def modelfit_plot(
     plt.ylabel(y_lab)
     plt.title(title)    
     plt.legend(fontsize=legend_fontsize)
+    
     if grid:
         plt.grid(True)
     
-    if show_plot:
-        plt.show()
-    
     if save_as is not None:
         plt.savefig(save_as, dpi=save_dpi)
+        
+    if show_plot:
+        plt.show()
+        
+    if close_plot:
+        plt.close()
      
     return modelfit_list
 
