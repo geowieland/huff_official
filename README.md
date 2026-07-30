@@ -25,7 +25,7 @@ A brief discussion of the included models and their application in this package 
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.2) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.3) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -229,10 +229,7 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.2)
+## What's new (v1.9.3)
 
 - Extensions
-  - New gistools function polygon_neighbors()
-- Bugfixes
-  - (Optional) Closing of matplotlib figures in gistools.map_with_basemap() and goodness_of_fit.modelfit_plot()
-  - Correct check whether statistics have to be saved in gistools.point_spatial_join()
+  - New functions in module predictive_models

@@ -4,11 +4,13 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.0
-# Last update: 2026-05-02 14:20
+# Version:     1.1.0
+# Last update: 2026-07-30 19:23
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
+
+import pandas as pd
 from statsmodels.formula.api import ols
 from sklearn.ensemble import BaggingRegressor, RandomForestRegressor, GradientBoostingRegressor
 from sklearn.tree import DecisionTreeRegressor
@@ -167,6 +169,90 @@ class PredictiveModel:
         self.runtime_error = runtime_error
         self.analysis_description = analysis_description
         self.timestamp = timestamp
+    
+    def predict(
+        self,
+        df: pd.DataFrame = None,
+        X_cols: list = None,        
+        ):
+        
+        """
+        Predict target values for new or stored test data.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame or None
+            Predictor data for prediction. If ``None``, stored test data is used.
+        X_cols : list or None
+            List of predictor columns to use from ``df``. Required if ``df`` is provided.
+
+        Returns
+        -------
+        numpy.ndarray or pandas.Series or None
+            Predicted target values or ``None`` if prediction failed.
+
+        Raises
+        ------
+        KeyError
+            If user-specified ``df`` is missing required predictor columns.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from huff.predictive_models import model_wrapper
+        >>> Wieland2015_interaction_matrix = pd.read_excel("data/Wieland2015.xlsx")
+        >>> y = Wieland2015_interaction_matrix["MA_Anb1"]
+        >>> X = Wieland2015_interaction_matrix[
+        ...     [
+        ...         "VF",
+        ...         "K",
+        ...         "K_KKr",
+        ...         "Dist_Min2",
+        ...     ]
+        ... ]
+        >>> result = model_wrapper(y, X, model_type="xgb")
+        >>> result.predict(df=X, X_cols=["VF", "K", "K_KKr", "Dist_Min2"])
+        """
+
+        if X_cols is None:
+            X_cols = []
+        
+        if df is not None and len(X_cols) > 0:
+            
+            X_train = self.data["X_train"]
+            
+            X_cols_missing = []
+            
+            for X_col in X_train.columns:
+                
+                if X_col not in X_cols:
+                    X_cols_missing.append(X_col)
+                    
+            if len(X_cols_missing) > 0:
+                raise KeyError(f"No prediction possible because of missing columns in user-specified X data: {', '.join(X_cols_missing)}.")
+        
+            X_pred = df[X_cols]
+            
+        else:
+            
+            print("NOTE: No X data specified by user. Using test data from model for prediction.")
+        
+            X_pred = self.data["X_test"]
+            
+        model = self.model
+        model_runtime_error = self.runtime_error
+        
+        y_pred = None
+        
+        if model_runtime_error is not None:            
+            print(model_runtime_error)                                            
+        else:            
+            try:
+                y_pred = model.predict(X_pred)
+            except Exception as e:
+                print(f"WARNING: Model prediction failed: '{e}'")
+            
+        return y_pred
         
     def summary(self):
 
@@ -267,6 +353,62 @@ class PredictiveModel:
         print("=" * config.SUMMARY_SECTION_SEP_LINELENGTH)
         
         return self        
+
+class PredictiveModels:
+    
+    def __init__(
+        self,
+        predictive_models,
+        y_test_models,
+        models_fit_metrics_df,
+        model_wrapper_errors,        
+        timestamp
+        ):
+        
+        """
+        Initialize PredictiveModels container.
+
+        Parameters
+        ----------
+        predictive_models : list
+            List of ``PredictiveModel`` instances or ``None`` placeholders.
+        y_test_models : pandas.DataFrame
+            DataFrame with observed test values and predictions for each model.
+        models_fit_metrics_df : pandas.DataFrame
+            DataFrame with goodness-of-fit metrics for each model.
+        model_wrapper_errors : list
+            List of error messages from failed model runs.
+        timestamp : str
+            Timestamp or metadata for the wrapper creation.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from huff.predictive_models import models_wrapper
+        >>> Wieland2015_interaction_matrix = pd.read_excel("data/Wieland2015.xlsx")
+        >>> y = Wieland2015_interaction_matrix["MA_Anb1"]
+        >>> X = Wieland2015_interaction_matrix[
+        ...     [
+        ...         "VF",
+        ...         "K",
+        ...         "K_KKr",
+        ...         "Dist_Min2",
+        ...     ]
+        ... ]
+        >>> models = {"xgb": {"model_params": {}}, "rf": {"model_params": {}}}
+        >>> result = models_wrapper(y, X, models=models)
+        >>> result.models_fit_metrics_df
+        """
+                
+        self.predictive_models = predictive_models
+        self.y_test_models = y_test_models
+        self.models_fit_metrics_df = models_fit_metrics_df
+        self.model_wrapper_errors = model_wrapper_errors
+        self.timestamp = timestamp
 
 def model_wrapper(
     y,
@@ -463,8 +605,9 @@ def model_wrapper(
         runtime_error = f"Model training failed: '{e}'"
 
     y_pred = None
+    fit_metrics = None
 
-    if runtime_error is None:
+    if runtime_error is None and len(X_test) > 0:
         
         try:
             
@@ -480,22 +623,20 @@ def model_wrapper(
             print(f"WARNING: Model prediction failed: '{e}'")
             runtime_error = f"Model prediction failed: '{e}'"
 
-    fit_metrics = None
-
-    if runtime_error is None:
-        
-        try:
+        if runtime_error is None:
             
-            fit_metrics = modelfit(
-                observed=y_test,
-                expected=y_pred,
-                remove_nan=True,
-                verbose=verbose
-            )            
-            
-        except Exception as e:
-            print(f"WARNING: Calculation of fit metrics failed: '{e}'")
-            runtime_error = f"Calculation of fit metrics failed: '{e}'"
+            try:
+                
+                fit_metrics = modelfit(
+                    observed=y_test,
+                    expected=y_pred,
+                    remove_nan=True,
+                    verbose=verbose
+                )            
+                
+            except Exception as e:
+                print(f"WARNING: Calculation of fit metrics failed: '{e}'")
+                runtime_error = f"Calculation of fit metrics failed: '{e}'"
 
     predictive_model = PredictiveModel(
         y_pred=y_pred,
@@ -524,3 +665,168 @@ def model_wrapper(
     )
 
     return predictive_model
+
+def models_wrapper(
+    y,
+    X,
+    models: dict = None,    
+    X_train: list = None,
+    X_test: list = None,
+    y_train: list = None,
+    y_test: list = None,
+    random_state: int = 71,
+    verbose: bool = False
+    ) -> PredictiveModels:
+    
+    """
+    Run multiple predictive models and compile results.
+
+    Parameters
+    ----------
+    y : array-like
+        Target variable for the full dataset.
+    X : array-like or pandas.DataFrame
+        Predictor variables for the full dataset.
+    models : dict, optional
+        Mapping of model keys to parameter dictionaries for ``model_wrapper``.
+    X_train : array-like, optional
+        User-provided training predictors.
+    X_test : array-like, optional
+        User-provided test predictors.
+    y_train : array-like, optional
+        User-provided training targets.
+    y_test : array-like, optional
+        User-provided test targets.
+    random_state : int, optional
+        Random seed for reproducibility. Default is ``71``.
+    verbose : bool, optional
+        If True, print progress messages.
+
+    Returns
+    -------
+    PredictiveModels
+        Container with multiple model results, test predictions and fit metrics.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from huff.predictive_models import models_wrapper
+    >>> Wieland2015_interaction_matrix = pd.read_excel("data/Wieland2015.xlsx")
+    >>> y = Wieland2015_interaction_matrix["MA_Anb1"]
+    >>> X = Wieland2015_interaction_matrix[
+    ...     [
+    ...         "VF",
+    ...         "K",
+    ...         "K_KKr",
+    ...         "Dist_Min2",
+    ...     ]
+    ... ]
+    >>> models = {"xgb": {"model_params": {}}, "rf": {"model_params": {}}}
+    >>> result = models_wrapper(y, X, models=models)
+    >>> result.models_fit_metrics_df
+    """
+    if models is None:
+        models = {}
+        
+    if len(models) == 0:
+        print("WARNING: No models were specified. Returning None.")
+        return None
+        
+    predictive_models = []
+    model_wrapper_errors = []
+    
+    for key, value in models.items():
+        
+        try:
+            
+            predictive_model = model_wrapper(
+                y = y,
+                X = X,
+                model_type = key,
+                model_params = value.get("model_params"),
+                split_params = value.get("split_params"),
+                X_train = X_train,
+                X_test = X_test,
+                y_train = y_train,
+                y_test = y_test,
+                random_state = random_state,
+                verbose = verbose
+                )
+            
+            predictive_models.append(predictive_model)
+            
+        except Exception as e:
+            predictive_models.append(None)
+            model_wrapper_errors.append(str(e))
+            
+    if verbose:
+        print(f"Compiling observed and predicted test data for {len(predictive_models)} models", end = " ... ")
+    
+    y_test_models = pd.DataFrame(predictive_models[0].data["y_test"])
+    y_test_models.reset_index(drop=True, inplace=True)
+    y_col = y_test_models.columns[0]
+    
+    for model in predictive_models:
+        
+        runtime_error = model.runtime_error
+        
+        if runtime_error is None:
+                        
+            model_type = model.params["model_type"]
+                        
+            y_pred = pd.DataFrame(model.y_pred, columns=[f"{y_col}{config.DEFAULT_PREDICTED_SUFFIX}_{model_type}"])
+            y_pred.reset_index(drop=True, inplace=True)
+            
+            y_test_models = pd.concat(
+                [
+                    y_test_models,
+                    y_pred
+                    ],
+                axis = 1
+                )
+ 
+    if verbose:
+        print("OK")
+        print(f"Compiling goodness-of-fit metrics for {len(predictive_models)} models", end = " ... ")
+    
+    models_fit_metrics_df = pd.DataFrame(index=config.GOODNESS_OF_FIT_VALUES)
+    
+    for model in predictive_models:
+        
+        if runtime_error is None:
+                                
+            model_type = model.params["model_type"]
+        
+            model_fit_metrics = model.fit_metrics[1]
+            model_fit_metrics = {
+                mfm_key: mfm_value
+                for mfm_key, mfm_value in model_fit_metrics.items()
+                if mfm_key in config.GOODNESS_OF_FIT_VALUES
+            }
+            model_fit_metrics_df = pd.DataFrame(model_fit_metrics.values(), columns=[model_type])
+            model_fit_metrics_df.index = config.GOODNESS_OF_FIT_VALUES
+            
+            models_fit_metrics_df = pd.concat(
+                [
+                    models_fit_metrics_df,
+                    model_fit_metrics_df
+                ],
+                axis = 1
+            )
+
+    if verbose:
+        print("OK")
+        
+    predictive_models = PredictiveModels(
+        predictive_models = predictive_models,
+        y_test_models = y_test_models,
+        models_fit_metrics_df = models_fit_metrics_df,
+        model_wrapper_errors = model_wrapper_errors,
+        timestamp = create_timestamp(
+            function="models_wrapper",
+            process = f"Creation of {len(predictive_models)} predictive models",
+            status="OK" if len(model_wrapper_errors) == 0 else ' '.join(model_wrapper_errors)
+            )
+        )
+    
+    return predictive_models

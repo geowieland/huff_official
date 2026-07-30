@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.20
-# Last update: 2026-06-15 18:23
+# Version:     1.0.21
+# Last update: 2026-07-29 ??:??
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.2"
+PACKAGE_VERSION = "1.9.3"
 
 # Basic config:
 
@@ -181,6 +181,12 @@ GOODNESS_OF_FIT = {
     #"Deviations < 40 %": f"{APE_PREFIX}40",
     #"Deviations < 45 %": f"{APE_PREFIX}45",
     #"Deviations < 50 %": f"{APE_PREFIX}50",
+}
+GOODNESS_OF_FIT_KEYS = GOODNESS_OF_FIT.keys()
+GOODNESS_OF_FIT_VALUES = GOODNESS_OF_FIT.values()
+
+GOODNESS_OF_FIT_OPTIMIZATION = {
+    value: "min" if value != "Rsq" else "max" for value in GOODNESS_OF_FIT_VALUES
 }
 
 

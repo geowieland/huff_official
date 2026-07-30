@@ -4,13 +4,13 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.0
-# Last update: 2026-05-06 21:33
+# Version:     1.1.0
+# Last update: 2026-07-30 19:20
 # Copyright (c) 2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 import pandas as pd
-from huff.predictive_models import model_wrapper
+from huff.predictive_models import model_wrapper, models_wrapper
 
 
 Wieland2015_interaction_matrix = pd.read_excel("data/Wieland2015.xlsx")
@@ -55,3 +55,40 @@ ols_result = model_wrapper(
 )
 
 ols_result.summary()
+
+print(ols_result.predict())
+
+print(
+    ols_result.predict(
+        df=Wieland2015_interaction_matrix, 
+        X_cols=[
+            "VF", 
+            "K", 
+            "K_KKr",
+            "Dist_Min2",        
+        ]
+        )
+    )
+
+# All three models at once:
+predictive_models = models_wrapper(
+    y,
+    X,
+    models = {
+        "ols": {            
+        },
+        "xgb": {            
+        },
+        "mlp": {
+            "activation": "tanh",
+            "hidden_layer_sizes": (5,10),
+            "solver": "adam"
+        }
+    },
+    random_state = 71,
+    verbose = True
+)
+
+print(predictive_models.y_test_models)
+
+print(predictive_models.models_fit_metrics_df)
