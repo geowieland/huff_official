@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.0
-# Last update: 2026-07-30 19:20
+# Version:     1.1.1
+# Last update: 2026-07-31 13:21
 # Copyright (c) 2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -92,3 +92,11 @@ predictive_models = models_wrapper(
 print(predictive_models.y_test_models)
 
 print(predictive_models.models_fit_metrics_df)
+
+predictive_models.find_best_model(
+    verbose=True,
+    fit_metrics = ["not_existing_metric", "APE5", "MAPE"]
+    )
+
+print(predictive_models.timestamp)
+print(predictive_models.best_model)

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.0
-# Last update: 2026-07-30 19:23
+# Version:     1.1.1
+# Last update: 2026-07-31 13:26
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
 import huff.config as config
 from huff.goodness_of_fit import modelfit
-from huff.helper import create_timestamp, print_modelfit
+from huff.helper import create_timestamp, add_timestamp, print_modelfit
 
 
 class PredictiveModel:
@@ -361,7 +361,8 @@ class PredictiveModels:
         predictive_models,
         y_test_models,
         models_fit_metrics_df,
-        model_wrapper_errors,        
+        model_wrapper_errors,
+        best_model,
         timestamp
         ):
         
@@ -408,7 +409,82 @@ class PredictiveModels:
         self.y_test_models = y_test_models
         self.models_fit_metrics_df = models_fit_metrics_df
         self.model_wrapper_errors = model_wrapper_errors
+        self.best_model = best_model
         self.timestamp = timestamp
+        
+    def find_best_model(
+        self,
+        fit_metrics: list = None,
+        verbose: bool = False
+        ):
+        
+        if fit_metrics is None:
+
+            fit_metrics = []
+
+        else:            
+
+            fit_metrics_invalid = []
+            for fit_metric in fit_metrics:
+                if fit_metric not in config.GOODNESS_OF_FIT_VALUES:
+                    fit_metrics_invalid.append(fit_metric)
+
+            if len(fit_metrics_invalid) > 0:
+                fit_metrics = [x for x in fit_metrics if x not in fit_metrics_invalid]
+                print(f"Specified list 'fit_metrics' contains invalid values which are skipped: {', '.join(fit_metrics_invalid)}.")
+        
+        if len(fit_metrics) == 0:
+            
+            fit_metrics = config.GOODNESS_OF_FIT_BESTMODEL_DEFAULT
+            
+            print(f"NOTE: No (valid) 'fit_metrics' list specified. Using default: {' > '.join(config.GOODNESS_OF_FIT_BESTMODEL_DEFAULT)}.")
+        
+        if verbose:
+            print(f"Identifying best model with respect to {len(fit_metrics)} fit metrics: {' > '.join(fit_metrics)}", end = " ... ")
+        
+        models_fit_metrics_df = self.models_fit_metrics_df.copy()
+        
+        best_model = None
+        
+        for fit_metric in fit_metrics:
+            
+            if fit_metric in models_fit_metrics_df.index:                
+            
+                if config.GOODNESS_OF_FIT_OPTIMIZATION[fit_metric] == "min":
+                    
+                    best_model_extract = models_fit_metrics_df.loc[fit_metric]
+                    val_min = best_model_extract.min()
+                    best_model = best_model_extract[best_model_extract == val_min].index.tolist()
+                    
+                    if len(best_model) == 1:
+                        break
+                                        
+                elif config.GOODNESS_OF_FIT_OPTIMIZATION[fit_metric] == "max":
+                    
+                    best_model_extract = models_fit_metrics_df.loc[fit_metric]
+                    val_max = best_model_extract.max()
+                    best_model = best_model_extract[best_model_extract == val_max].index.tolist()
+                    
+                    if len(best_model) == 1:
+                        break
+                    
+        best_model_result = best_model[0]
+
+        best_model_result_name = config.MODEL_WRAPPER_AVAILABLE[best_model_result]
+        
+        if verbose:
+            print("OK")
+
+        if len(best_model) > 1:
+            print(f"NOTE: In view of the selection criteria, several models have identical values: {', '.join(best_model)}.")
+        else:
+            if verbose:
+                print(f"The best model is: {best_model_result_name}.")
+
+        self.best_model = best_model_result
+
+        return self
+
 
 def model_wrapper(
     y,
@@ -822,6 +898,7 @@ def models_wrapper(
         y_test_models = y_test_models,
         models_fit_metrics_df = models_fit_metrics_df,
         model_wrapper_errors = model_wrapper_errors,
+        best_model = None,
         timestamp = create_timestamp(
             function="models_wrapper",
             process = f"Creation of {len(predictive_models)} predictive models",
