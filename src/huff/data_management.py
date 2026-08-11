@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.18
-# Last update: 2026-05-02 11:05
+# Version:     1.0.19
+# Last update: 2026-08-10 12:21
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -122,6 +122,14 @@ def load_geodata(
         
         assert unique_id in data.columns, f"Error while loading geodata: unique_id '{unique_id}' not found in data columns."
 
+        coord_cols_missing = []
+        if x_col is None:
+            coord_cols_missing.append("X coordinate column")
+        if y_col is None:
+            coord_cols_missing.append("Y coordinate column")
+        if len(coord_cols_missing) > 0:
+            raise ValueError(f"Missing value(s) for: {', '.join(coord_cols_missing)}.")
+
         geodata_tab = data
 
     elif isinstance(data, str):
@@ -148,7 +156,7 @@ def load_geodata(
             if y_col is None:
                 coord_cols_missing.append("Y coordinate column")
             if len(coord_cols_missing) > 0:
-                raise ValueError(f"Missing value for {', '.join(coord_cols_missing)}.")
+                raise ValueError(f"Missing value(s) for: {', '.join(coord_cols_missing)}.")
             
             if data_type == "csv":
 

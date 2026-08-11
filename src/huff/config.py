@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.21
-# Last update: 2026-07-31 13:05
+# Version:     1.0.22
+# Last update: 2026-08-11 09:04
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.4"
+PACKAGE_VERSION = "1.9.5"
 
 # Basic config:
 
@@ -294,7 +294,13 @@ ORS_ENDPOINTS = {
 ORS_PROFILES = {
     "Driving car": "driving-car",
     "Driving heavy goods vehicle": "driving-hgv",
+    "Cycling by bike (regular)": "cycling-regular",
+    "Cycling by bike (road)": "cycling-road",
+    "Cycling by bike (mountain)": "cycling-mountain",
+    "Cycling by bike (electric)": "cycling-electric",
     "Walking by foot": "foot-walking",
+    "Hiking by foot": "foot-hiking",
+    "Wheelchair": "wheelchair"
 }
 ORS_PROFILES_LIST = ORS_PROFILES.keys()
 ORS_PROFILES_LIST_API = list(ORS_PROFILES.values())

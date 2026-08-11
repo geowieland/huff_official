@@ -25,7 +25,7 @@ A brief discussion of the included models and their application in this package 
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.4) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.5) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -223,9 +223,11 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.4)
+## What's new (v1.9.5)
 
-- Extensions
-  - Method find_best_model() for PredictiveModels class in predictive_models module
 - Bugfixes
-  - Corrections in documentation
+  - Check for coordinate columns in data_management.load_geodata() if data is pandas.DataFrame
+  - models.get_isochrones(): Warning if no isochrones were retrieved for specific input points
+- Other
+  - Added all OpenRouteService profiles for network analysis
+  - Added more status messages (when verbose=True) in models.get_isochrones()

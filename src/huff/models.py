@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.9.0
-# Last update: 2026-05-09 16:02
+# Version:     1.9.1
+# Last update: 2026-08-10 13:12
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -8929,6 +8929,7 @@ def get_isochrones(
         segments = [segment*1000 for segment in segments]
 
     i = 0
+    no_isochrones_retrieved = []
 
     for x, y in coords:
         
@@ -8945,6 +8946,7 @@ def get_isochrones(
             )
         
         if isochrone_output.status_code != 200:
+            no_isochrones_retrieved.append(i)
             continue        
         
         isochrone_gdf = isochrone_output.get_isochrones_gdf()
@@ -8977,6 +8979,9 @@ def get_isochrones(
         
         i = i+1
 
+    if len(no_isochrones_retrieved) > 0:
+        print(f"WARNING: No isochrones were retrieved for {len(no_isochrones_retrieved)} input points. Index: {', '.join([str(entry) for entry in no_isochrones_retrieved])}.")
+
     if len(isochrones_gdf) == 0:
         raise ValueError("Error in isochrones calculation: No isochrones were retrieved. Probably ORS server error. Check output above and try again later.")
 
@@ -8986,16 +8991,28 @@ def get_isochrones(
         isochrones_gdf[f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_min"] = isochrones_gdf[f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_min"].astype(int)
     if range_type == "distance":
         isochrones_gdf[f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_km"] = isochrones_gdf[f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_km"].astype(int)
+
+    if verbose:
+        print(f"Setting CRS to {output_crs}", end = " ... ")
     
     isochrones_gdf.set_crs(
         output_crs, 
         allow_override=True, 
         inplace=True
         )
+
+    if verbose:
+        print("OK")
         
     if save_output:
 
+        if verbose:
+            print(f"Saving isochrones as {output_filepath}", end = " ... ")
+
         isochrones_gdf.to_file(filename = output_filepath)
+
+        if verbose:
+            print("OK")
 
     return isochrones_gdf
 
