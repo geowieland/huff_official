@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.23
-# Last update: 2026-08-11 10:11
+# Version:     1.0.24
+# Last update: 2026-08-11 11:22
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.6"
+PACKAGE_VERSION = "1.9.7"
 
 # Basic config:
 
@@ -322,7 +322,8 @@ USE_ORS_DEFAULT = True
 
 # OSM config:
 
-OSM_TILES_SERVER = "http://a.tile.openstreetmap.org/"
+OSM_TILES_SERVER = "https://a.tile.openstreetmap.org/"
+OSM_USER_AGENT = f"{PACKAGE_NAME}/{PACKAGE_VERSION} (geowieland@googlemail.com)"
 
 DEFAULT_FILENAME_ORS_TMP = "osm_map.png"
 

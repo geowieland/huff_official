@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.9.2
-# Last update: 2026-08-11 10:09
+# Version:     1.9.3
+# Last update: 2026-08-11 11:10
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -8914,7 +8914,7 @@ def get_isochrones(
 
     coords = [(point.x, point.y) for point in geodata_gpd.geometry]
     
-    unique_id_values = geodata_gpd[unique_id_col].values
+    unique_id_values = list(geodata_gpd[unique_id_col].values)
 
     ors_client = Client(
         server = ors_server,
@@ -8983,7 +8983,7 @@ def get_isochrones(
         i = i+1
 
     if len(no_isochrones_retrieved) > 0:
-        print(f"WARNING: No isochrones were retrieved for {len(no_isochrones_retrieved)} input points. Index: {', '.join([str(entry) for entry in no_isochrones_retrieved])}.")
+        print(f"WARNING: No isochrones were retrieved for {len(no_isochrones_retrieved)} input points. Unique IDs: {', '.join([str(entry) for entry in no_isochrones_retrieved])}.")
 
     if len(isochrones_gdf) == 0:
         raise ValueError("Error in isochrones calculation: No isochrones were retrieved. Probably ORS server error. Check output above and try again later.")

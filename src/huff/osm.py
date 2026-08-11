@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.13
-# Last update: 2026-06-11 17:06
+# Version:     1.4.14
+# Last update: 2026-08-11 11:19
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -29,7 +29,7 @@ class Client:
         self,
         server = config.OSM_TILES_SERVER,
         headers = {
-           'User-Agent': 'huff.osm/1.4.10 (your_name@your_email_provider.com)'
+           'User-Agent': config.OSM_USER_AGENT
            }
         ):
         
