@@ -4,6 +4,7 @@
 
 This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985). Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003, Luo 2014). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
 
+WARNING: As of August 10, 2026, OpenStreetMap no longer supports the automated downloading of tiles. This affects the OSM client in the huff package, as it relies on this method to generate base maps. Therefore, the inclusion of OSM basemaps in the map plotting functions is currently disabled.
 
 ## Author
 
@@ -223,8 +224,8 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.7)
+## What's new (v1.9.8)
 
-- Bugfixes
-  - Fixed bug in models.get_isochrones() regarding the handling of unique IDs
-  - Update of OSM client data
+- General
+  - Inclusion of OSM basemaps in the map plotting functions is currently disabled because OSM no longer supports the automated downloading of tiles
+  - Warning message with respect to change in OSM tile download policy in osm.get_basemap()

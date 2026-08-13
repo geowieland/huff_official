@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.9.3
-# Last update: 2026-08-11 11:10
+# Version:     1.9.4
+# Last update: 2026-08-13 12:16
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -701,7 +701,7 @@ class CustomerOrigins:
             legend = legend,
             map_title = map_title,
             zoom = zoom,
-            verbose = False
+            verbose = verbose
             )
         
         return [
@@ -2289,6 +2289,7 @@ class SupplyLocations:
             }
 
         if polygon_style is not None and len(polygon_style) > 0 and len(layers_to_plot) > 1:
+
             layer_styles[1] = polygon_style
 
             color_key_old = next(iter(layer_styles[1]["color"]))

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.26
-# Last update: 2026-06-16 19:18
+# Version:     1.4.27
+# Last update: 2026-08-13 12:26
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -1275,7 +1275,11 @@ def map_with_basemap(
     sw_lon, sw_lat, ne_lon, ne_lat = bounds[0]*bounds_factor[0], bounds[1]*bounds_factor[1], bounds[2]*bounds_factor[2], bounds[3]*bounds_factor[3]
 
     if verbose:
-        print("OK")        
+        print("OK")
+
+    if osm_basemap and not config.OSM_BASEMAP:
+        print(f"{config.OSM_TILE_POLICY_WARNING} Therefore, the inclusion of OSM basemaps in the map plotting functions is currently disabled.")
+        osm_basemap = config.OSM_BASEMAP
     
     if osm_basemap:
         

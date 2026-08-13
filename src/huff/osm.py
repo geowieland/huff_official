@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.14
-# Last update: 2026-08-11 11:19
+# Version:     1.4.15
+# Last update: 2026-08-13 12:20
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -29,7 +29,8 @@ class Client:
         self,
         server = config.OSM_TILES_SERVER,
         headers = {
-           'User-Agent': config.OSM_USER_AGENT
+           "User-Agent": config.OSM_USER_AGENT,
+           "Referer": config.GITHUB_HUFF_URL
            }
         ):
         
@@ -107,7 +108,7 @@ def get_basemap(
     ne_lat, 
     ne_lon, 
     zoom = 15,
-    tile_delay = 0.1,
+    tile_delay = config.OSM_DELAY,
     verbose: bool = False
     ):
 
@@ -124,7 +125,7 @@ def get_basemap(
         Zoom level of the map (default 15).
         See the OSM documentation with respect to zoom: https://wiki.openstreetmap.org/wiki/Zoom_levels
     tile_delay : float, optional
-        Delay in seconds between tile downloads (default 0.1).
+        Delay in seconds between tile downloads (default: config.OSM_DELAY).
     verbose : bool, optional
         If True, print informational messages during processing.
 
@@ -138,6 +139,8 @@ def get_basemap(
     >>> img = get_basemap(40.712, -74.227, 40.774, -74.125, zoom=14)
     >>> img.show()
     """
+
+    print("WARNING: As of August 10, 2026, OpenStreetMap no longer supports the automated downloading of tiles. This affects the OSM client in the huff package, as it relies on this method to generate base maps. This is no longer possible.")
 
     def lat_lon_to_tile(
         lat, 

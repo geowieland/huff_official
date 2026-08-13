@@ -4,14 +4,18 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.24
-# Last update: 2026-08-11 11:22
+# Version:     1.0.25
+# Last update: 2026-08-13 12:26
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.7"
+PACKAGE_VERSION = "1.9.8"
+
+PYPI_HUFF_URL = "https://pypi.org/project/huff/"
+GITHUB_HUFF_URL = "https://github.com/geowieland/huff_official"
+
 
 # Basic config:
 
@@ -322,10 +326,16 @@ USE_ORS_DEFAULT = True
 
 # OSM config:
 
-OSM_TILES_SERVER = "https://a.tile.openstreetmap.org/"
-OSM_USER_AGENT = f"{PACKAGE_NAME}/{PACKAGE_VERSION} (geowieland@googlemail.com)"
+OSM_TILES_SERVER = "https://tile.openstreetmap.org/"
+OSM_USER_AGENT = f"{PACKAGE_NAME}/{PACKAGE_VERSION} {GITHUB_HUFF_URL} (geowieland@googlemail.com)"
+
+OSM_DELAY = 0.3
 
 DEFAULT_FILENAME_ORS_TMP = "osm_map.png"
+
+OSM_BASEMAP = False
+
+OSM_TILE_POLICY_WARNING = "WARNING: As of August 10, 2026, OpenStreetMap no longer supports the automated downloading of tiles (see: https://wiki.openstreetmap.org/wiki/Blocked_tiles). This affects the OSM client in the huff package, as it relies on this method to generate base maps."
 
 
 # GIS constants and defaults:
