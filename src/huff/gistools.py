@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.27
-# Last update: 2026-08-13 12:26
+# Version:     1.4.28
+# Last update: 2026-09-01 17:17
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -19,7 +19,6 @@ from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString, box, Point
-import contextily as cx
 from PIL import Image
 from huff.osm import get_basemap
 import huff.config as config
@@ -225,7 +224,7 @@ def distance_matrix(
     """
     
     if distance_type not in config.DISTANCE_TYPES_LIST_FUNC:
-        raise ValueError(f"Distance type {distance_type} is unknown. Please choose one of the following: {', '.join(config.DISTANCE_TYPES_LIST_FUNC)}.")
+        raise ValueError(f"Distance type '{distance_type}' is unknown. Please choose one of the following: {', '.join(config.DISTANCE_TYPES_LIST_FUNC)}.")
     
     if verbose:
         print(f"Calculating {distance_type} distance matrix for {len(sources)} sources and {len(destinations)} destinations", end = " ... ")
@@ -514,7 +513,7 @@ def buffers(
         print(f"Calculating buffers for {len(point_gdf)} points", end = " ... ")
 
     if unique_id_col not in point_gdf.columns:
-        raise KeyError(f"No column {unique_id_col} in input GeoDataFrame")
+        raise KeyError(f"No column '{unique_id_col}' in input GeoDataFrame")
         
     all_buffers_gdf = gp.GeoDataFrame(
         columns=[
@@ -659,10 +658,10 @@ def polygon_select(
         raise ValueError(f"Coordinate reference systems of inputs do not match. Polygons: {str(gdf.crs)}, points: {str(gdf_polygon_select.crs)}")
         
     if gdf_unique_id_col not in gdf.columns:
-        raise KeyError(f"No column {gdf_unique_id_col} in input GeoDataFrame")
+        raise KeyError(f"No column '{gdf_unique_id_col}' in input GeoDataFrame")
     
     if gdf_polygon_select_unique_id_col not in gdf_polygon_select.columns:        
-        raise KeyError(f"No column {gdf_polygon_select_unique_id_col} in input GeoDataFrame for selection")
+        raise KeyError(f"No column '{gdf_polygon_select_unique_id_col}' in input GeoDataFrame for selection")
     
     if gdf.crs.is_geographic:
         print(f"WARNING: Input GeoDataFrames have geographic coordinate system {gdf.crs}. Results may be invalid.")
@@ -1033,13 +1032,13 @@ def point_spatial_join(
     if polygon_ref_cols != [] and check_polygon_ref_cols:
         for polygon_ref_col in polygon_ref_cols:
             if polygon_ref_col not in polygon_gdf.columns:
-                raise KeyError (f"Column {polygon_ref_col} not in polygon data")
+                raise KeyError (f"Column '{polygon_ref_col}' not in polygon data")
         
     if point_stat_col is not None:
         if point_stat_col not in point_gdf.columns:
-            raise KeyError (f"Column {point_stat_col} not in point data")
+            raise KeyError (f"Column '{point_stat_col}' not in point data")
         if not is_numeric_dtype(point_gdf[point_stat_col]):
-            raise TypeError (f"Column {point_stat_col} is not numeric")
+            raise TypeError (f"Column '{point_stat_col}' is not numeric")
     
     if verbose:
         print(f"Performing spatial join with {len(polygon_gdf)} polygons and {len(point_gdf)} points", end = " ... ")
@@ -1057,7 +1056,7 @@ def point_spatial_join(
     if polygon_ref_cols != [] and point_stat_col is not None:
 
         if verbose:
-            print("Calculation overlay statistics", end = " ... ")
+            print("Calculation of overlay statistics", end = " ... ")
 
         shp_points_gdf_join_count = shp_points_gdf_join.groupby(polygon_ref_cols)[point_stat_col].count()
         shp_points_gdf_join_sum = shp_points_gdf_join.groupby(polygon_ref_cols)[point_stat_col].sum()
@@ -1122,6 +1121,7 @@ def map_with_basemap(
     map_title: str = "Map with OSM basemap",
     show_plot: bool = True,
     close_plot: bool = True,
+    osm_tiles_server: str = None,
     verbose: bool = False
     ):
 
@@ -1217,6 +1217,9 @@ def map_with_basemap(
     ...     output_filepath = "Haslach_map.png"
     ... )
     """
+
+    if osm_tiles_server is None:
+        osm_tiles_server = config.OSM_TILES_SERVER
     
     if not isinstance(layers, list):
         raise TypeError("Param 'layers' must be a list")
@@ -1276,33 +1279,41 @@ def map_with_basemap(
 
     if verbose:
         print("OK")
-
-    if osm_basemap and not config.OSM_BASEMAP:
-        print(f"{config.OSM_TILE_POLICY_WARNING} Therefore, the inclusion of OSM basemaps in the map plotting functions is currently disabled.")
-        osm_basemap = config.OSM_BASEMAP
     
     if osm_basemap:
         
         if verbose:
             print("Retrieving OSM basemap ...", end = " ")
-            
-        get_basemap(
-            sw_lat, 
-            sw_lon, 
-            ne_lat, 
-            ne_lon, 
+        
+        img, extent_img = get_basemap(
+            sw_lat,
+            sw_lon,
+            ne_lat,
+            ne_lon,
             zoom=zoom,
             tile_delay=tile_delay,
             verbose=False
-            )
+        )
 
     fig, ax = plt.subplots(figsize=figsize)
 
     if osm_basemap:
         
         img = Image.open(config.DEFAULT_FILENAME_ORS_TMP)
-        extent_img = [sw_lon, ne_lon, sw_lat, ne_lat]
-        ax.imshow(img, extent=extent_img, origin="upper")
+        
+        bbox = box(sw_lon, sw_lat, ne_lon, ne_lat)
+        extent_img = (
+            gp.GeoSeries([bbox], crs=config.WGS84_CRS)
+            .to_crs(crs=config.PSEUDO_MERCATOR_CRS)
+            .total_bounds
+        )
+
+        ax.imshow(
+            img,
+            extent=(extent_img[0], extent_img[2], extent_img[1], extent_img[3]),
+            origin="upper",
+            zorder=0
+        )
         
         if verbose:
             print("OK")
@@ -1321,12 +1332,16 @@ def map_with_basemap(
             
             layer_style = styles[i]
             
+            missing_styles = []
+            
             if "color" not in layer_style:
-                raise KeyError(f"No 'color' key in definition of layer {i}")
+                missing_styles.append(f"No 'color' key in definition of layer {i}")
             if "name" not in layer_style:
-                raise KeyError(f"No 'name' key in definition of layer {i}")
+                missing_styles.append(f"No 'name' key in definition of layer {i}")
             if "alpha" not in layer_style:
-                raise KeyError(f"No 'alpha' key in definition of layer {i}")
+                missing_styles.append(f"No 'alpha' key in definition of layer {i}")                
+            if len(missing_styles) > 0:
+                raise KeyError(", ".join(missing_styles))
             
             if all(layer_3857.geometry.geom_type == "Point"):
                 if "size" not in layer_style:
@@ -1372,7 +1387,7 @@ def map_with_basemap(
                     color_mapping = layer_color[color_key]
 
                     if color_key not in layer_3857.columns:
-                        raise KeyError(f"Column {color_key} not in layer.")
+                        raise KeyError(f"Column '{color_key}' not in layer.")
 
                     for value, color in color_mapping.items():
                         
@@ -1413,7 +1428,7 @@ def map_with_basemap(
                         width_mapping = layer_linewidth.get("mapping")
 
                         if width_col not in layer_3857.columns:
-                            raise KeyError(f"Column {width_col} not in layer.")
+                            raise KeyError(f"Column '{width_col}' not in layer.")
 
                         if width_mapping:
                             lw = layer_3857[width_col].map(width_mapping)
@@ -1454,7 +1469,7 @@ def map_with_basemap(
                     color_mapping = layer_color[color_key]
 
                     if color_key not in layer_3857.columns:
-                        raise KeyError(f"Column {color_key} not in layer.")
+                        raise KeyError(f"Column '{color_key}' not in layer.")
 
                     for value, color in color_mapping.items():
 
@@ -1469,7 +1484,7 @@ def map_with_basemap(
                             width_mapping = layer_linewidth.get("mapping")
 
                             if width_col not in subset.columns:
-                                raise KeyError(f"Column {width_col} not in layer.")
+                                raise KeyError(f"Column '{width_col}' not in layer.")
 
                             if width_mapping:
                                 lw = subset[width_col].map(width_mapping)
@@ -1521,22 +1536,6 @@ def map_with_basemap(
     ax.set_xlim(extent_geom[0], extent_geom[2])
     ax.set_ylim(extent_geom[1], extent_geom[3])
 
-    if osm_basemap:
-        
-        try:
-            
-            cx.add_basemap(
-                ax,
-                source=cx.providers.OpenStreetMap.Mapnik,
-                zoom=zoom
-            )
-            
-        except Exception as e:
-            
-            error_message = f"Error while retrieving basemap from OSM. Error message: {str(e)}"
-            
-            print(error_message)
-
     plt.axis('off')
 
     if legend and legend_handles:
@@ -1553,17 +1552,18 @@ def map_with_basemap(
         print("OK")
     
     if save_output:
-        plt.savefig(
+        fig.savefig(
             output_filepath,
             dpi=output_dpi,
-            bbox_inches="tight"
-        )    
+            bbox_inches="tight",
+            facecolor="white"
+        )
 
     if show_plot:
         plt.show()
 
     if close_plot:
-        plt.close()
+        plt.close(fig)
     
     if os.path.exists(config.DEFAULT_FILENAME_ORS_TMP):
         try:

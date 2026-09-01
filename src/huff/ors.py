@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.7
-# Last update: 2026-06-11 17:06
+# Version:     1.5.8
+# Last update: 2026-09-01 17:19
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -16,6 +16,12 @@ import geopandas as gp
 from shapely.geometry import shape
 import huff.config as config
 import huff.helper as helper
+
+
+ORS_SERVER = config.ORS_SERVER
+ORS_USER_AGENT = config.ORS_USER_AGENT
+ORS_REFERER = config.GITHUB_HUFF_URL
+ORS_AUTH = config.ORS_AUTH
 
 class Isochrone:
 
@@ -439,13 +445,18 @@ class Client:
     
     def __init__(
         self,
-        server = config.ORS_SERVER,
-        auth: str = config.ORS_AUTH
+        server = None,
+        headers = None,
+        auth: str = None
         ):
         
-        self.server = server
-        self.auth = auth
-            
+        self.server = server if server is not None else ORS_SERVER
+        self.headers = headers if headers is not None else {
+            "User-Agent": ORS_USER_AGENT,
+            "Referer": ORS_REFERER
+            }
+        self.auth = auth if auth is not None else ORS_AUTH
+        
     def isochrone(
         self,
         locations: list,
@@ -530,10 +541,11 @@ class Client:
         assert len(locations) <= config.ORS_ENDPOINTS["Isochrones"]["Restrictions"]["Locations"], f"ORS client does not allow >{config.ORS_ENDPOINTS['Isochrones']['Restrictions']['Locations']} locations in an Isochrones query. See {config.ORS_URL_RESTRICTIONS}."
     
         ors_url = self.server + config.ORS_ENDPOINTS["Isochrones"]["endpoint"] + profile
+        headers = self.headers
         auth = self.auth
 
         headers = {
-            **config.ORS_HEADERS,
+            **headers,
             "Authorization": auth
         }
 
@@ -745,10 +757,11 @@ class Client:
         )
         
         ors_url = self.server + config.ORS_ENDPOINTS["Matrix"]["endpoint"] + profile
+        headers = self.headers
         auth = self.auth
         
         headers = {
-            **config.ORS_HEADERS,
+            **headers,
             "Authorization": auth
         }
 
@@ -964,3 +977,80 @@ def check_params(
                     )
                 
                 prev = segment
+                
+def define_ors_server(server_url: str):
+
+    """
+    Define the OpenRouteService server URL.
+
+    Parameters
+    ----------
+    server_url : str
+        The URL of the ORS server.
+
+    Example
+    -------
+    >>> define_ors_server("https://api.heigit.org/openrouteservice/v2/")
+    """
+
+    global ORS_SERVER
+    ORS_SERVER = server_url
+    
+    print(f"ORS server set to: {ORS_SERVER}")
+    print(config.ORS_ATTRIBUTION)
+    
+def define_headers(
+    user_agent: str,
+    referer: str
+    ):
+
+    """
+    Define the headers for ORS requests.
+
+    Parameters
+    ----------
+    user_agent : str
+        The User-Agent string to be used in requests.
+    referer : str
+        The Referer string to be used in requests.
+
+    Example
+    -------
+    >>> define_headers("MyApp/1.0", "https://myapp.example.com")
+    """
+
+    global ORS_USER_AGENT, ORS_REFERER
+    ORS_USER_AGENT = user_agent
+    ORS_REFERER = referer
+    
+    print(f"ORS User-Agent set to: {ORS_USER_AGENT}")
+    print(f"ORS Referer set to: {ORS_REFERER}")
+    
+def define_ors_auth(auth: str):
+    
+    """
+    Define the authentication token for the OpenRouteService API.
+
+    Parameters
+    ----------
+    auth : str
+        The authentication token for the ORS API.
+
+    Example
+    -------
+    >>> define_ors_auth("your_auth_token_here")
+    """
+
+    global ORS_AUTH
+    ORS_AUTH = auth
+    
+    print(f"ORS authentication set to: '{ORS_AUTH}'")
+
+define_ors_server(ORS_SERVER)
+
+define_headers(
+    ORS_USER_AGENT, 
+    ORS_REFERER
+    )
+
+define_ors_auth(ORS_AUTH)

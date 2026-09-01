@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.25
-# Last update: 2026-08-13 12:26
+# Version:     1.0.26
+# Last update: 2026-09-01 17:10
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.8"
+PACKAGE_VERSION = "1.9.9"
 
 PYPI_HUFF_URL = "https://pypi.org/project/huff/"
 GITHUB_HUFF_URL = "https://github.com/geowieland/huff_official"
@@ -230,15 +230,17 @@ GOODNESS_OF_FIT_BESTMODEL_DEFAULT = [
 # ORS config:
 
 ORS_SERVER = "https://api.heigit.org/openrouteservice/v2/"
-# ORS_SERVER = "https://api.openrouteservice.org/v2/"
-# still active, but deprecated
-# https://ask.openrouteservice.org/t/deprecating-api-openrouteservice-org-in-favour-of-api-heigit-org/7912
+ORS_USER_AGENT = f"{PACKAGE_NAME}/{PACKAGE_VERSION} {GITHUB_HUFF_URL} (geowieland@googlemail.com)"
+ORS_ATTRIBUTION = "© openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors | https://openrouteservice.org/"
+
 ORS_URL_RESTRICTIONS = "https://openrouteservice.org/restrictions/"
 
-ORS_HEADERS = {
-    "Content-Type": "application/json; charset=utf-8",
-    "Accept": "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",    
-}
+# ORS_HEADERS = {
+#     "User-Agent": ORS_USER_AGENT,
+#     "Referer": GITHUB_HUFF_URL,
+#     "Content-Type": "application/json; charset=utf-8",
+#     "Accept": "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
+# }
 
 ORS_AUTH = "5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f"
 # for TESTING
@@ -326,16 +328,13 @@ USE_ORS_DEFAULT = True
 
 # OSM config:
 
-OSM_TILES_SERVER = "https://tile.openstreetmap.org/"
+OSM_TILES_SERVER = "https://a.tile.openstreetmap.org/"
 OSM_USER_AGENT = f"{PACKAGE_NAME}/{PACKAGE_VERSION} {GITHUB_HUFF_URL} (geowieland@googlemail.com)"
+OSM_ATTRIBUTION = "© OpenStreetMap contributors | available under the Open Database License | https://www.openstreetmap.org/"
 
 OSM_DELAY = 0.3
 
 DEFAULT_FILENAME_ORS_TMP = "osm_map.png"
-
-OSM_BASEMAP = False
-
-OSM_TILE_POLICY_WARNING = "WARNING: As of August 10, 2026, OpenStreetMap no longer supports the automated downloading of tiles (see: https://wiki.openstreetmap.org/wiki/Blocked_tiles). This affects the OSM client in the huff package, as it relies on this method to generate base maps."
 
 
 # GIS constants and defaults:

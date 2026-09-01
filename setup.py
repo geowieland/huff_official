@@ -7,7 +7,7 @@ def read_README():
     
 setup(
     name='huff',
-    version='1.9.8',
+    version='1.9.9',
     description='huff: Market Area Analysis in Python',
     packages=find_packages(where="src"),
     package_dir={"": "src"},
@@ -33,7 +33,6 @@ setup(
         'requests<3.0',
         'matplotlib',
         'pillow',
-        'contextily',
         'openpyxl'
     ],
     test_suite='huff.tests',
