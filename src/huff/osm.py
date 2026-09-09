@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.16
-# Last update: 2026-09-01 17:11
+# Version:     1.4.17
+# Last update: 2026-09-05 12:44
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -17,10 +17,6 @@ from shapely.geometry import box
 import tempfile
 import time
 from PIL import Image
-import shutil
-import subprocess
-from pathlib import Path
-import urllib.request
 import huff.config as config
 
 

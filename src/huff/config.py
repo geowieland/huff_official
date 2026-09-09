@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.26
-# Last update: 2026-09-01 17:10
+# Version:     1.0.27
+# Last update: 2026-09-09 20:44
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.9"
+PACKAGE_VERSION = "1.9.10"
 
 PYPI_HUFF_URL = "https://pypi.org/project/huff/"
 GITHUB_HUFF_URL = "https://github.com/geowieland/huff_official"

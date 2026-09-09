@@ -2,7 +2,11 @@
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
-This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985). Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003, Luo 2014). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
+This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. 
+
+Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985).
+
+Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003, Luo 2014). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
 
 
 ## Author
@@ -25,7 +29,7 @@ A brief discussion of the included models and their application in this package 
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.9) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.10) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -65,7 +69,7 @@ pip install git+https://github.com/geowieland/huff_official.git
   - MCI model market simulation with inverse log-centering transformation
 - **Machine Learning Based Market Area Models**: 
   - Fitting customer flows model with >= 2 independent variables in the utility function
-  - Huff-like model market simulation
+  - Huff-like market simulation
 - **Hansen Accessibility**:
   - Calculating basic Hansen accessibility based on an interaction matrix
   - Calculating multivariate and (empirically) weighted Hansen accessibility based on an interaction matrix
@@ -223,12 +227,11 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.9)
+## What's new (v1.9.10)
 
 - Extensions
-  - Globally defining own OpenStreetMap tile servers and corresponding headers for HTTP requests
-  - Globally defining own OpenRouteService servers and corresponding HTTPs headers for HTTP requests, including own authentification tokens
+  - Globally defining own transport costs weighting functions via models.define_weighting_function()
+  - Option to specify attraction variable in SupplyLocations.define_attraction_weighting()
 - Bugfixes
-  - Retrieving OSM basemaps is working again now because a different access method has been implemented
-  - Import and use of package 'contextily' was cancelled without replacement  
-  - Correction of spelling and word errors in error messages
+  - Correct projection of generated maps in gistools.map_with_basemap() and all functions and methods importing this function
+  - Fixed bug in InteractionMatrix.mci_fit() and HuffModel.mci_fit(): Name of the first attraction variable is transferred correctly

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.9.4
-# Last update: 2026-08-13 12:16
+# Version:     1.9.5
+# Last update: 2026-09-09 19:49
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -25,6 +25,9 @@ from huff.ors import Client, TimeDistanceMatrix, Isochrone
 from huff.gistools import overlay_difference, distance_matrix, buffers, map_with_basemap, distance_matrix_from_gdf
 from huff.predictive_models import model_wrapper, PredictiveModel
 
+
+PERMITTED_WEIGHTING_FUNCTIONS = config.PERMITTED_WEIGHTING_FUNCTIONS
+PERMITTED_WEIGHTING_FUNCTIONS_LIST = config.PERMITTED_WEIGHTING_FUNCTIONS_LIST
 
 class CustomerOrigins:
 
@@ -1023,8 +1026,9 @@ class SupplyLocations:
     
     def define_attraction_weighting(
         self,
-        func = "power",
-        param_gamma = 1,
+        attrac_var: str = None,
+        func: str = "power",
+        param_gamma = 1.0,
         verbose: bool = False
         ):
 
@@ -1034,10 +1038,12 @@ class SupplyLocations:
 
         Parameters
         ----------
+        attrac_var : str, optional
+            Name of attraction variable to be weighted. Default: None (A_j).
         func : str, optional
             Weighting function to use (default is "power").
         param_gamma : float or list of float, optional
-            Parameter(s) for the weighting function (default is 1).
+            Parameter(s) for the weighting function (default is 1.0).
         verbose : bool, optional
             If True, print informational messages during processing.
 
@@ -1069,14 +1075,17 @@ class SupplyLocations:
 
         if metadata["attraction_col"] is None:
             raise ValueError(f"Error while defining attraction weighting: {config.DEFAULT_NAME_ATTRAC} column is not yet defined. Use SupplyLocations.define_attraction()")
-        
+
+        if attrac_var is None:
+            attrac_var = config.DEFAULT_COLNAME_ATTRAC
+
         check_weighting(
-            name = config.DEFAULT_COLNAME_ATTRAC,
+            name = attrac_var,
             func = func,
             param = param_gamma
             )
         
-        metadata["weighting"][0]["name"] = config.DEFAULT_COLNAME_ATTRAC
+        metadata["weighting"][0]["name"] = attrac_var
         metadata["weighting"][0]["func"] = func
 
         if isinstance(param_gamma, list):
@@ -1087,11 +1096,11 @@ class SupplyLocations:
         helper.add_timestamp(
             self,
             function="models.SupplyLocations.define_attraction_weighting",
-            process = f"Defined attraction weighting with {func} function with gamma = {param_gamma}"
+            process = f"Defined weighting of attraction variable '{attrac_var}' with {func} function and gamma = {param_gamma}"
             )
         
         if verbose:
-            print(f"Defined attraction weighting to function {func} with parameter(s) {param_gamma}")
+            print(f"Defined weighting of attraction variable '{attrac_var}' with {func} function and gamma = {param_gamma}")
 
         return self
 
@@ -4209,7 +4218,12 @@ class InteractionMatrix:
         """
 
         if cols is None:
-            cols = [config.DEFAULT_COLNAME_ATTRAC, config.DEFAULT_COLNAME_TC]
+
+            cols = [
+                config.DEFAULT_COLNAME_ATTRAC, 
+                config.DEFAULT_COLNAME_TC
+                ]
+
             print(f"NOTE: No utility variables were specified for {config.MODELS['MCI']['description']} transformation. Using default: '{config.DEFAULT_COLNAME_ATTRAC}', '{config.DEFAULT_COLNAME_TC}'.")
 
         if verbose:
@@ -4389,7 +4403,12 @@ class InteractionMatrix:
         """
 
         if cols is None:
-            cols = [config.DEFAULT_COLNAME_ATTRAC, config.DEFAULT_COLNAME_TC]
+
+            cols = [
+                config.DEFAULT_COLNAME_ATTRAC, 
+                config.DEFAULT_COLNAME_TC
+                ]
+
             print(f"NOTE: No utility variables were specified for {config.MODELS['MCI']['description']} estimation. Using default: '{config.DEFAULT_COLNAME_ATTRAC}', '{config.DEFAULT_COLNAME_TC}'.")
 
         supply_locations = self.get_supply_locations()
@@ -4405,6 +4424,7 @@ class InteractionMatrix:
         cols_t = [col + config.DEFAULT_LCT_SUFFIX for col in cols]
 
         if f"{config.DEFAULT_COLNAME_PROBABILITY}{config.DEFAULT_LCT_SUFFIX}" not in interaction_matrix_df.columns:
+        # Check whether interaction matrix already includes transformed columns
             interaction_matrix = self.mci_transformation(
                 cols = cols,
                 verbose = verbose
@@ -4443,20 +4463,24 @@ class InteractionMatrix:
             }
 
         coefs2 = coefs.copy()
+        
         for key, value in list(coefs2.items()):
+            
             if value["Coefficient"] == config.DEFAULT_COLNAME_TC:
                 del coefs2[key]
         
         coefs2 = {i: value for i, (key, value) in enumerate(coefs2.items())}
         
         for key, value in coefs2.items():
+            
             supply_locations_metadata["weighting"][key] = {
                 "name": value["Coefficient"],
                 "func": config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0],
                 "param": value["Estimate"]
             }
 
-            supply_locations_metadata["attraction_col"][key] = value["Coefficient"]
+            if key > 0:
+                supply_locations_metadata["attraction_col"][key] = value["Coefficient"]
 
         customer_origins.metadata = customer_origins_metadata
         supply_locations.metadata = supply_locations_metadata
@@ -6229,10 +6253,13 @@ class HuffModel:
         """
 
         if cols is None:
+
             cols = [
                 config.DEFAULT_COLNAME_ATTRAC, 
                 config.DEFAULT_COLNAME_TC
                 ]
+
+            print(f"NOTE: No utility variables were specified for {config.MODELS['MCI']['description']} estimation. Using default: '{config.DEFAULT_COLNAME_ATTRAC}', '{config.DEFAULT_COLNAME_TC}'.")
 
         if verbose:
             print(f"Processing estimation of {config.MODELS['MCI']['description']}", end = " ... ")
@@ -6246,10 +6273,11 @@ class HuffModel:
 
         customer_origins = interaction_matrix.get_customer_origins()
         customer_origins_metadata = customer_origins.get_metadata()
-        
+
         cols_t = [col + config.DEFAULT_LCT_SUFFIX for col in cols]
 
         if f"{config.DEFAULT_COLNAME_PROBABILITY}{config.DEFAULT_LCT_SUFFIX}" not in interaction_matrix_df.columns:
+        # Check whether interaction matrix already includes transformed columns
             interaction_matrix = interaction_matrix.mci_transformation(
                 cols = cols
                 )
@@ -6284,6 +6312,7 @@ class HuffModel:
             }
 
         coefs2 = coefs.copy()
+        
         for key, value in list(coefs2.items()):
             if value["Coefficient"] == config.DEFAULT_COLNAME_TC:
                 del coefs2[key]
@@ -6291,13 +6320,15 @@ class HuffModel:
         coefs2 = {i: value for i, (key, value) in enumerate(coefs2.items())}
         
         for key, value in coefs2.items():
+            
             supply_locations_metadata["weighting"][(key)] = {
                 "name": value["Coefficient"],
                 "func": config.PERMITTED_WEIGHTING_FUNCTIONS_LIST[0],
                 "param": value["Estimate"]
             }
-            
-            supply_locations_metadata["attraction_col"][key] = value["Coefficient"]
+
+            if key > 0:
+                supply_locations_metadata["attraction_col"][key] = value["Coefficient"]
 
         customer_origins.metadata = customer_origins_metadata
         supply_locations.metadata = supply_locations_metadata
@@ -6366,6 +6397,7 @@ class HuffModel:
         params,
         check_df_vars: bool = True,
         ):
+        
         """
         Compute the negative log-likelihood for the Huff model based on totals.
 
@@ -7636,10 +7668,16 @@ class MCIModel:
 
         if transformation == "ILCT":
             for key, value in attraction_weighting.items():
-                mci_formula = mci_formula + f" + {value['param']}*{attraction_col[key]}"
+                if key == 0:
+                    mci_formula = mci_formula + f" + {value['param']}*{config.DEFAULT_COLNAME_ATTRAC}"
+                else:
+                    mci_formula = mci_formula + f" + {value['param']}*{attraction_col[key]}"
         else:
             for key, value in attraction_weighting.items():
-                mci_formula = mci_formula + f" * {attraction_col[key]}**{value['param']}"
+                if key == 0:
+                    mci_formula = mci_formula + f" * {config.DEFAULT_COLNAME_ATTRAC}**{value['param']}"
+                else:
+                    mci_formula = mci_formula + f" * {attraction_col[key]}**{value['param']}"
 
         interaction_matrix_df[config.DEFAULT_COLNAME_UTILITY] = interaction_matrix_df.apply(lambda row: eval(mci_formula, {}, row.to_dict()), axis=1)
 
@@ -8485,35 +8523,7 @@ class LearnModel:
         )
 
         helper.print_interaction_matrix_info(interaction_matrix)
-        
-        # print("-" * config.SUMMARY_SECTION_SEP_LINELENGTH)
-        
-        # print("Weighting estimates")
- 
-        # coefficients_rows = []
-
-        # for key, value in coefs.items():
-
-        #     coefficient_name = value["Coefficient"]
-        #     if coefficient_name == config.DEFAULT_COLNAME_ATTRAC:
-        #         coefficient_name = config.DEFAULT_NAME_ATTRAC
-        #     if coefficient_name == config.DEFAULT_COLNAME_TC:
-        #         coefficient_name = config.DEFAULT_NAME_TC
-
-        #     coefficients_rows.append({
-        #         "": coefficient_name,
-        #         "Estimate": round(value["Estimate"], config.FLOAT_ROUND),
-        #         "SE": round(value["SE"], config.FLOAT_ROUND),
-        #         "t": round(value["t"], config.FLOAT_ROUND),
-        #         "p": round(value["p"], config.FLOAT_ROUND),
-        #         "CI lower": round(value["CI_lower"], config.FLOAT_ROUND),
-        #         "CI upper": round(value["CI_upper"], config.FLOAT_ROUND)
-        #     })
-
-        # coefficients_df = pd.DataFrame(coefficients_rows)
-        
-        # print(coefficients_df.to_string(index=False))
-        
+                
         learn_modelfit = None
 
         learn_modelfit = self.modelfit()
@@ -8622,7 +8632,7 @@ def create_interaction_matrix(
     
     if verbose:
         print("OK")
-
+        
     if customer_origins_marketsize is None and requiring_attributes:
         print(f"WARNING: {config.DEFAULT_NAME_MARKETSIZE} column in customer origins not defined and is set to {config.DEFAULT_COLNAME_MARKETSIZE} = np.nan. Use CustomerOrigins.define_marketsize().")  
     
@@ -8660,7 +8670,7 @@ def create_interaction_matrix(
             customer_origins_marketsize: config.DEFAULT_COLNAME_MARKETSIZE,
             "geometry": f"{config.DEFAULT_COLNAME_CUSTOMER_ORIGINS}_coords"
             }
-        )
+        )    
     
     if verbose:
         print("OK")        
@@ -8713,7 +8723,7 @@ def create_interaction_matrix(
     interaction_matrix_df[config.DEFAULT_COLNAME_UTILITY] = None
     interaction_matrix_df[config.DEFAULT_COLNAME_PROBABILITY] = None
     interaction_matrix_df[config.DEFAULT_COLNAME_FLOWS] = None
-
+    
     metadata = {}
     
     interaction_matrix = InteractionMatrix(
@@ -9319,3 +9329,76 @@ def check_weighting(
 
     if len(weighting_errors) > 0:
         raise WeightingError(f"Error(s) in weighting definition of '{name}': {' '.join(weighting_errors)}")
+    
+def define_weighting_function(
+    weighting_func: dict = None,
+    verbose: bool = True
+    ):
+    
+    """
+    Define a custom weighting function and add it to the list of permitted functions.
+    
+    Parameters
+    ----------
+    weighting_func : dict
+        A dictionary defining the weighting function with the following keys:
+        - "description": str, a brief description of the function.
+        - "function": str, a string representing the mathematical formula of the function.
+        - "no_params": int, the number of parameters the function requires.
+        - "type": type, the data type of the parameters.
+        
+    verbose : bool, optional
+        If True, print a message confirming the addition of the weighting function (default True).
+        
+    Raises
+    ------
+    TypeError
+        If `weighting_func` is not a dictionary.
+    KeyError
+        If required keys are missing in `weighting_func`.
+    ValueError
+        If the values of the keys in `weighting_func` are not of the expected types
+            
+    """
+    
+    if not isinstance(weighting_func, dict):
+        raise TypeError(f"Weighting function must be a dictionary with one key and a list of parameters as value.")
+            
+    wf_key = list(weighting_func.keys())[0]
+    wf_values = weighting_func[wf_key]
+    
+    wf_missing_values = []
+    if "description" not in wf_values:
+        wf_missing_values.append("description")
+    if "function" not in wf_values:
+        wf_missing_values.append("function")
+    if "no_params" not in wf_values:
+        wf_missing_values.append("no_params")
+    if "type" not in wf_values:
+        wf_missing_values.append("type")
+    if len(wf_missing_values) > 0:
+        raise KeyError(f"Weighting function '{wf_key}' is missing required keys: {', '.join(wf_missing_values)}.")
+    
+    wf_wrong_formats = []
+    wf_description = wf_values["description"]
+    if not isinstance(wf_description, str):
+        wf_wrong_formats.append("description")
+    wf_function = wf_values["function"]
+    if not isinstance(wf_function, str):
+        wf_wrong_formats.append("function")
+    wf_no_params = wf_values["no_params"]
+    if not isinstance(wf_no_params, int):
+        wf_wrong_formats.append("no_params")
+    wf_type = wf_values["type"]
+    if not isinstance(wf_type, type):
+        wf_wrong_formats.append("type")
+    if len(wf_wrong_formats) > 0:
+        raise ValueError(f"Weighting function '{wf_key}' has incorrect format for keys: {', '.join(wf_wrong_formats)}.")
+
+    global PERMITTED_WEIGHTING_FUNCTIONS, PERMITTED_WEIGHTING_FUNCTIONS_LIST
+    
+    PERMITTED_WEIGHTING_FUNCTIONS[wf_key] = wf_values
+    PERMITTED_WEIGHTING_FUNCTIONS_LIST.append(wf_key)
+   
+    if verbose:
+        print(f"Added weighting function '{wf_key}' to permitted weighting functions.")

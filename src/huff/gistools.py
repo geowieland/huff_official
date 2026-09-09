@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.28
-# Last update: 2026-09-01 17:17
+# Version:     1.5.29
+# Last update: 2026-09-07 21:04
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -24,11 +24,13 @@ from huff.osm import get_basemap
 import huff.config as config
 
 
+
 def manhattan_distance(
     source: list,
     destination: list,
     unit: str = "m"
-):
+    ):
+    
     """
     Compute the Manhattan (L1) distance between two geographic coordinates.
 
@@ -1245,8 +1247,7 @@ def map_with_basemap(
                 
                 layers[i] = layers[i].to_crs(crs_layer0)
             
-            if verbose:
-                print(f"NOTE: Input layers have different CRS: {', '.join(map(str, unique_crs))}. All layers were automatically converted to CRS {str(crs_layer0)}.")
+            print(f"NOTE: Input layers have different CRS: {', '.join(map(str, unique_crs))}. All layers were automatically converted to CRS {str(crs_layer0)}.")
                 
         else:
             raise TypeError(f"The {len(layers)} layers have {len(unique_crs)} different CRS: {', '.join(unique_crs)}.")
@@ -1300,17 +1301,15 @@ def map_with_basemap(
     if osm_basemap:
         
         img = Image.open(config.DEFAULT_FILENAME_ORS_TMP)
-        
-        bbox = box(sw_lon, sw_lat, ne_lon, ne_lat)
-        extent_img = (
-            gp.GeoSeries([bbox], crs=config.WGS84_CRS)
-            .to_crs(crs=config.PSEUDO_MERCATOR_CRS)
-            .total_bounds
-        )
 
         ax.imshow(
             img,
-            extent=(extent_img[0], extent_img[2], extent_img[1], extent_img[3]),
+            extent=(
+                extent_img[0],
+                extent_img[2],
+                extent_img[1], 
+                extent_img[3]
+                ),
             origin="upper",
             zorder=0
         )
@@ -1335,21 +1334,21 @@ def map_with_basemap(
             missing_styles = []
             
             if "color" not in layer_style:
-                missing_styles.append(f"No 'color' key in definition of layer {i}")
+                missing_styles.append(f"No 'color' key in definition of layer {i}.")
             if "name" not in layer_style:
-                missing_styles.append(f"No 'name' key in definition of layer {i}")
+                missing_styles.append(f"No 'name' key in definition of layer {i}.")
             if "alpha" not in layer_style:
-                missing_styles.append(f"No 'alpha' key in definition of layer {i}")                
+                missing_styles.append(f"No 'alpha' key in definition of layer {i}.")                
             if len(missing_styles) > 0:
-                raise KeyError(", ".join(missing_styles))
+                raise KeyError(" ".join(missing_styles))
             
             if all(layer_3857.geometry.geom_type == "Point"):
                 if "size" not in layer_style:
-                    raise KeyError(f"No 'size' key in definition of point layer {i}")
+                    raise KeyError(f"No 'size' key in definition of point layer {i}.")
             
             if all(layer_3857.geometry.geom_type.isin(["LineString", "MultiLineString"])):
                 if "linewidth" not in layer_style:
-                    raise KeyError(f"No 'linewidth' key in definition of line layer {i}")
+                    raise KeyError(f"No 'linewidth' key in definition of line layer {i}.")
                 else:
                     layer_linewidth = layer_style["linewidth"]
             
@@ -1539,6 +1538,7 @@ def map_with_basemap(
     plt.axis('off')
 
     if legend and legend_handles:
+
         ax.legend(
             handles=legend_handles, 
             loc=config.DEFAULT_LEGEND_LOC, 
@@ -1552,12 +1552,19 @@ def map_with_basemap(
         print("OK")
     
     if save_output:
+
+        if verbose:
+            print(f"Saving map as {output_filepath}", end = " ... ")
+
         fig.savefig(
             output_filepath,
             dpi=output_dpi,
             bbox_inches="tight",
             facecolor="white"
         )
+
+        if verbose:
+            print("OK")
 
     if show_plot:
         plt.show()

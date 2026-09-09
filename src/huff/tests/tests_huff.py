@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.6.8
-# Last update: 2026-05-09 16:01
+# Version:     1.6.9
+# Last update: 2026-09-08 20:37
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -90,13 +90,18 @@ Haslach_supermarkets.define_attraction("VKF_qm")
 # Defining attraction variable
 
 Haslach_supermarkets.define_attraction_weighting(
+    attrac_var = "VKF_qm",
     param_gamma=0.9
     )
 # Define attraction weighting (gamma)
 
+print(Haslach_supermarkets.get_metadata())
+
 Haslach_supermarkets.summary()
+# Summary of supermarkets
 
 Haslach_supermarkets.show_log()
+# Log of supermarkets object
 
 Haslach_supermarkets.isochrones(
     segments=[2, 4, 6],
@@ -223,28 +228,28 @@ print(huff_model_marketareas)
 # Showing total market areas
 
 
-# # Maximum Likelihood fit for Huff Model:
+# Maximum Likelihood fit for Huff Model:
 
-# haslach_interactionmatrix.huff_ml_fit(
-#     initial_params=[1, -2],
-#     method="trust-constr",
-#     bounds = [(0.8, 0.9999),(-2.5, -1.5)]    
-# )
-# # Maximum Likelihood fit for Huff Model
+haslach_interactionmatrix.huff_ml_fit(
+    initial_params=[1, -2],
+    method="trust-constr",
+    bounds = [(0.8, 0.9999),(-2.5, -1.5)]    
+)
+# Maximum Likelihood fit for Huff Model
 
-# haslach_interactionmatrix.summary()
-# # Summary of fitted ML-fitted interaction matrix (Huff model)
+haslach_interactionmatrix.summary()
+# Summary of fitted ML-fitted interaction matrix (Huff model)
 
-# huff_model_fit = haslach_interactionmatrix.marketareas()
-# # Calculcation of total market areas
-# # Result of class HuffModel
+huff_model_fit = haslach_interactionmatrix.marketareas()
+# Calculcation of total market areas
+# Result of class HuffModel
 
-# bootstrap_cis = huff_model_fit.confint(repeats=10)
-# print(bootstrap_cis)
-# # Confidence intervals for estimated parameters
+bootstrap_cis = huff_model_fit.confint(repeats=10)
+print(bootstrap_cis)
+# Confidence intervals for estimated parameters
 
-# huff_model_fit.summary()
-# # Huff model summary
+huff_model_fit.summary()
+# Huff model summary
 
 
 # Adding new supply location:
@@ -286,14 +291,19 @@ print(huff_model.get_market_areas_df())
 print(huff_model.get_interaction_matrix_df())
 # Showing df of interaction matrix
 
+print(huff_model.get_supply_locations().get_geodata_gpd_original())
+# Showing supermarkets geodata
+
 huff_model.get_interaction_matrix_df().to_excel("interaction_matrix_df.xlsx")
 # Export of interaction matrix
 
 
 # Multiplicative Competitive Interaction Model:
 
-mci_fit = huff_model.mci_fit()
+mci_fit = huff_model.mci_fit(verbose=True)
 # Fitting via MCI
+
+mci_fit.show_log()
 
 mci_fit.summary()
 # Summary of MCI model
@@ -307,10 +317,10 @@ mci_fit.get_market_areas_df()
 mci_fit.show_log()
 # Log of MCIModel object
 
-
 # Competing Destinations Model:
 
 Haslach_supermarkets.summary()
+# Summary of locations
 
 # Calculation of competitor accessibility:
 Haslach_supermarkets.competitor_accessibility(
@@ -318,7 +328,7 @@ Haslach_supermarkets.competitor_accessibility(
     destinations=[12,25,46],
     verbose = True
 )
-# Only supermarkets
+# Only supermarkets (IDs 12, 25, 46)
 
 Haslach_supermarkets.summary()
 
@@ -327,7 +337,7 @@ Haslach_supermarkets.competitor_accessibility(
     destinations=[1,5,30,38,59],
     verbose = True
 )
-# Only discounters
+# Only discounters (IDs 1, 5, 30, 38, 59)
 
 Haslach_supermarkets.summary()
 

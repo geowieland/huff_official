@@ -5,7 +5,7 @@
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
 # Version:     1.0.19
-# Last update: 2026-08-10 12:21
+# Last update: 2026-09-08 20:36
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -440,9 +440,9 @@ def load_interaction_matrix(
 
     import_col_errors = []
     if attraction_col is None or (isinstance(attraction_col, list) and len(attraction_col) == 0):
-        import_col_errors.append(f"No attraction column(s) stated.")
+        import_col_errors.append("No attraction column(s) stated.")
     if transport_costs_col is None or (isinstance(transport_costs_col, list) and len(transport_costs_col) == 0):
-        import_col_errors.append(f"No transport costs column stated.")
+        import_col_errors.append("No transport costs column stated.")
     if len(import_col_errors) > 0:
         raise InteractionMatrixError(f"Error(s) while importing interaction matrix: {' '.join(import_col_errors)}.")
     
@@ -585,7 +585,7 @@ def load_interaction_matrix(
             geometry="geometry",
             crs = crs_input
             )
-                
+                        
     customer_origins_metadata = {
         "location_type": "origins",
         "unique_id": customer_origins_col,
@@ -745,7 +745,7 @@ def load_interaction_matrix(
             )
         
     supply_locations_geodata_gpd_original[f"{config.DEFAULT_COLNAME_SUPPLY_LOCATIONS}_update"] = 0
-               
+        
     supply_locations_metadata = {
         "location_type": "destinations",
         "unique_id": supply_locations_col,
@@ -815,8 +815,8 @@ def load_interaction_matrix(
             columns = {
                 market_size_col: config.DEFAULT_COLNAME_MARKETSIZE
             }
-            )
-    
+            )    
+   
     metadata = {
         "fit": {
             "function": None,
