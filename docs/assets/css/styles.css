@@ -1,0 +1,245 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  color: #24292f;
+  background: #ffffff;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Helvetica,
+    Arial,
+    sans-serif;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+.container {
+  width: min(900px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.site-header {
+  border-bottom: 1px solid #d0d7de;
+  padding: 18px 0;
+  margin-bottom: 45px;
+}
+
+.site-title {
+  color: #24292f;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.content {
+  padding-bottom: 120px;
+}
+
+/* Headings */
+
+h1,
+h2,
+h3,
+h4 {
+  color: #1f2328;
+  line-height: 1.3;
+  margin-top: 1.8em;
+  margin-bottom: 0.7em;
+  overflow-wrap: break-word;
+}
+
+h1 {
+  font-size: 2.1rem;
+  margin-top: 0;
+}
+
+h2 {
+  font-size: 1.55rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+/* Text */
+
+p {
+  margin: 0 0 1.1em;
+  overflow-wrap: break-word;
+}
+
+a {
+  color: #0969da;
+  overflow-wrap: anywhere;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Lists */
+
+ul,
+ol {
+  padding-left: 1.8rem;
+}
+
+/* Code */
+
+code {
+  padding: 0.15em 0.35em;
+  background: #f6f8fa;
+  border-radius: 4px;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+pre {
+  padding: 16px;
+  overflow-x: auto;
+  max-width: 100%;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  overflow-wrap: normal;
+}
+
+/* Tables */
+
+table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  border: 1px solid #d0d7de;
+  text-align: left;
+  overflow-wrap: break-word;
+}
+
+th {
+  background: #f6f8fa;
+}
+
+/* Images */
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Blockquotes */
+
+blockquote {
+  margin: 1.5em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid #d0d7de;
+  color: #57606a;
+}
+
+/* MathJax */
+
+mjx-container {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Footer */
+
+.site-footer {
+  border-top: 1px solid #d0d7de;
+  margin-top: 40px;
+  padding: 35px 0 45px;
+  color: #57606a;
+  font-size: 0.9rem;
+}
+
+.site-footer p {
+  margin: 0.3em 0;
+}
+
+.site-footer a {
+  color: #57606a;
+}
+
+/* Smartphone */
+
+@media (max-width: 600px) {
+
+  .container {
+    width: calc(100% - 28px);
+  }
+
+  .site-header {
+    margin-bottom: 30px;
+    padding: 15px 0;
+  }
+
+  .site-title {
+    font-size: 1rem;
+  }
+
+  .content {
+    padding-bottom: 90px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+  }
+
+  body {
+    font-size: 15px;
+  }
+
+  table {
+    font-size: 13px;
+  }
+
+  th,
+  td {
+    padding: 6px 8px;
+  }
+
+  mjx-container[display="true"] {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  pre {
+    font-size: 13px;
+  }
+}

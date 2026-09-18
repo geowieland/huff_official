@@ -1,0 +1,12 @@
+title: "Handbook of Market Area and Accessibility Models"
+description: "Handbook of Market Area and Accessibility Models with the huff Python Package"
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+markdown: kramdown
+kramdown:
+  math_engine: mathjax
