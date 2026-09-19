@@ -1,5 +1,6 @@
 title: "Handbook of Market Area and Accessibility Models"
-description: "Handbook of Market Area and Accessibility Models with the huff Python Package"
+description: "Market Area and Accessibility Models in the huff Python Package"
+author: "Thomas Wieland"
 
 defaults:
   - scope:

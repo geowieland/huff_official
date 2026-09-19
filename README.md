@@ -2,7 +2,7 @@
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
-This Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. 
+The **huff** Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. 
 
 Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985).
 
@@ -20,16 +20,20 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 - 💻 GitHub Repository: [huff_official](https://github.com/geowieland/huff_official)
 - 📄 DOI (Zenodo): [10.5281/zenodo.18639559](https://doi.org/10.5281/zenodo.18639559)
 
-A software paper describing the library is available at [arXiv](https://arxiv.org/abs/2602.17640).
 
-A brief discussion of the included models and their application in this package may also be found in an article available at [Medium](https://medium.com/@geowieland/oldie-but-goodie-market-area-models-and-retail-location-analysis-in-python-9f6609355585?source=friends_link&sk=a0314d63cee214cda92aa8fd13d92b64).
+## Documentation
+
+- Software paper: [arXiv](https://arxiv.org/abs/2602.17640) 
+- Methodological overview: [Handbook of Market Area and Accessibility Models](https://geowieland.github.io/huff_official/).
+
+A brief discussion of the included models and their application in the **huff** package may also be found in an article available at [Medium](https://medium.com/@geowieland/oldie-but-goodie-market-area-models-and-retail-location-analysis-in-python-9f6609355585?source=friends_link&sk=a0314d63cee214cda92aa8fd13d92b64).
 
 
 ## Citation
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.10) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.11) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -227,11 +231,8 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.10)
+## What's new (v1.9.11)
 
-- Extensions
-  - Globally defining own transport costs weighting functions via models.define_weighting_function()
-  - Option to specify attraction variable in SupplyLocations.define_attraction_weighting()
-- Bugfixes
-  - Correct projection of generated maps in gistools.map_with_basemap() and all functions and methods importing this function
-  - Fixed bug in InteractionMatrix.mci_fit() and HuffModel.mci_fit(): Name of the first attraction variable is transferred correctly
+- General:
+  - Added methodological handbook
+  - Update of README
