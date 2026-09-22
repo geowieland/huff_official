@@ -2,8 +2,8 @@
 
 **Author:** Thomas Wieland  
 **ORCID:** [0000-0001-5168-9846](https://orcid.org/0000-0001-5168-9846)  
-**EMail:** geowieland@googlemail.com  
-**Version:** 1.0.1 · 2026-09-19
+**EMail:** [geowieland@googlemail.com](geowieland@googlemail.com)  
+**Version:** 1.0.2 · 2026-09-22
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
@@ -11,7 +11,7 @@ This handbook aims to provide an overview of the market area models and approach
 
 If you use this handbook, please cite:
 
-Wieland T (2026) Handbook of Market Area and Accessibility Models. (https://geowieland.github.io/huff_official/).
+Wieland T (2026) Handbook of Market Area and Accessibility Models. [https://geowieland.github.io/huff_official/](https://geowieland.github.io/huff_official/).
 
 
 ## Content
