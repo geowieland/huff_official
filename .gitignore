@@ -23,8 +23,8 @@ pip-log.txt
 # Jupyter
 *.ipynb
 
-# Graphics
-*.png
+# # Graphics
+# *.png
 
 # Shapefiles generated from examples (if any)
 huff/tests/*.cpg
