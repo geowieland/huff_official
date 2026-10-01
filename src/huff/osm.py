@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.4.17
-# Last update: 2026-09-05 12:44
+# Version:     1.4.19
+# Last update: 2026-09-29 17:30
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -209,7 +209,8 @@ def get_basemap(
 
         stitched_image = Image.new(
             "RGB",
-            (width, height)
+            (width, height), 
+            config.OSM_MAP_BACKGROUND
         )
 
         for x in range(
@@ -345,10 +346,3 @@ def define_headers(
     
     print(f"OSM User-Agent set to: {OSM_USER_AGENT}")
     print(f"OSM Referer set to: {OSM_REFERER}")
-    
-define_tiles_server(config.OSM_TILES_SERVER)
-
-define_headers(
-    OSM_USER_AGENT, 
-    OSM_REFERER
-    )

@@ -6,15 +6,13 @@ Fotheringham's *Competing Destinations Model*[1] is an extension of the [Huff Mo
 
 ## Model formulation
 
-There are $$I$$ customer origins ($$i = 1, ..., I$$) and $$J$$ supply locations ($$j = 1, ..., J$$). The Competing Destinations Model has the following probability equation[1]:
+There are $$I$$ [customer origins](glossary.md#customer-origins) ($$i = 1, ..., I$$) and $$J$$ [supply locations](glossary.md#supply-locations) ($$j = 1, ..., J$$). The Competing Destinations Model has the following probability equation[1]:
 
 $$p_{ij} = \frac{A_j^{\gamma} \exp{-\lambda t_{ij}} C_j^{\beta}}{\sum_{j=1}^J A_j^{\gamma} \exp{-\lambda t_{ij}} C_j^{\beta}}$$
 
 where $$A_j$$ is the attraction (size) of supply location $$j$$, $$t_{ij}$$ is the travel time from $$i$$ to $$j$$, $$C_j$$ is the so-called *relative location* of supplier $$j$$ with respect to its $$K$$ competitors ($$k=1,2,...,K$$, $$j \neq k$$), and $$\gamma$$, $$\lambda$$ and $$\beta$$ are weighting parameters.
 
-The $$\beta$$ parameter reflects the impact of the relative location: if $$\beta$$ is positive, a higher value of $$C_j$$ increases the probability of choosing location $$j$$, which may be interpreted as positive agglomeration effects due to the clustering of competitors. A negative value would indicate that competitive effects dominate[1]. 
-
-In defining the indicator of spatial concentration, Fotheringham refers to the [Hansen Accessibility](hansen-accessibility.md)[5]. It is thus defined as follows[1]:
+The $$\beta$$ parameter reflects the impact of the relative location: if $$\beta$$ is positive, a higher value of $$C_j$$ increases the probability of choosing location $$j$$, which may be interpreted as positive agglomeration effects due to the clustering of competitors. A negative value would indicate that competitive effects dominate[1]. In defining the indicator of spatial concentration, Fotheringham refers to the [Hansen Accessibility](hansen-accessibility.md)[5]. It is thus defined as follows[1]:
 
 $$C_j = \sum_{k=1, j \neq k}^K \frac{A_k^{\alpha}}{t_{jk}^{\delta}}$$
 
@@ -22,7 +20,7 @@ where $$C_j$$ is relative location of supplier $$j$$, $$A_k$$ is the attraction 
 
 ## Further notes
 
-The empirical application of the Competing Destinations Model has the same requirements as a Huff Model analysis, including the calculation of travel costs for all $$I \times J$$ combinations of customer origins and supply locations. Additionally, travel costs between the $$J$$ locations and their $$K$$ competitors need to be calculated. For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
+The empirical application of the Competing Destinations Model has the same requirements as a Huff Model analysis, including the calculation of [travel costs](glossary.md#travel-costs) for all $$I \times J$$ combinations of customer origins and supply locations. Additionally, travel costs between the $$J$$ locations and their $$K$$ competitors need to be calculated. For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
 
 There are a few studies that have empirically applied the Competing Destinations Model, particularly in combination with [iterative parameter estimation](huff-fitting.md) or the [MCI Model](mci-model.md). The reported empirical effects vary across studies and retail contexts: Orpana and Lampinen[6] found exclusively negative effects for grocery stores when categorized by store format. In contrast, Wieland[4] identified positive agglomeration effects for clusters of supermarkets and discount grocery stores, but negative effects for supermarket-supermarket or discounter-discounter combinations, as well as positive agglomeration effects for consumer electronics stores. Li and Liu[7] empirically determined a distance threshold between competitors that separates agglomeration advantages from competitive disadvantages.
 

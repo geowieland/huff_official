@@ -2,7 +2,7 @@
 
 ## Background
 
-The *Multiplicative Competitive Interaction (MCI) Model* was developed by Masao Nakanishi and Lee G. Cooper[1][2][3]. It is both a generalization of the [Huff Model](huff-model.md) and a linear transformation that transforms the Huff Model into an econometric model in which the weighting parameters may be estimated based on empirical data. An MCI Model analysis thus provides statistical inference ($$t$$ value, $$p$$ value, confidence intervals) for the weighting parameters. Performing a market area analysis using the MCI Model requires observed data on regional customer or expenditure flows, $$E_{ij}$$, or the corresponding regional market shares, $$p_{ij}$$[4]. The MCI Model is used in empirical studies to test hypotheses on the impact of marketing or location variables on customer patronage and/or to improve the fit of the Huff Model with respect to real-world data[4][5][6][7][8][9].
+The *Multiplicative Competitive Interaction (MCI) Model* was developed by Masao Nakanishi and Lee G. Cooper[1][2][3]. It is both a generalization of the [Huff Model](huff-model.md) and a linear transformation that transforms the Huff Model into an econometric model in which the weighting parameters may be estimated based on empirical data. An MCI Model analysis thus provides statistical inference ($$t$$ value, $$p$$ value, confidence intervals) for the weighting parameters. Performing a [market area analysis](glossary.md#market-area-model) using the MCI Model requires observed data on regional customer or expenditure flows, $$E_{ij}$$, or the corresponding regional market shares, $$p_{ij}$$[4]. The MCI Model is used in empirical studies to test hypotheses on the impact of marketing or location variables on customer patronage and/or to improve the fit of the Huff Model with respect to real-world data[4][5][6][7][8][9].
 
 ## Model formulation
 
@@ -32,13 +32,13 @@ $$\hat{p}_{ij} = \frac{\exp{\sum_{h=1}^H \hat{\gamma}_h \log \frac{A_{h_j}}{\wid
 
 A market area analysis using the MCI Model involves the following steps:
 
-1. Define a study area and divide it into $$I$$ customer origins (e.g., municipalities, ZIP code areas, census tracts)
-2. Collect shopping trips and/or expenditures on the individual/household level and aggregate them at the customer origins level ($$E_{ij}$$, $$p_{ij}$$)
-3. Identify the relevant $$J$$ supply locations competing within the study area
+1. Define a study area and divide it into $$I$$ [customer origins](glossary.md#customer-origins) (e.g., municipalities, ZIP code areas, census tracts)
+2. Collect shopping trips and/or expenditures at the individual/household level and construct empirical [market areas](glossary.md#market-area), which means aggregating the observed customer-store interactions at the customer origins level ($$E_{ij}$$, $$p_{ij}$$)
+3. Identify the relevant $$J$$ [supply locations](glossary.md#supply-locations) competing within the study area
 4. Collect the attraction values $$A_j$$ (e.g., size) of all $$J$$ supply locations and, if necessary, further demand- or supply-specific variables
 5. [Calculate travel costs](huff-model.md#calculation-of-travel-costs) $$t_{ij}$$ for all $$I \times J$$ origin-destination combinations and store them in a travel cost matrix
 6. If necessary, correct or transform the variables to match the requirements of the log-centering transformation
-7. Apply the log-centering transformation to the previously created interaction matrix
+7. Apply the log-centering transformation to the previously created [interaction matrix](glossary.md#interaction-matrix)
 8. Estimate the OLS regression model
 9. Calculate expected probabilities $$p_{ij}$$, and expected customer/expenditure flows $$E_{ij}$$
 10. Sum the expected values $$E_{ij}$$ for each supply location as $$T_{j}$$
@@ -52,9 +52,11 @@ If the goal of the MCI analysis is to model changes in market areas (e.g., due t
 
 ## Further notes
 
-The empirical application of the MCI Model has the same requirements as a Huff Model analysis, including the calculation of travel costs for all $$I$$ x $$J$$ combinations of customer origins and supply locations (in the case that travel times are included in the $$H$$ utility variables). For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
+The empirical application of the MCI Model has the same requirements as a Huff Model analysis, including the calculation of [travel costs](glossary.md#travel-costs) for all $$I \times J$$ combinations of customer origins and supply locations (in the case that travel times are included in the $$H$$ utility variables). For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
 
-Customer store choices are typically inquired via household surveys, asking for, e.g., typical or previous shopping trips[4][10]. 
+Customer store choices are typically inquired via household surveys, asking for, e.g., typical or previous shopping trips[4][10].
+
+There are some studies that use the MCI Model for a local calibration of the Huff Model, which leads to utility functions differing by customer origins[8][9]. This is possible using the [Geographically Weighted Regression](https://en.wikipedia.org/wiki/Spatial_analysis#Spatial_regression) technique.
 
 Variables entering the MCI Model must have values greater than zero. Dummy variables do not need to be (and cannot be) transformed using the log-centering transformation; they may be included using the inverse log-centering transformation[4]. In cases where interval-scaled variables, which may take on negative values ​​(e.g., scoring values), are included in the model instead of ratio-scaled variables, Cooper and Nakanishi propose the zeta-squared transformation[3]:
 

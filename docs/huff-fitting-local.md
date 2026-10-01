@@ -2,7 +2,7 @@
 
 ## Background
 
-Güssefeldt[1] developed an algorithm for fitting the [Huff Model](huff-model.md) iteratively in cases when only the total turnovers of supply locations, $$T_j$$ are available (e.g., via firm surveys or official statistics). This algorithm was then simplified by Wieland[2]. The underlying rationale is that supply locations employ their factors of production differently, though this need not be reflected in their structural indicators (e.g., size). Consequently, their attraction variable must be adjusted with respect to actual turnover, which is conducted iteratively for any supply location, with a defined threshold of acceptable deviation[1][2].
+Güssefeldt[1] developed an algorithm for fitting the [Huff Model](huff-model.md) iteratively in cases when only the total turnovers of [supply locations](glossary.md#supply-locations), $$T_j$$ are available (e.g., via firm surveys or official statistics). This algorithm was then simplified by Wieland[2]. The underlying rationale is that supply locations employ their [factors of production](https://en.wikipedia.org/wiki/Factors_of_production) differently, though this need not be reflected in their structural indicators (e.g., size). Consequently, their attraction variable must be adjusted with respect to actual turnover, which is conducted iteratively for any supply location, with a defined threshold of acceptable deviation[1][2].
 
 ## Definitions and calculations
 
@@ -34,24 +34,19 @@ where $$A_{j_{adj}}$$ is the adjusted turnover of location $$j$$.
 
 The attraction values ​​are adjusted step-by-step by the algorithm, performing Huff Model calculations over a number of $$N$$ iterations[2]:
 
-1. Define a study area and divide it into $$I$$ customer origins (e.g., municipalities, ZIP code areas, census tracts)
+1. Define a study area and divide it into $$I$$ [customer origins](glossary.md#customer-origins) (e.g., municipalities, ZIP code areas, census tracts)
 2. Identify the relevant $$J$$ supply locations competing within the study area
 3. Collect the attraction values $$A_j$$ (e.g., size) of all $$J$$ supply locations and the customer potentials $$C_i$$ (e.g., people, EUR, $) of all customer origins
 4. Collect total customers or turnover of all $$j$$ supply locations
-4. [Calculate travel costs](#calculation-of-travel-costs) $$t_{ij}$$ for all $$I \times J$$ origin-destination combinations and store them in a travel cost matrix
-5. [Define a travel cost weighting function](#weighting-functions) and the corresponding parameter(s) for $$t_{ij}$$
+4. [Calculate travel costs](huff-model.md#calculation-of-travel-costs) $$t_{ij}$$ for all $$I \times J$$ origin-destination combinations and store them in a travel cost matrix
+5. [Define a travel time weighting function](huff-model.md#weighting-functions) and the corresponding parameter(s) for $$t_{ij}$$
 6. Set a tolerance value $$maxtol(APE_j)$$ to define which difference between the real and the expected turnovers of location $$j$$ is accepted, e.g. 5%
 7. Calculate utilities $$U_{ij}$$, probabilities $$p_{ij}$$, and expected customer/expenditure flows $$E_{ij}$$
 8. Sum the expected values $$E_{ij}$$ for each supply location as $$T_{j}$$
 9. Calculate the $$APE_j$$ for all $$J$$ locations
 10. For any $$j$$ location ($$j=1,2,...,J$$): 
     - If $$APE_j \le maxtol(APE_j)$$: No further local optimization for location $$j$$ is required. Continue with location $$j + 1$$.
-    - If $$APE_j > maxtol(APE_j)$$: 
-        - Calculate the slope of the attraction function, $$b_j$$
-        - Calculate the adjusted attraction of $$j$$, $$A_{j_{adj}}$$
-        - Set $$A_j$$ in the [interaction matrix](huff-model.md#empirical-application) to $$A_{j_{adj}}$$
-        - Repeat steps 8 to 10
-        - Continue with location $$j + 1$$
+    - If $$APE_j > maxtol(APE_j)$$: Calculate the slope of the attraction function, $$b_j$$. Calculate the adjusted attraction of $$j$$, $$A_{j_{adj}}$$. Set $$A_j$$ in the [interaction matrix](glossary.md#interaction-matrix) to $$A_{j_{adj}}$$. Repeat steps 8 to 10. Continue with location $$j + 1$$.
 11. Calculate evaluation metrics for the global fit of the estimated model such as [RMSE](https://en.wikipedia.org/wiki/Root_mean_square_deviation), [MAPE](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error), or [R-Squared](https://en.wikipedia.org/wiki/Coefficient_of_determination)
 12. Repeat steps 8 to 12 for the complete location system up to $$N$$ times and/or until the local optima and/or the global optimum is sufficiently approximated
 

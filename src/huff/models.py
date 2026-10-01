@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.9.5
-# Last update: 2026-09-09 19:49
+# Version:     1.9.6
+# Last update: 2026-09-29 19:51
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -18,8 +18,8 @@ import statsmodels.regression
 from statsmodels.formula.api import ols
 from scipy.optimize import minimize, Bounds, LinearConstraint, NonlinearConstraint
 import copy
-import huff.helper as helper
 import huff.config as config
+import huff.helper as helper
 import huff.goodness_of_fit as gof
 from huff.ors import Client, TimeDistanceMatrix, Isochrone
 from huff.gistools import overlay_difference, distance_matrix, buffers, map_with_basemap, distance_matrix_from_gdf

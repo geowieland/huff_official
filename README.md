@@ -24,7 +24,7 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 ## Documentation
 
 - Software paper: [arXiv](https://arxiv.org/abs/2602.17640) 
-- Methodological overview: [Handbook of Market Area and Accessibility Models](https://geowieland.github.io/huff_official/).
+- Methodological overview: [Handbook of Market Area and Accessibility Models](https://geowieland.github.io/huff_official/)
 
 A brief discussion of the included models and their application in the **huff** package may also be found in an article available at [Medium](https://medium.com/@geowieland/oldie-but-goodie-market-area-models-and-retail-location-analysis-in-python-9f6609355585?source=friends_link&sk=a0314d63cee214cda92aa8fd13d92b64).
 
@@ -33,7 +33,7 @@ A brief discussion of the included models and their application in the **huff** 
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.11) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.12) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -201,6 +201,7 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 
 ## Literature
 
+  - Benoit D, Clarke GP (1997) Assessing GIS for retail location planning. *Journal of Retailing and Consumer Services* 4(4): 239-258. [10.1016/S0969-6989(96)00047-1](https://doi.org/10.1016/S0969-6989(96)00047-1)
   - Cooper LG, Nakanishi M (1983) Standardizing Variables in Multiplicative Choice Models. *Journal of Consumer Research* 10(1): 96–108. [10.1086/208948](https://doi.org/10.1086/208948)
   - De Beule M, Van den Poel D, Van de Weghe N (2014) An extended Huff-model for robustly benchmarking and predicting retail network performance. *Applied Geography* 46(1): 80–89. [10.1016/j.apgeog.2013.09.026](https://doi.org/10.1016/j.apgeog.2013.09.026)
   - Fotheringham AS (1985) Spatial Competition and Agglomeration in Urban Modelling. *Environment and Planning A: Economy and Space* 17(2): 213-230. [10.1068/a170213](https://doi.org/10.1068/a170213)
@@ -213,7 +214,6 @@ For detailed examples, see the /examples folder in the [public GitHub repository
   - Huff DL (2003) Parameter Estimation in the Huff Model. *ArcUser* 6(4): 34–36. https://stg.esri.com/news/arcuser/1003/files/huff.pdf
   - Huff DL, Batsell RR (1975) Conceptual and Operational Problems with Market Share Models of Consumer Spatial Behavior. *Advances in Consumer Research* 2(1): 165-172. 
   - Huff DL, McCallum BM (2008) Calibrating the Huff Model using ArcGIS Business Analyst. ESRI White Paper, September 2008. https://www.esri.com/library/whitepapers/pdfs/calibrating-huff-model.pdf.
-  - Kapitza J, Wieland T, Metzler M (2026) Modeling hospital catchment areas in pediatric oncology using an empirically parameterized extended Huff model. *International Journal of Health Geographics*. [10.1186/s12942-026-00478-2](https://doi.org/10.1186/s12942-026-00478-2)
   - Luo W, Wang F (2003) Measures of spatial accessibility to health care in a GIS environment: synthesis and a case study in the Chicago region. *Environment and Planning B: Planning and Design* 30: 865-884. [10.1068/b29120](https://doi.org/10.1068/b29120)
   - Luo J (2014) Integrating the Huff Model and Floating Catchment Area Methods to Analyze Spatial Access to Healthcare Services. *Transactions in GIS* 18(3): 436-448. [10.1111/tgis.12096](https://doi.org/10.1111/tgis.12096)
   - Nakanishi M, Cooper LG (1974) Parameter estimation for a Multiplicative Competitive Interaction Model: Least squares approach. *Journal of Marketing Research* 11(3): 303–311. [10.2307/3151146](https://doi.org/10.2307/3151146).
@@ -231,8 +231,14 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.11)
+## What's new (v1.9.12)
 
-- General:
-  - Added methodological handbook
-  - Update of README
+- Bugfixes:
+  - Optional installation of XGBoost and LightGBM (more stable if problems with the installation of these packages occur)
+  - Bugfixes in osm.get_basemap(): (1) Default color of OSM basemap is set to white (if no OSM tiles retrieved), (2) Check whether one or more specified layers are empty
+  - Removed redundant OSM and ORS configuration and outputs
+  - Fixed inefficient processing order in gistools.buffers()
+  - gistools.overlay_difference(): Check whether specified polygon_gdf is None
+- Other:
+  - huff.info() function with package information and OSM/ORS configuration 
+  - Extension of [methodological handbook](https://geowieland.github.io/huff_official/)

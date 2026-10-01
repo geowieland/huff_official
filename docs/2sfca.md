@@ -2,7 +2,7 @@
 
 ## Background
 
-The *Two-step Floating Catchment Area (2SFCA) Analysis* was developed by Luo and Wang[1] in the context of health geography, more specifically: to measure the spatial accessibility of healthcare providers. The basic idea is to include both the capacity utilization of the providers (supply-to-demand ratio) and their accessibility from the demand locations. Furthermore, a catchment threshold is introduced, which is a maximum distance or travel time up to which supply and demand locations are considered.
+The *Two-step Floating Catchment Area (2SFCA) Analysis* was developed by Luo and Wang[1] in the context of health geography, more specifically: to measure the [spatial accessibility](glossary.md#accessibility) of healthcare providers. The basic idea is to include both the capacity utilization of the providers (supply-to-demand ratio) and their accessibility from the [demand locations](glossary.md#customer-origins). Furthermore, a [catchment threshold](market-area.md) is introduced, which is a maximum [distance or travel time](glossary.md#travel-costs) up to which [supply locations](glossary.md#supply-locations) and demand locations are considered.
 
 ## Model formulation
 
@@ -24,17 +24,18 @@ A basic 2SFCA Analysis involves the following steps:
 2. Define a catchment threshold $$d_0$$
 3. Identify the relevant $$J$$ supply locations within the study area
 4. Collect the size values $$S_j$$ (e.g., opportunities) of all $$J$$ supply locations and the local populations $$P_k$$
-5. [Calculate travel costs](#calculation-of-travel-costs) $$d_{kj}$$ and $$d_{ij}$$ (up to $$d_0$$) and store them travel cost matrices
+5. [Calculate travel costs](huff-model.md#calculation-of-travel-costs) $$d_{kj}$$ and $$d_{ij}$$ (up to $$d_0$$) and store them travel cost matrices
 7. Calculate $$R_j$$ for all supply locations
 8. Sum $$R_j$$ over all customer origins to calculate $$A_i^F$$
 
 ## Further notes
 
-The empirical application of the 2SFCA Analysis has the same requirements as a Huff Model analysis, including the calculation of travel costs for all $$I \times J$$ combinations of customer origins and supply locations. For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
+The empirical application of the 2SFCA Analysis has the same requirements as a Huff Model analysis, including the calculation of [travel costs](glossary.md#travel-costs) for all $$I \times J$$ combinations of customer origins and supply locations. For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
 
-The approach was extended by including [distance decay functions](huff-model.md#weighting-functions) from market area models instead of defining a distance threshold[2][3].
+The approach was extended by including [distance decay functions](glossary.md#distance-decay-function) from market area models instead of defining a distance threshold[2][3].
 
 For a broader discussion of 2SFCA Analysis, including a comparison with other approaches to modeling accessibility, see the paper by Rauch et al.[4]
+
 
 ## References
 

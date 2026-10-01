@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.29
-# Last update: 2026-09-07 21:04
+# Version:     1.5.30
+# Last update: 2026-09-30 19:18
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -548,14 +548,7 @@ def buffers(
         point_buffers_gdf = pd.concat(
             point_buffers, 
             ignore_index = True
-            )
-
-        if donut:
-            point_buffers_gdf = overlay_difference(
-                polygon_gdf = point_buffers_gdf, 
-                sort_col = config.DEFAULT_SEGMENTS_COL,
-                verbose = verbose
-                )
+            )        
  
         all_buffers_gdf = pd.concat(
             [
@@ -563,11 +556,18 @@ def buffers(
                 point_buffers_gdf
                 ], 
             ignore_index = True)
-
+    
     all_buffers_gdf = all_buffers_gdf.to_crs(output_crs)
 
     if verbose:
         print("OK")
+
+    if donut:
+        point_buffers_gdf = overlay_difference(
+            polygon_gdf = point_buffers_gdf, 
+            sort_col = config.DEFAULT_SEGMENTS_COL,
+            verbose = verbose
+            )
 
     if merge_buffers:
 
@@ -750,6 +750,9 @@ def overlay_difference(
     ...     verbose=True
     ... )
     """
+
+    if polygon_gdf is None:
+        raise ValueError("Specified polygon GeoDataFrame is None")
 
     if verbose:
         print(f"Performing overlay difference on {len(polygon_gdf)} polygons", end = " ... ")
@@ -1323,212 +1326,220 @@ def map_with_basemap(
     i = 0
     legend_handles = []
 
+    empty_layers = []
+
     for i, layer in enumerate(layers):
+
+        if len(layer) > 0:
         
-        layer_3857 = layer.to_crs(crs = config.PSEUDO_MERCATOR_CRS)        
+            layer_3857 = layer.to_crs(crs = config.PSEUDO_MERCATOR_CRS)        
 
-        if styles != {}:
-            
-            layer_style = styles[i]
-            
-            missing_styles = []
-            
-            if "color" not in layer_style:
-                missing_styles.append(f"No 'color' key in definition of layer {i}.")
-            if "name" not in layer_style:
-                missing_styles.append(f"No 'name' key in definition of layer {i}.")
-            if "alpha" not in layer_style:
-                missing_styles.append(f"No 'alpha' key in definition of layer {i}.")                
-            if len(missing_styles) > 0:
-                raise KeyError(" ".join(missing_styles))
-            
-            if all(layer_3857.geometry.geom_type == "Point"):
-                if "size" not in layer_style:
-                    raise KeyError(f"No 'size' key in definition of point layer {i}.")
-            
-            if all(layer_3857.geometry.geom_type.isin(["LineString", "MultiLineString"])):
-                if "linewidth" not in layer_style:
-                    raise KeyError(f"No 'linewidth' key in definition of line layer {i}.")
-                else:
-                    layer_linewidth = layer_style["linewidth"]
-            
-            layer_color = layer_style["color"]
-            layer_alpha = layer_style["alpha"]
-            layer_name = layer_style["name"]            
-
-            if all(layer_3857.geometry.geom_type == "Point"):
+            if styles != {}:
                 
-                layer_markersize = layer_style["size"]
+                layer_style = styles[i]
                 
-                if isinstance(layer_color, str):
-                    layer_3857.plot(
-                        ax=ax,
-                        color=layer_color,
-                        alpha=layer_alpha,
-                        label=layer_name,
-                        markersize=layer_markersize
-                    )
-                    if legend:
-                        handle = Line2D(
-                            [], 
-                            [], 
-                            marker='o', 
-                            color='w', 
-                            markerfacecolor=layer_color, 
-                            markersize=config.DEFAULT_LEGEND_POINT_SIZE, 
-                            alpha=layer_alpha, 
-                            label=layer_name
-                        )
-                        legend_handles.append(handle)              
-
-                elif isinstance(layer_color, dict):
-                    color_key = list(layer_color.keys())[0]
-                    color_mapping = layer_color[color_key]
-
-                    if color_key not in layer_3857.columns:
-                        raise KeyError(f"Column '{color_key}' not in layer.")
-
-                    for value, color in color_mapping.items():
-                        
-                        subset = layer_3857[layer_3857[color_key].astype(str) == str(value)]
-                        
-                        if not subset.empty:
-                            
-                            subset.plot(
-                                ax=ax,
-                                color=color,
-                                alpha=layer_alpha,
-                                label=str(value),
-                                markersize=layer_markersize
-                            )
-                            
-                            if legend:
-                                handle = Line2D(
-                                    [], 
-                                    [], 
-                                    marker='o', 
-                                    color='w', 
-                                    markerfacecolor=color,
-                                    markersize=config.DEFAULT_LEGEND_POINT_SIZE, 
-                                    alpha=layer_alpha, 
-                                    label=str(value)
-                                )
-                                legend_handles.append(handle)
-                                                                
-            else:                
-
-                layer_linewidth = layer_style.get("linewidth", None)
-
-                if isinstance(layer_color, str):
-
-                    if isinstance(layer_linewidth, dict):
-
-                        width_col = layer_linewidth["width_col"]
-                        width_mapping = layer_linewidth.get("mapping")
-
-                        if width_col not in layer_3857.columns:
-                            raise KeyError(f"Column '{width_col}' not in layer.")
-
-                        if width_mapping:
-                            lw = layer_3857[width_col].map(width_mapping)
-                        else:
-                            lw = layer_3857[width_col]
-
-                        layer_3857.plot(
-                            ax=ax,
-                            color=layer_color,
-                            alpha=layer_alpha,
-                            linewidth=lw,
-                            label=layer_name,
-                        )
-
+                missing_styles = []
+                
+                if "color" not in layer_style:
+                    missing_styles.append(f"No 'color' key in definition of layer {i}.")
+                if "name" not in layer_style:
+                    missing_styles.append(f"No 'name' key in definition of layer {i}.")
+                if "alpha" not in layer_style:
+                    missing_styles.append(f"No 'alpha' key in definition of layer {i}.")                
+                if len(missing_styles) > 0:
+                    raise KeyError(" ".join(missing_styles))
+                
+                if all(layer_3857.geometry.geom_type == "Point"):
+                    if "size" not in layer_style:
+                        raise KeyError(f"No 'size' key in definition of point layer {i}.")
+                
+                if all(layer_3857.geometry.geom_type.isin(["LineString", "MultiLineString"])):
+                    if "linewidth" not in layer_style:
+                        raise KeyError(f"No 'linewidth' key in definition of line layer {i}.")
                     else:
+                        layer_linewidth = layer_style["linewidth"]
+                
+                layer_color = layer_style["color"]
+                layer_alpha = layer_style["alpha"]
+                layer_name = layer_style["name"]            
+
+                if all(layer_3857.geometry.geom_type == "Point"):
+                    
+                    layer_markersize = layer_style["size"]
+                    
+                    if isinstance(layer_color, str):
                         layer_3857.plot(
                             ax=ax,
                             color=layer_color,
                             alpha=layer_alpha,
-                            linewidth=layer_linewidth,
                             label=layer_name,
+                            markersize=layer_markersize
                         )
+                        if legend:
+                            handle = Line2D(
+                                [], 
+                                [], 
+                                marker='o', 
+                                color='w', 
+                                markerfacecolor=layer_color, 
+                                markersize=config.DEFAULT_LEGEND_POINT_SIZE, 
+                                alpha=layer_alpha, 
+                                label=layer_name
+                            )
+                            legend_handles.append(handle)              
 
-                    if legend:
-                        handle = Line2D(
-                            [],
-                            [],
-                            color=layer_color,
-                            linewidth=2,
-                            alpha=layer_alpha,
-                            label=layer_name,
-                        )
-                        legend_handles.append(handle)
+                    elif isinstance(layer_color, dict):
+                        color_key = list(layer_color.keys())[0]
+                        color_mapping = layer_color[color_key]
 
-                elif isinstance(layer_color, dict):
+                        if color_key not in layer_3857.columns:
+                            raise KeyError(f"Column '{color_key}' not in layer.")
 
-                    color_key = list(layer_color.keys())[0]
-                    color_mapping = layer_color[color_key]
+                        for value, color in color_mapping.items():
+                            
+                            subset = layer_3857[layer_3857[color_key].astype(str) == str(value)]
+                            
+                            if not subset.empty:
+                                
+                                subset.plot(
+                                    ax=ax,
+                                    color=color,
+                                    alpha=layer_alpha,
+                                    label=str(value),
+                                    markersize=layer_markersize
+                                )
+                                
+                                if legend:
+                                    handle = Line2D(
+                                        [], 
+                                        [], 
+                                        marker='o', 
+                                        color='w', 
+                                        markerfacecolor=color,
+                                        markersize=config.DEFAULT_LEGEND_POINT_SIZE, 
+                                        alpha=layer_alpha, 
+                                        label=str(value)
+                                    )
+                                    legend_handles.append(handle)
+                                                                    
+                else:                
 
-                    if color_key not in layer_3857.columns:
-                        raise KeyError(f"Column '{color_key}' not in layer.")
+                    layer_linewidth = layer_style.get("linewidth", None)
 
-                    for value, color in color_mapping.items():
-
-                        subset = layer_3857[layer_3857[color_key].astype(str) == str(value)]
-
-                        if subset.empty:
-                            continue
+                    if isinstance(layer_color, str):
 
                         if isinstance(layer_linewidth, dict):
 
                             width_col = layer_linewidth["width_col"]
                             width_mapping = layer_linewidth.get("mapping")
 
-                            if width_col not in subset.columns:
+                            if width_col not in layer_3857.columns:
                                 raise KeyError(f"Column '{width_col}' not in layer.")
 
                             if width_mapping:
-                                lw = subset[width_col].map(width_mapping)
+                                lw = layer_3857[width_col].map(width_mapping)
                             else:
-                                lw = subset[width_col]
+                                lw = layer_3857[width_col]
+
+                            layer_3857.plot(
+                                ax=ax,
+                                color=layer_color,
+                                alpha=layer_alpha,
+                                linewidth=lw,
+                                label=layer_name,
+                            )
 
                         else:
-                            lw = layer_linewidth
-
-                        subset.plot(
-                            ax=ax,
-                            color=color,
-                            alpha=layer_alpha,
-                            linewidth=lw,
-                            label=str(value),
-                        )
+                            layer_3857.plot(
+                                ax=ax,
+                                color=layer_color,
+                                alpha=layer_alpha,
+                                linewidth=layer_linewidth,
+                                label=layer_name,
+                            )
 
                         if legend:
                             handle = Line2D(
                                 [],
                                 [],
-                                color=color,
+                                color=layer_color,
                                 linewidth=2,
                                 alpha=layer_alpha,
-                                label=str(value),
+                                label=layer_name,
                             )
                             legend_handles.append(handle)
 
-        else:
-            
-            layer_3857.plot(
-                ax=ax, 
-                alpha=config.DEFAULT_LAYER_ALPHA, 
-                label=f"{config.DEFAULT_LAYER_LABEL} {i+1}"
-                )
-            
-            if legend:
+                    elif isinstance(layer_color, dict):
+
+                        color_key = list(layer_color.keys())[0]
+                        color_mapping = layer_color[color_key]
+
+                        if color_key not in layer_3857.columns:
+                            raise KeyError(f"Column '{color_key}' not in layer.")
+
+                        for value, color in color_mapping.items():
+
+                            subset = layer_3857[layer_3857[color_key].astype(str) == str(value)]
+
+                            if subset.empty:
+                                continue
+
+                            if isinstance(layer_linewidth, dict):
+
+                                width_col = layer_linewidth["width_col"]
+                                width_mapping = layer_linewidth.get("mapping")
+
+                                if width_col not in subset.columns:
+                                    raise KeyError(f"Column '{width_col}' not in layer.")
+
+                                if width_mapping:
+                                    lw = subset[width_col].map(width_mapping)
+                                else:
+                                    lw = subset[width_col]
+
+                            else:
+                                lw = layer_linewidth
+
+                            subset.plot(
+                                ax=ax,
+                                color=color,
+                                alpha=layer_alpha,
+                                linewidth=lw,
+                                label=str(value),
+                            )
+
+                            if legend:
+                                handle = Line2D(
+                                    [],
+                                    [],
+                                    color=color,
+                                    linewidth=2,
+                                    alpha=layer_alpha,
+                                    label=str(value),
+                                )
+                                legend_handles.append(handle)
+
+            else:
                 
-                patch = Patch(
-                    facecolor="gray", 
-                    alpha=0.6, 
+                layer_3857.plot(
+                    ax=ax, 
+                    alpha=config.DEFAULT_LAYER_ALPHA, 
                     label=f"{config.DEFAULT_LAYER_LABEL} {i+1}"
                     )
                 
-                legend_handles.append(patch)
+                if legend:
+                    
+                    patch = Patch(
+                        facecolor="gray", 
+                        alpha=0.6, 
+                        label=f"{config.DEFAULT_LAYER_LABEL} {i+1}"
+                        )
+                    
+                    legend_handles.append(patch)
+
+        else:
+
+            empty_layers.append(i)
 
     bbox = box(sw_lon, sw_lat, ne_lon, ne_lat)
     extent_geom = gp.GeoSeries([bbox], crs = config.WGS84_CRS).to_crs(crs = config.PSEUDO_MERCATOR_CRS).total_bounds
@@ -1550,6 +1561,9 @@ def map_with_basemap(
 
     if verbose:
         print("OK")
+
+        if len(empty_layers) > 0:
+            print(f"WARNING: The following layers are empty: {', '.join([str(entry) for entry in empty_layers])}.")
     
     if save_output:
 

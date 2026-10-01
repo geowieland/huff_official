@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.1
-# Last update: 2026-07-31 13:26
+# Version:     1.1.2
+# Last update: 2026-09-29 19:51
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -18,11 +18,21 @@ from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from xgboost import XGBRegressor
-from lightgbm import LGBMRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
+
+try:
+    from xgboost import XGBRegressor
+except Exception as e:
+    print(f"XGBoost is not available: {str(e)}")
+    XGBRegressor = None
+try:
+    from lightgbm import LGBMRegressor
+except Exception as e:
+    print(f"LightGBM is not available: {str(e)}")
+    lightgbm = None
+
 import huff.config as config
 from huff.goodness_of_fit import modelfit
 from huff.helper import create_timestamp, add_timestamp, print_modelfit
@@ -619,12 +629,12 @@ def model_wrapper(
         config.MODEL_WRAPPER_AVAILABLE_LIST[7]: lambda: XGBRegressor(
             random_state=random_state,
             **model_params
-        ),
+        ) if XGBRegressor is not None else {},
 
         config.MODEL_WRAPPER_AVAILABLE_LIST[8]: lambda: LGBMRegressor(
             random_state=random_state,
             **model_params
-        ),
+        )  if LGBMRegressor is not None else {},
 
         config.MODEL_WRAPPER_AVAILABLE_LIST[9]: lambda: Pipeline([
             ("scaler", StandardScaler()),

@@ -2,7 +2,7 @@
 
 ## Background
 
-David L. Huff[1][2][3] developed the market area model named after him based on his critique of earlier models, specifically the *Law of Retail Gravitation* by W. J. Reilly[4] and the subsequent *Breaking Point Formula* by P. D. Converse[5]. These earlier models were deterministic, meaning they precisely delineated market areas, implying no overlap between them, which is unrealistic. Furthermore, they considered only two competing locations. In contrast, Huff proposed a probabilistic model in which the outcome is the probability of customers visiting a specific location in a system of customer origins and supply locations. The *Huff Model* is part of classical retail location theory[6].
+David L. Huff[1][2][3] developed the [market area model](glossary.md#market-area-model) named after him based on his critique of earlier models, specifically the *Law of Retail Gravitation* by W. J. Reilly[4] and the subsequent *Breaking Point Formula* by P. D. Converse[5]. These earlier models were deterministic, meaning they precisely delineated [market areas](glossary.md#market-area), implying no overlap between them, which is unrealistic. Furthermore, they considered only two competing locations. In contrast, Huff proposed a probabilistic model in which the outcome is the probability of customers visiting a specific location in a system of [customer origins](glossary.md#customer-origins) and [supply locations](glossary.md#supply-locations) The *Huff Model* is part of classical retail location theory[6].
 
 ## Model formulation
 
@@ -54,7 +54,7 @@ If the goal of the Huff analysis is to model changes in market areas (e.g., due 
 9. Repeat steps 6 and 7
 10. Compare market areas and total expected customers/expenditures
 
-The complete data of a Huff Model calculation is stored in an *interaction matrix* with $$I \times J$$ rows:
+The complete data of a Huff Model calculation is stored in an [interaction matrix](glossary.md#interaction-matrix) with $$I \times J$$ rows:
 
 ![](images/interaction-matrix.png)
 
@@ -62,23 +62,17 @@ Source: [8], modified
 
 ## Calculation of travel costs
 
-In spatial economics, the costs of overcoming distance are grouped under the term *transport costs* or, when consumers travel to supply locations, the term *travel costs* is frequently used as well[8]. In the Huff Model, these transport/travel costs are explicitly expressed as travel *time*. Calculating travel times, whether by car or by another mode of transport, requires actual road networks represented as line geometries. Using a [GIS (Geographic Information System)](https://en.wikipedia.org/wiki/Geographic_information_system), these networks can be converted into a routable network of edges and nodes, with the network segments assigned specific weights (e.g., average travel speed, one-way restrictions, or travel distance). Based on this network, mathematical routing algorithms, such as [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm), are used to calculate the shortest paths and, where appropriate, the corresponding travel distances or travel times[9]. 
-
-In the Huff Model, travel time must be calculated for each of the $$I×J$$ origin–destination (OD) combinations and stored in a OD travel cost matrix[10]. However, other forms of travel costs may also be used: in the simplest case, straight-line distances are calculated, although these do not account for the actual road network or traffic conditions. Public transport travel times cannot be modeled directly using road networks; instead, they must be calculated based on timetable data (e.g., [GTFS](https://de.wikipedia.org/wiki/General_Transit_Feed_Specification)).
+In the Huff Model, [travel costs](glossary.md#travel-costs) are explicitly expressed as travel *time*. Calculating travel times, whether by car or by another mode of (individual) transport, requires [GIS-based network analysis](glossary.md#gis-based-network-analysis) using real road networks. In the Huff Model, travel time must be calculated for each of the $$I \times J$$ origin–destination (OD) combinations and stored in a OD travel cost matrix[9]. 
 
 ## Weighting functions
 
-The weighting of travel time is typically referred to as [distance decay function](https://en.wikipedia.org/wiki/Distance_decay), which is a core principle of all spatial interaction models in spatial economics, describing how the intensity of interaction between locations decreases as the distance/travel time between them increases[10]. In the basic Huff Model, both explanatory variables enter the utility function in power form. However, other weighting functions are also used in studies applying the Huff Model, particularly for travel time, such as exponential or logistic functions[10][11][12][13][14][15].
-
-![Distance Decay Functions](images/distance-decay.png)
-
-Source: own illustration with ChatGPT
+In the basic Huff Model, both explanatory variables enter the utility function in power form. However, other weighting functions are also used in studies applying the Huff Model, particularly the [distance-decay function](glossary.md#distance-decay-function) for the weighting of $$t_{ij}$$, such as exponential or logistic functions[9][10][11][12][13][14]. Due to the nonlinear nature of the model, the choice of the weighting functions and corresponding weighting parameters have a strong influence on the model results. Calibrating the Huff Model, i.e., estimating weighting parameters based on empirically observed choice behavior, may be conducted using the [MCI Model](mci-model.md) or [iterative fitting procedures](huff-fitting-global.md). 
 
 ## Further notes
 
 The model implies a market-clearing condition in the sense that the total demand originating from the included demand locations is allocated across the set of included supply locations: $$\sum^J_{j=1} T_{j} = \sum^I_{i=1} C_i$$. Consequently, the delineation of the study area has a strong impact on the model results. 
 
-Due to the nonlinear nature of the model, the choice of the weighting functions and corresponding weighting parameters have a strong influence on the model results. Calibrating the Huff Model, i.e., estimating weighting parameters based on empirically observed choice behavior, may be conducted using the [MCI Model](mci-model.md) or [iterative fitting procedures](huff-fitting-global.md). Alternatively, it is possible to [optimize the attraction values iteratively](huff-fitting-local.md) based on observed turnovers.
+As an alternative to the empirical calibration of the weighting functions, it is possible to [optimize the attraction values iteratively](huff-fitting-local.md) based on observed turnovers.
 
 
 ## References
@@ -99,16 +93,14 @@ Due to the nonlinear nature of the model, the choice of the weighting functions 
 
 [8] Wieland T (2015) *Räumliches Einkaufsverhalten und Standortpolitik im Einzelhandel unter Berücksichtigung von Agglomerationseffekten - Theoretische Erklärungsansätze, modellanalytische Zugänge und eine empirisch-ökonometrische Marktgebietsanalyse anhand eines Fallbeispiels aus dem ländlichen Raum Ostwestfalens/Südniedersachsens*. Geographische Handelsforschung 23. Mannheim: MetaGIS. https://nbn-resolving.org/urn:nbn:de:bvb:20-opus-180753
 
-[9] Miller H, Shaw SL (2015) Geographic Information Systems for Transportation in the 21st Century. *Geography Compass* 9(4): 180-189. [10.1111/gec3.12204](https://doi.org/10.1111/gec3.12204)
+[9] Wieland T (2017) Market Area Analysis for Retail and Service Locations with MCI. *R Journal* 9(1): 298-323. [10.32614/RJ-2017-020](https://doi.org/10.32614/RJ-2017-020)
 
-[10] Wieland T (2017) Market Area Analysis for Retail and Service Locations with MCI. *R Journal* 9(1): 298-323. [10.32614/RJ-2017-020](https://doi.org/10.32614/RJ-2017-020)
+[10] Bai L, Tao Z, Cheng Y, Feng L, Wang S (2023) Delineating hierarchical obstetric hospital service areas using the Huff model based on medical records. *Applied Geography* 153: 102903. [10.1016/j.apgeog.2023.102903](https://doi.org/10.1016/j.apgeog.2023.102903)
 
-[11] Bai L, Tao Z, Cheng Y, Feng L, Wang S (2023) Delineating hierarchical obstetric hospital service areas using the Huff model based on medical records. *Applied Geography* 153: 102903. [10.1016/j.apgeog.2023.102903](https://doi.org/10.1016/j.apgeog.2023.102903)
+[11] De Beule M, Van den Poel D, Van de Weghe N (2014) An extended Huff-model for robustly benchmarking and predicting retail network performance. *Applied Geography* 46(1): 80–89. [10.1016/j.apgeog.2013.09.026](https://doi.org/10.1016/j.apgeog.2013.09.026)
 
-[12] De Beule M, Van den Poel D, Van de Weghe N (2014) An extended Huff-model for robustly benchmarking and predicting retail network performance. *Applied Geography* 46(1): 80–89. [10.1016/j.apgeog.2013.09.026](https://doi.org/10.1016/j.apgeog.2013.09.026)
+[12] Fotheringham AS (1985) Spatial Competition and Agglomeration in Urban Modelling. *Environment and Planning A: Economy and Space* 17(2): 213-230. [10.1068/a170213](https://doi.org/10.1068/a170213)
 
-[13] Fotheringham AS (1985) Spatial Competition and Agglomeration in Urban Modelling. *Environment and Planning A: Economy and Space* 17(2): 213-230. [10.1068/a170213](https://doi.org/10.1068/a170213)
+[13] Kanhäusser C (2007) Modellierung und Prognose von Marktgebieten am Beispiel des Möbeleinzelhandels. In: Klein R, Rauh J (eds.) *Analysemethodik und Modellierung in der geographischen Handelsforschung*, 75-110. Geographische Handelsforschung 13. Passau: L.I.S.
 
-[14] Kanhäusser C (2007) Modellierung und Prognose von Marktgebieten am Beispiel des Möbeleinzelhandels. In: Klein R, Rauh J (eds.) *Analysemethodik und Modellierung in der geographischen Handelsforschung*, 75-110. Geographische Handelsforschung 13. Passau: L.I.S.
-
-[15] Wieland T (2018) Modellgestützte Verfahren und "big (spatial) data" in der regionalen Versorgungsforschung II: Räumliche Interaktionsmodelle. *Monitor Versorgungsforschung* 11(3): 59-64. [10.24945/MVF.03.18.1866-0533.2083](https://doi.org/10.24945/MVF.03.18.1866-0533.2083)
+[14] Wieland T (2018) Modellgestützte Verfahren und "big (spatial) data" in der regionalen Versorgungsforschung II: Räumliche Interaktionsmodelle. *Monitor Versorgungsforschung* 11(3): 59-64. [10.24945/MVF.03.18.1866-0533.2083](https://doi.org/10.24945/MVF.03.18.1866-0533.2083)

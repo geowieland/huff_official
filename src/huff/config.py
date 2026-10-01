@@ -4,17 +4,19 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.27
-# Last update: 2026-09-09 20:44
+# Version:     1.0.29
+# Last update: 2026-09-29 19:52
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.10"
+PACKAGE_VERSION = "1.9.12"
 
 PYPI_HUFF_URL = "https://pypi.org/project/huff/"
 GITHUB_HUFF_URL = "https://github.com/geowieland/huff_official"
+GITHUB_HANDBOOK_URL = "https://geowieland.github.io/huff_official/"
+HUFF_SOFTWAREPAPER_URL = "https://doi.org/10.48550/arXiv.2602.17640"
 
 
 # Basic config:
@@ -335,6 +337,8 @@ OSM_ATTRIBUTION = "© OpenStreetMap contributors | available under the Open Data
 OSM_DELAY = 0.3
 
 DEFAULT_FILENAME_ORS_TMP = "osm_map.png"
+
+OSM_MAP_BACKGROUND = (255, 255, 255)
 
 
 # GIS constants and defaults:

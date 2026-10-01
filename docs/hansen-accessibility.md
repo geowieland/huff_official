@@ -2,7 +2,7 @@
 
 ## Background
 
-The *Hansen Accessibility*, named after him, was developed by Walter G. Hansen in the context of urban planning and land use[1]. Starting from an origin (e.g., place of residence), it represents the sum of all opportunities (e.g., jobs, shopping facilities, leisure activities, medical services), weighted by travel costs.
+The *Hansen Accessibility*, named after him, was developed by Walter G. Hansen in the context of urban planning and land use[1]. Starting from a [customer origin](glossary.md#customer-origins) (e.g., place of residence), it represents the sum of all opportunities (e.g., jobs, shopping facilities, leisure activities, medical services), weighted by [travel costs](glossary.md#travel-costs). It is a common formulation of [spatial accessibility](glossary.md#accessibility).
 
 ## Model formulation
 
@@ -19,15 +19,15 @@ The [distance decay function](huff-model.md#weighting-functions) $$f(d_{ij})$$ i
 Calculating the Hansen Accessibility involves the following steps:
 
 1. Define a study area and divide it into $$I$$ customer origins (e.g., municipalities, ZIP code areas, census tracts)
-2. Identify the relevant $$J$$ supply locations within the study area
+2. Identify the relevant $$J$$ [supply locations](glossary.md#supply-locations) within the study area
 3. Collect the size values $$O_j$$ (e.g., opportunities) of all $$J$$ supply locations
-4. [Calculate travel costs](#calculation-of-travel-costs) $$d_{ij}$$ for all $$I \times J$$ origin-destination combinations and store them in a travel cost matrix
-5. [Define a distance decay function](#weighting-functions) and the corresponding parameter(s) for $$t_{ij}$$ (and, if required, define a weighting for $$O_j$$ as well)
+4. [Calculate travel costs](huff-model.md#calculation-of-travel-costs) $$d_{ij}$$ for all $$I \times J$$ origin-destination combinations and store them in a travel cost matrix
+5. [Define a distance decay function](huff-model.md#weighting-functions) and the corresponding parameter(s) for $$t_{ij}$$ (and, if required, define a weighting for $$O_j$$ as well)
 6. Calculate $$A_i$$ for all $$I$$ origins
 
 ## Further notes
 
-The empirical application of the Hansen Accessibility has the same requirements as a Huff Model analysis, including the calculation of travel costs for all $$I \times J$$ combinations of customer origins and supply locations. For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
+The empirical application of the Hansen Accessibility has the same requirements as a Huff Model analysis, including the calculation of [travel costs](glossary.md#travel-costs) for all $$I \times J$$ combinations of customer origins and supply locations. For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
 
 The Hansen Accessibility served as the model for incorporating cluster effects into the [Competing Destinations Model](competing-destinations.md).
 

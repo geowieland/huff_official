@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.8
-# Last update: 2026-09-01 17:19
+# Version:     1.5.9
+# Last update: 2026-09-29 17:28
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -1045,12 +1045,3 @@ def define_ors_auth(auth: str):
     ORS_AUTH = auth
     
     print(f"ORS authentication set to: '{ORS_AUTH}'")
-
-define_ors_server(ORS_SERVER)
-
-define_headers(
-    ORS_USER_AGENT, 
-    ORS_REFERER
-    )
-
-define_ors_auth(ORS_AUTH)

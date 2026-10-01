@@ -7,7 +7,7 @@ def read_README():
     
 setup(
     name='huff',
-    version='1.9.11',
+    version='1.9.12',
     description='huff: Market Area Analysis in Python',
     packages=find_packages(where="src"),
     package_dir={"": "src"},
@@ -27,13 +27,18 @@ setup(
         'statsmodels>=0.14.5',
         'scipy>=1.17',
         'scikit-learn',
-        'xgboost',
-        'lightgbm',
         'shapely',
         'requests<3.0',
         'matplotlib',
         'pillow',
-        'openpyxl'
+        'openpyxl',
+        'xgboost',
     ],
+    extras_require={
+        "optional": [
+        'lightgbm',
+        'xgboost',
+        ]
+    },
     test_suite='huff.tests',
 )
