@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.30
-# Last update: 2026-09-30 19:18
+# Version:     1.5.31
+# Last update: 2026-10-05 19:10
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -411,8 +411,16 @@ def distance_matrix_from_gdf(
     ... )
     """
 
+    type_errors = []
+    if not isinstance(sources_points_gdf, gp.GeoDataFrame):
+        type_errors.append("sources_points_gdf must be a GeoDataFrame")
+    if not isinstance(destinations_points_gdf, gp.GeoDataFrame):
+        type_errors.append("destinations_points_gdf must be a GeoDataFrame")
+    if len(type_errors) > 0:
+        raise TypeError(f"Invalid input types: {', '.join(type_errors)}")
+
     if sources_points_gdf.crs != destinations_points_gdf.crs:        
-        print(f"NOTE: Sources and destinations have different CRS: {sources_points_gdf.crs}, {destinations_points_gdf.crs}")
+        print(f"NOTE: Sources and destinations have different CRS: {sources_points_gdf.crs}, {destinations_points_gdf.crs}. Results are likely invalid.")
             
     sources_points_gdf = sources_points_gdf.to_crs(config.WGS84_EPSG)        
     destinations_points_gdf = destinations_points_gdf.to_crs(config.WGS84_EPSG)
@@ -507,9 +515,12 @@ def buffers(
         output_crs = output_crs
         )
     """
+
+    if not isinstance(point_gdf, gp.GeoDataFrame):
+        raise TypeError("Invalid input type: Input point_gdf must be a GeoDataFrame")
     
     if point_gdf.crs.is_geographic:
-        print(f"WARNING: Point GeoDataFrame has geographic coordinate system {point_gdf.crs}. Results may be invalid.")
+        print(f"WARNING: Point GeoDataFrame has geographic coordinate system {point_gdf.crs}. Results are likely invalid.")
   
     if verbose:
         print(f"Calculating buffers for {len(point_gdf)} points", end = " ... ")
@@ -656,6 +667,14 @@ def polygon_select(
     ... )
     """
     
+    type_errors = []
+    if not isinstance(gdf, gp.GeoDataFrame):
+        type_errors.append("gdf must be a GeoDataFrame")
+    if not isinstance(gdf_polygon_select, gp.GeoDataFrame):
+        type_errors.append("gdf_polygon_select must be a GeoDataFrame")
+    if len(type_errors) > 0:
+        raise TypeError(f"Invalid input types: {', '.join(type_errors)}")
+    
     if gdf.crs != gdf_polygon_select.crs:
         raise ValueError(f"Coordinate reference systems of inputs do not match. Polygons: {str(gdf.crs)}, points: {str(gdf_polygon_select.crs)}")
         
@@ -753,6 +772,8 @@ def overlay_difference(
 
     if polygon_gdf is None:
         raise ValueError("Specified polygon GeoDataFrame is None")
+    if not isinstance(polygon_gdf, gp.GeoDataFrame):
+        raise TypeError("Invalid input type: Input polygon_gdf must be a GeoDataFrame")
 
     if verbose:
         print(f"Performing overlay difference on {len(polygon_gdf)} polygons", end = " ... ")
@@ -867,6 +888,9 @@ def polygon_neighbors(
 
     if polygon_gdf is None:
         raise ValueError("Parameter 'polygon_gdf' is None")
+    if not isinstance(polygon_gdf, gp.GeoDataFrame):
+        raise TypeError("Invalid input type: Input polygon_gdf must be a GeoDataFrame")
+    
     if id_col not in polygon_gdf.columns:
         raise KeyError(f"Column '{id_col}' not in polygon GeoDataFrame")
     
@@ -1022,14 +1046,25 @@ def point_spatial_join(
     ...     verbose=True
     ... )
     """
-    
+
+    type_errors = []    
+    if not isinstance(polygon_gdf, gp.GeoDataFrame):
+        raise TypeError("Input polygon_gdf must be a GeoDataFrame")
+    if not isinstance(point_gdf, gp.GeoDataFrame):
+        raise TypeError("Input point_gdf must be a GeoDataFrame")
+    if len(type_errors) > 0:
+        raise TypeError(f"Invalid input types: {', '.join(type_errors)}")
+
+    value_errors = []
+    if polygon_gdf is None:
+        value_errors.append("Parameter 'polygon_gdf' is None")
+    if point_gdf is None:
+        value_errors.append("Parameter 'point_gdf' is None")
+    if len(value_errors) > 0:
+        raise ValueError(f"Invalid input values: {', '.join(value_errors)}")
+
     if polygon_ref_cols is None:
         polygon_ref_cols = []
-
-    if polygon_gdf is None:
-        raise ValueError("Parameter 'polygon_gdf' is None")
-    if point_gdf is None:
-        raise ValueError("Parameter 'point_gdf' is None")
     
     if polygon_gdf.crs != point_gdf.crs:
         raise ValueError(f"Coordinate reference systems of polygon and point data do not match. Polygons: {str(polygon_gdf.crs)}, points: {str(point_gdf.crs)}")
@@ -1228,6 +1263,13 @@ def map_with_basemap(
     
     if not isinstance(layers, list):
         raise TypeError("Param 'layers' must be a list")
+    
+    type_errors = []
+    for layer in layers:
+        if not isinstance(layer, gp.GeoDataFrame):
+            type_errors.append(f"Layer at index {layers.index(layer)} is not a GeoDataFrame")
+    if len(type_errors) > 0:
+        raise TypeError(f"Invalid input types: {', '.join(type_errors)}")
     
     if not layers:
         raise ValueError("List layers is empty")

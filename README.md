@@ -2,11 +2,11 @@
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
-The **huff** Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982). The package is especially intended for researchers in economic geography, regional economics, spatial planning, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. 
+The **huff** Python library is designed for performing market area analyses with the *Huff Model* (Huff 1962, 1963, 1964) and/or the *Multiplicative Competitive Interaction (MCI) Model* (Nakanishi and Cooper 1974, 1982), as well as market area and accessibility models derived from or related to them. The package is intended for researchers in economic geography, regional economics, marketing, geoinformation science, and health geography. It is designed to cover the entire workflow of a market area analysis, including model calibration and GIS-related processing. 
 
-Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI model or Maximum Likelihood estimation. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985).
+Users may load point shapefiles (or CSV, XLSX) of customer origins and supply locations and conduct a market area analysis step by step. The first step after importing is always to create an interaction matrix with a built-in function, on the basis of which all implemented models can then be calculated. The library supports parameter estimation based on empirical customer data using the MCI Model, Maximum Likelihood estimation, or local optimization. See Huff and McCallum (2008), Orpana and Lampinen (2003) and Wieland (2017) for a description of the models, their practical application and fitting procedures. The library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003, Luo 2014). Competitor accessibility/concentration may also be calculated directly in order to extend the Huff model in terms of the *Competing Destinations Model* (Fotheringham 1985).
 
-Additionally, the library includes functions for accessibility analysis, which may be combined with market area analysis, namely the *Hansen accessibility* (Hansen 1959) and the *Two-step floating catchment area analysis* (Luo and Wang 2003, Luo 2014). The package also includes auxiliary GIS functions for market area analysis (buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
+The package also includes auxiliary GIS functions for market area and accessibility analysis (e.g., buffer, distance matrix, overlay statistics) and clients for OpenRouteService(1) for network analysis (e.g., transport cost matrix) and OpenStreetMap(2) for simple maps. All auxiliary functions are implemented in the market area analysis functions but are also able to be used stand-alone. 
 
 
 ## Author
@@ -33,7 +33,7 @@ A brief discussion of the included models and their application in the **huff** 
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.12) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.13) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -149,8 +149,8 @@ haslach_interactionmatrix = create_interaction_matrix(
 # Creating interaction matrix
 
 haslach_interactionmatrix.transport_costs(
-    ors_auth="5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f",
-    # API token FOR TESTING
+    ors_auth="<<Your ORS API key>>",
+    # Get your ORS API key at: https://account.heigit.org/signup
     network=True,
     )
 # Obtaining transport costs (default: driving-car)
@@ -216,6 +216,7 @@ For detailed examples, see the /examples folder in the [public GitHub repository
   - Huff DL, McCallum BM (2008) Calibrating the Huff Model using ArcGIS Business Analyst. ESRI White Paper, September 2008. https://www.esri.com/library/whitepapers/pdfs/calibrating-huff-model.pdf.
   - Luo W, Wang F (2003) Measures of spatial accessibility to health care in a GIS environment: synthesis and a case study in the Chicago region. *Environment and Planning B: Planning and Design* 30: 865-884. [10.1068/b29120](https://doi.org/10.1068/b29120)
   - Luo J (2014) Integrating the Huff Model and Floating Catchment Area Methods to Analyze Spatial Access to Healthcare Services. *Transactions in GIS* 18(3): 436-448. [10.1111/tgis.12096](https://doi.org/10.1111/tgis.12096)
+  - Miller H, Shaw SL (2015) Geographic Information Systems for Transportation in the 21st Century. *Geography Compass* 9(4): 180-189. [10.1111/gec3.12204](https://doi.org/10.1111/gec3.12204)
   - Nakanishi M, Cooper LG (1974) Parameter estimation for a Multiplicative Competitive Interaction Model: Least squares approach. *Journal of Marketing Research* 11(3): 303–311. [10.2307/3151146](https://doi.org/10.2307/3151146).
   - Nakanishi M, Cooper LG (1982) Technical Note — Simplified Estimation Procedures for MCI Models. *Marketing Science* 1(3): 314-322. [10.1287/mksc.1.3.314](https://doi.org/10.1287/mksc.1.3.314)
   - Orpana T, Lampinen J (2003) Building Spatial Choice Models from Aggregate Data. *Journal of Regional Science* 43(2): 319-348. [10.1111/1467-9787.00301](https://doi.org/10.1111/1467-9787.00301)
@@ -228,17 +229,14 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 
 ## AI Usage Statement
 
-This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used solely to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
+This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.12)
+## What's new (v1.9.13)
 
 - Bugfixes:
-  - Optional installation of XGBoost and LightGBM (more stable if problems with the installation of these packages occur)
-  - Bugfixes in osm.get_basemap(): (1) Default color of OSM basemap is set to white (if no OSM tiles retrieved), (2) Check whether one or more specified layers are empty
-  - Removed redundant OSM and ORS configuration and outputs
-  - Fixed inefficient processing order in gistools.buffers()
-  - gistools.overlay_difference(): Check whether specified polygon_gdf is None
+  - goodness_of_fit.modelfit(): No (failing) R-squared calculation when total sum of squares is zero (additional NOTE message)
+  - More detailed checks of input GeoDataFrame(s) in gistools functions buffers(), distance_matrix_from_gdf(), polygon_select(), point_spatial_join(), map_with_basemap(), and overlay_difference()
+  - Corrections in documentation/README
 - Other:
-  - huff.info() function with package information and OSM/ORS configuration 
-  - Extension of [methodological handbook](https://geowieland.github.io/huff_official/)
+  - Extension of huff.info(): Displaying available models etc. and test for OSM and ORS server response

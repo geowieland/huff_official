@@ -4,14 +4,16 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.29
-# Last update: 2026-09-29 19:52
+# Version:     1.0.30
+# Last update: 2026-10-05 19:19
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.12"
+PACKAGE_VERSION = "1.9.13"
+PACKAGE_AUTHOR = "Thomas Wieland"
+PACKAGE_AUTHOR_EMAIL = "geowieland@googlemail.com"
 
 PYPI_HUFF_URL = "https://pypi.org/project/huff/"
 GITHUB_HUFF_URL = "https://github.com/geowieland/huff_official"
@@ -70,6 +72,11 @@ MODELS = {
         "description": "Machine learning market area model",
         "metadata_model_type": "ML",
         "fit_function": "learn_fit"
+    },
+    "CDM": {
+        "description": "Competing Destinations Model",
+        "metadata_model_type": "CDM",
+        "fit_function": "huff_ml_fit"
     }
 }
 MODELS_LIST = list(MODELS.keys())
@@ -237,12 +244,12 @@ ORS_ATTRIBUTION = "© openrouteservice.org by HeiGIT | Map data © OpenStreetMap
 
 ORS_URL_RESTRICTIONS = "https://openrouteservice.org/restrictions/"
 
-# ORS_HEADERS = {
-#     "User-Agent": ORS_USER_AGENT,
-#     "Referer": GITHUB_HUFF_URL,
-#     "Content-Type": "application/json; charset=utf-8",
-#     "Accept": "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
-# }
+ORS_HEADERS = {
+    "User-Agent": ORS_USER_AGENT,
+    "Referer": GITHUB_HUFF_URL,
+    "Content-Type": "application/json; charset=utf-8",
+    "Accept": "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
+}
 
 ORS_AUTH = "5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f"
 # for TESTING

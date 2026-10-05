@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.13
-# Last update: 2026-06-16 18:30
+# Version:     1.0.14
+# Last update: 2026-10-05 19:19
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -176,11 +176,16 @@ def modelfit(
     SAR = float(np.sum(residuals_abs))    
     observed_mean = float(np.sum(observed)/observed_no)
     SQT = float(np.sum((observed-observed_mean)**2))
-    Rsq = float(1-(SQR/SQT))
+    Rsq = None
+    if SQT is not None and SQT > 0:
+        Rsq = float(1-(SQR/SQT))
     MSE = float(SQR/observed_no)
     RMSE = float(sqrt(MSE))
     MAE = float(SAR/observed_no)
     LL = np.sum(np.log(residuals_sq))
+
+    if Rsq is None:
+        print("NOTE: R-squared is not computed because the observed vector has zero variance.")
     
     sMAPE = float(np.mean(sAPE))
 
