@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.31
-# Last update: 2026-10-05 19:10
+# Version:     1.5.32
+# Last update: 2026-10-20 19:03
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -566,7 +566,8 @@ def buffers(
                 all_buffers_gdf,
                 point_buffers_gdf
                 ], 
-            ignore_index = True)
+            ignore_index = True
+            )
     
     all_buffers_gdf = all_buffers_gdf.to_crs(output_crs)
 
@@ -574,11 +575,23 @@ def buffers(
         print("OK")
 
     if donut:
-        point_buffers_gdf = overlay_difference(
-            polygon_gdf = point_buffers_gdf, 
-            sort_col = config.DEFAULT_SEGMENTS_COL,
-            verbose = verbose
-            )
+        all_buffers_gdf = gp.GeoDataFrame(
+            pd.concat(
+                [
+                    overlay_difference(
+                        polygon_gdf=group,
+                        sort_col=config.DEFAULT_SEGMENTS_COL,
+                    )
+                    for _, group in all_buffers_gdf.groupby(
+                        unique_id_col,
+                        sort=False,
+                    )
+                ],
+                ignore_index=True,
+            ),
+            geometry="geometry",
+            crs=all_buffers_gdf.crs,
+        )
 
     if merge_buffers:
 
@@ -677,19 +690,21 @@ def polygon_select(
     
     if gdf.crs != gdf_polygon_select.crs:
         raise ValueError(f"Coordinate reference systems of inputs do not match. Polygons: {str(gdf.crs)}, points: {str(gdf_polygon_select.crs)}")
-        
+
+    key_errors = []
     if gdf_unique_id_col not in gdf.columns:
-        raise KeyError(f"No column '{gdf_unique_id_col}' in input GeoDataFrame")
-    
+        key_errors.append(f"No column '{gdf_unique_id_col}' in input GeoDataFrame.")    
     if gdf_polygon_select_unique_id_col not in gdf_polygon_select.columns:        
-        raise KeyError(f"No column '{gdf_polygon_select_unique_id_col}' in input GeoDataFrame for selection")
+        key_errors.append(f"No column '{gdf_polygon_select_unique_id_col}' in input GeoDataFrame for selection.")
+    if len(key_errors) > 0:
+        raise KeyError(f"Missing columns: {' '.join(key_errors)}")
     
     if gdf.crs.is_geographic:
         print(f"WARNING: Input GeoDataFrames have geographic coordinate system {gdf.crs}. Results may be invalid.")
     
     if len(gdf) > 1:
         print(f"WARNING: Input GeoDataFrame 'gdf' includes {len(gdf)} objects. Using the first only.")
-        gdf = gdf[0]
+        gdf = gdf.iloc[[0]]
     
     if verbose:
         print(f"Selecting from a set of {len(gdf_polygon_select)} polygons", end = " ... ")

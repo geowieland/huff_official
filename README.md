@@ -23,17 +23,16 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 
 ## Documentation
 
-- Software paper: [arXiv](https://arxiv.org/abs/2602.17640) 
-- Methodological overview: [Handbook of Market Area and Accessibility Models](https://geowieland.github.io/huff_official/)
-
-A brief discussion of the included models and their application in the **huff** package may also be found in an article available at [Medium](https://medium.com/@geowieland/oldie-but-goodie-market-area-models-and-retail-location-analysis-in-python-9f6609355585?source=friends_link&sk=a0314d63cee214cda92aa8fd13d92b64).
+- Software paper (preprint): [arXiv](https://arxiv.org/abs/2602.17640) 
+- Methodological handbook: [Handbook of Market Area and Accessibility Models](https://geowieland.github.io/huff_official/)
+- Article: [Medium](https://medium.com/@geowieland/oldie-but-goodie-market-area-models-and-retail-location-analysis-in-python-9f6609355585?source=friends_link&sk=a0314d63cee214cda92aa8fd13d92b64)
 
 
 ## Citation
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.13) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.14) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -232,11 +231,12 @@ For detailed examples, see the /examples folder in the [public GitHub repository
 This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.13)
+## What's new (v1.9.14)
 
 - Bugfixes:
-  - goodness_of_fit.modelfit(): No (failing) R-squared calculation when total sum of squares is zero (additional NOTE message)
-  - More detailed checks of input GeoDataFrame(s) in gistools functions buffers(), distance_matrix_from_gdf(), polygon_select(), point_spatial_join(), map_with_basemap(), and overlay_difference()
-  - Corrections in documentation/README
-- Other:
-  - Extension of huff.info(): Displaying available models etc. and test for OSM and ORS server response
+  - Correct handling of individual missing/non-calculable isochrones in `ors.Client.isochrone()`
+  - Potential import problems (may occur in rare cases) have been fixed in `load_geodata()` and `load_interaction_matrix()`
+  - Fixed potential runtime error (may occur in rare cases) in `models.HuffModel.modelfit()`
+  - Fixed bug in `gistools.buffers()` with respect to calculcating overlay difference for all buffers
+  - Fixed bugs in `predictive_models`: 1) Correct testing whether LightGBM is available, 2) Correct handling of the (rare) case that all specified model trainings have failed, 3) Corrected incorrect order of ML model names
+  - Correct handling of empty data after optional removing of NaN values (may occur in rare cases) in `goodness_of_fit.modelfit()`

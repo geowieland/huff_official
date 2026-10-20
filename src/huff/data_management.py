@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.19
-# Last update: 2026-09-08 20:36
+# Version:     1.0.20
+# Last update: 2026-10-17 12:18
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -210,7 +210,7 @@ def load_geodata(
 
             print(f"WARNING: Invalid geometry information in {location_type} input data. Object is imported as pandas.DataFrame without geometry. Error: {str(e)}")
 
-            geodata_gpd = geodata_gpd[[unique_id]]    
+            geodata_gpd = geodata_tab[[unique_id]]    
     
     if verbose:
         print("OK")
@@ -391,6 +391,18 @@ def load_interaction_matrix(
     ...     data_type="xlsx"
     ... )
     """
+
+    missing_col_parameters = []
+    if customer_origins_col is None:
+        missing_col_parameters.append("No 'customer_origins_col' provided.")
+    if supply_locations_col is None:
+        missing_col_parameters.append("No 'supply_locations_col' provided.")
+    if attraction_col is None:
+        missing_col_parameters.append("No 'attraction_col' provided.")
+    if transport_costs_col is None:
+        missing_col_parameters.append("No 'transport_costs_col' provided.")
+    if len(missing_col_parameters) > 0:
+        raise InteractionMatrixError(f"Necessary columns were not specified by the user: {' '.join(missing_col_parameters)}")
     
     if isinstance(data, pd.DataFrame):
         
@@ -430,19 +442,21 @@ def load_interaction_matrix(
     else:
         raise ValueError("Error while loading interaction matrix: param 'data' must be pandas.DataFrame or file (.csv, .xlsx)")
     
-    import_key_errors = []   
+    import_key_errors = []
     if customer_origins_col not in interaction_matrix_df.columns:
-        import_key_errors.append(f"Column {customer_origins_col} not in data.")
+        import_key_errors.append(f"Column '{customer_origins_col}' not in data.")
     if supply_locations_col not in interaction_matrix_df.columns:
-        import_key_errors.append(f"Column {supply_locations_col} not in data.")
+        import_key_errors.append(f"Column '{supply_locations_col}' not in data.")
     if len(import_key_errors) > 0:
         raise InteractionMatrixError(f"Error(s) while importing interaction matrix: {' '.join(import_key_errors)}.")
 
     import_col_errors = []
-    if attraction_col is None or (isinstance(attraction_col, list) and len(attraction_col) == 0):
-        import_col_errors.append("No attraction column(s) stated.")
-    if transport_costs_col is None or (isinstance(transport_costs_col, list) and len(transport_costs_col) == 0):
-        import_col_errors.append("No transport costs column stated.")
+    if isinstance(attraction_col, str):
+        attraction_col = [attraction_col]
+    if not isinstance(attraction_col, list) or len(attraction_col) == 0:
+        import_col_errors.append("Attraction column(s) must be provided as a non-empty list.")
+    if not isinstance(transport_costs_col, str):
+        import_col_errors.append("Transport costs column must be provided as a string.")
     if len(import_col_errors) > 0:
         raise InteractionMatrixError(f"Error(s) while importing interaction matrix: {' '.join(import_col_errors)}.")
     
@@ -470,6 +484,9 @@ def load_interaction_matrix(
     type_errors_customer_origins = []
     
     if customer_origins_coords_col is not None:
+
+        if not isinstance(customer_origins_coords_col, (str, list)):
+            raise TypeError("Input 'customer_origins_coords_col' must be a string, a list of two column names, or None.")
 
         if verbose:
             print(f"Checking and processing customer origins coordinates", end = " ... ")
@@ -517,8 +534,6 @@ def load_interaction_matrix(
                     
         if len(type_errors_customer_origins) == 0:
 
-            customer_origins_geodata_gpd = customer_origins_geodata_gpd.drop(columns = customer_origins_coords_col)
-            
             customer_origins_geodata_tab = customer_origins_geodata_tab.drop_duplicates()
             
             try:
@@ -529,7 +544,7 @@ def load_interaction_matrix(
                     crs = crs_input
                     )
                 
-                customer_origins_geodata_gpd.set_crs(crs_output, inplace=True)
+                customer_origins_geodata_gpd.to_crs(crs_output, inplace=True)
 
             except Exception as e:
                 type_errors_customer_origins.append(f"No valid geometry information for customer origins: {str(e)}.")
@@ -629,6 +644,9 @@ def load_interaction_matrix(
 
     if supply_locations_coords_col is not None:
 
+        if not isinstance(supply_locations_coords_col, (str, list)):
+            raise TypeError("Input 'supply_locations_coords_col' must be a string, a list of two column names, or None.")
+        
         if verbose:
             print("Checking and processing supply locations coordinates", end = " ... ")
 
@@ -675,8 +693,6 @@ def load_interaction_matrix(
 
         if len(type_errors_supply_locations) == 0:
 
-            supply_locations_geodata_gpd = supply_locations_geodata_gpd.drop(columns = customer_origins_coords_col)
-            
             supply_locations_geodata_tab = supply_locations_geodata_tab.drop_duplicates()
             
             try:
@@ -687,7 +703,7 @@ def load_interaction_matrix(
                     crs = crs_input
                     )
                 
-                supply_locations_geodata_gpd.set_crs(crs_output, inplace=True)
+                supply_locations_geodata_gpd.to_crs(crs_output, inplace=True)
 
             except Exception as e:
                 type_errors_supply_locations.append(f"No valid geometry information for supply locations: {str(e)}.")

@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.2
-# Last update: 2026-09-29 19:51
+# Version:     1.1.3
+# Last update: 2026-10-11 13:07
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ try:
     from lightgbm import LGBMRegressor
 except Exception as e:
     print(f"LightGBM is not available: {str(e)}")
-    lightgbm = None
+    LGBMRegressor = None
 
 import huff.config as config
 from huff.goodness_of_fit import modelfit
@@ -672,57 +672,64 @@ def model_wrapper(
         if verbose:
             print("OK")
 
-    model = MODEL_REGISTRY[model_type]()
-
-    runtime_error = None
-
-    try:
-
-        if verbose:
-            print(f"Training {config.MODEL_WRAPPER_AVAILABLE[model_type]} model", end=" ... ")
-            
-        model.fit(X_train, y_train)
-        
-        if verbose:
-            print("OK")
-            
-    except Exception as e:
-        print(f"WARNING: Model training failed: '{e}'")
-        runtime_error = f"Model training failed: '{e}'"
-
     y_pred = None
     fit_metrics = None
 
-    if runtime_error is None and len(X_test) > 0:
-        
+    model = MODEL_REGISTRY[model_type]()
+
+    if model == {}:
+
+        runtime_error = f"Model specified as '{model_type}' is not available."
+        print(f"WARNING: {runtime_error}")
+
+    else:
+
+        runtime_error = None
+
         try:
-            
+
             if verbose:
-                print(f"Predicting with {config.MODEL_WRAPPER_AVAILABLE[model_type]} model", end=" ... ")
-
-            y_pred = model.predict(X_test)
-
+                print(f"Training {config.MODEL_WRAPPER_AVAILABLE[model_type]} model", end=" ... ")
+                
+            model.fit(X_train, y_train)
+            
             if verbose:
                 print("OK")
                 
         except Exception as e:
-            print(f"WARNING: Model prediction failed: '{e}'")
-            runtime_error = f"Model prediction failed: '{e}'"
+            print(f"WARNING: Model training failed: '{e}'")
+            runtime_error = f"Model training failed: '{e}'"
 
-        if runtime_error is None:
+        if runtime_error is None and len(X_test) > 0:
             
             try:
                 
-                fit_metrics = modelfit(
-                    observed=y_test,
-                    expected=y_pred,
-                    remove_nan=True,
-                    verbose=verbose
-                )            
-                
+                if verbose:
+                    print(f"Predicting with {config.MODEL_WRAPPER_AVAILABLE[model_type]} model", end=" ... ")
+
+                y_pred = model.predict(X_test)
+
+                if verbose:
+                    print("OK")
+                    
             except Exception as e:
-                print(f"WARNING: Calculation of fit metrics failed: '{e}'")
-                runtime_error = f"Calculation of fit metrics failed: '{e}'"
+                print(f"WARNING: Model prediction failed: '{e}'")
+                runtime_error = f"Model prediction failed: '{e}'"
+
+            if runtime_error is None:
+                
+                try:
+                    
+                    fit_metrics = modelfit(
+                        observed=y_test,
+                        expected=y_pred,
+                        remove_nan=True,
+                        verbose=verbose
+                    )            
+                    
+                except Exception as e:
+                    print(f"WARNING: Calculation of fit metrics failed: '{e}'")
+                    runtime_error = f"Calculation of fit metrics failed: '{e}'"
 
     predictive_model = PredictiveModel(
         y_pred=y_pred,
@@ -811,6 +818,7 @@ def models_wrapper(
     >>> result = models_wrapper(y, X, models=models)
     >>> result.models_fit_metrics_df
     """
+
     if models is None:
         models = {}
         
@@ -878,6 +886,8 @@ def models_wrapper(
     models_fit_metrics_df = pd.DataFrame(index=config.GOODNESS_OF_FIT_VALUES)
     
     for model in predictive_models:
+
+        runtime_error = model.runtime_error
         
         if runtime_error is None:
                                 
@@ -902,7 +912,7 @@ def models_wrapper(
 
     if verbose:
         print("OK")
-        
+       
     predictive_models = PredictiveModels(
         predictive_models = predictive_models,
         y_test_models = y_test_models,

@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.30
-# Last update: 2026-10-05 19:19
+# Version:     1.0.31
+# Last update: 2026-10-20 19:15
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.13"
+PACKAGE_VERSION = "1.9.14"
 PACKAGE_AUTHOR = "Thomas Wieland"
 PACKAGE_AUTHOR_EMAIL = "geowieland@googlemail.com"
 
@@ -210,7 +210,7 @@ MODEL_WRAPPER_SPLIT_PARAMS_DEFAULT = {
     "stratify": None,
     }
 
-# Machine learning models:
+# Machine learning models: 
 MODEL_WRAPPER_AVAILABLE = {
     "ols": "Ordinary Least Squares",
     "olsbg": "Ordinary Least Squares with Bagging",
@@ -218,9 +218,9 @@ MODEL_WRAPPER_AVAILABLE = {
     "rf": "Random Forest",
     "gb": "Gradient Boosted Trees",
     "knn": "K-nearest neighbor",
+    "svr": "Support-Vector Regression",
     "xgb": "Extreme Gradient Boosting",
     "lgbm": "LightGBM",
-    "svr": "Support-Vector Regression",
     "mlp": "Multi-layer Perceptron"
 }
 MODEL_WRAPPER_AVAILABLE_LIST = list(MODEL_WRAPPER_AVAILABLE.keys())

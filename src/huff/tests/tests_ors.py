@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.1.1
-# Last update: 2026-09-30 19:05
+# Version:     1.1.2
+# Last update: 2026-10-18 13:38
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -18,6 +18,41 @@ from huff.gistools import overlay_difference, buffers
 
 ors_client = Client(auth = "5b3ce3597851110001cf62487536b5d6794a4521a7b44155998ff99f")
 # API token FOR TESTING PURPOSES ONLY
+
+
+test_ors_example1 = ors_client.isochrone(
+    locations = [[8.681495,49.41461]],
+    # Example from ORS documentation
+    segments = [300, 600, 900],
+    range_type = "time",
+    profile = "driving-car",
+    timeout = 10,
+    output_filepath = "test_ors_example1.shp",
+    verbose = True
+)
+
+test_ors_example2 = ors_client.isochrone(
+    locations = [[8.681495,49.41461],[8.686507,49.41943]],
+    # Example from ORS documentation
+    segments = [300, 600, 900],
+    range_type = "time",
+    profile = "driving-car",
+    timeout = 10,
+    output_filepath = "test_ors_example2.shp",
+    verbose = True
+)
+
+
+test_ors_example3 = ors_client.isochrone(
+    locations = [[15.686507,1.41943],[8.681495,49.41461],[8.686507,49.41943]],
+    # Example from ORS documentation, first coordinate pair in list is invalid
+    segments = [300, 600, 900],
+    range_type = "time",
+    profile = "driving-car",
+    timeout = 10,
+    output_filepath = "test_ors_example3.shp",
+    verbose = True
+)
 
 
 # Buffers vs. isochrones:

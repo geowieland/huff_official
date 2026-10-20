@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.9.6
-# Last update: 2026-09-29 19:51
+# Version:     1.9.7
+# Last update: 2026-10-20 19:12
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -7232,7 +7232,7 @@ class HuffModel:
                     
                     return huff_modelfit
                     
-                except:
+                except Exception as e:
                     
                     print(f"WARNING: An error occured during the calculation of goodness-of-fit metrics for the {config.MODELS['Huff']['description']}: '{str(e)}'.")
                     
@@ -8964,6 +8964,13 @@ def get_isochrones(
             continue        
         
         isochrone_gdf = isochrone_output.get_isochrones_gdf()
+
+        if len(isochrone_gdf) == 0:
+            
+            no_isochrones_retrieved.append(unique_id_values[i])
+            unique_id_values.remove(unique_id_values[i])
+
+            continue
         
         if donut:
             isochrone_gdf = overlay_difference(

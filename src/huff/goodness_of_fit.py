@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.14
-# Last update: 2026-10-05 19:19
+# Version:     1.0.15
+# Last update: 2026-10-18 13:56
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -121,6 +121,8 @@ def modelfit(
         if len(obs_exp_clean) < len(observed) or len(obs_exp_clean) < len(expected):
             if verbose:
                 print("NOTE: Vectors 'observed' and/or 'expected' contain NaNs which are dropped.")
+
+        assert len(obs_exp_clean) > 0, "Due to removing NaNs, there are no observed/expected pairs left."
         
         observed = obs_exp_clean[config.DEFAULT_OBSERVED_COL].to_numpy()
         expected = obs_exp_clean[config.DEFAULT_EXPECTED_COL].to_numpy()
@@ -162,15 +164,17 @@ def modelfit(
         
     sAPE = abs(observed-expected)/((abs(observed)+abs(expected))/2)*perc_factor
     
-    data_residuals = pd.DataFrame({
-        config.DEFAULT_OBSERVED_COL: observed,
-        config.DEFAULT_EXPECTED_COL: expected,
-        "residuals": residuals,
-        "residuals_sq": residuals_sq,
-        "residuals_abs": residuals_abs,
-        config.APE_PREFIX: APE,
-        f"s{config.APE_PREFIX}": sAPE
-        })
+    data_residuals = pd.DataFrame(
+        {
+            config.DEFAULT_OBSERVED_COL: observed,
+            config.DEFAULT_EXPECTED_COL: expected,
+            "residuals": residuals,
+            "residuals_sq": residuals_sq,
+            "residuals_abs": residuals_abs,
+            config.APE_PREFIX: APE,
+            f"s{config.APE_PREFIX}": sAPE
+            }
+        )
 
     SQR = float(np.sum(residuals_sq))
     SAR = float(np.sum(residuals_abs))    
@@ -185,7 +189,7 @@ def modelfit(
     LL = np.sum(np.log(residuals_sq))
 
     if Rsq is None:
-        print("NOTE: R-squared is not computed because the observed vector has zero variance.")
+        print("WARNING: R-squared is not computed because the observed vector has zero variance.")
     
     sMAPE = float(np.mean(sAPE))
 

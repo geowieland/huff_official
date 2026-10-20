@@ -4,13 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.9
-# Last update: 2026-09-29 17:28
+# Version:     1.5.10
+# Last update: 2026-10-18 13:38
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 import pandas as pd
+import numpy as np
 import requests
 import geopandas as gp
 from shapely.geometry import shape
@@ -465,6 +466,7 @@ class Client:
         intersections: str = "true",
         profile: str = "driving-car",
         timeout = 10,
+        remove_contours: bool = True,
         save_output: bool = True,
         output_filepath: str = "isochrones.shp",
         output_crs: str = "EPSG:4326",
@@ -491,6 +493,8 @@ class Client:
             See https://openrouteservice.org/dev/#/api-docs/v2/isochrones/{profile}/post for available profiles.
         timeout : int, optional
             Maximum request time in seconds (default: 10).
+        remove_contours : bool, optional
+            If True, contour features from ORS are deleted from the output (default: True).
         save_output : bool, optional
             Whether to save the resulting GeoDataFrame as a file (default: True).
         output_filepath : str, optional
@@ -601,6 +605,8 @@ class Client:
                 )
             
             return isochrone_output
+
+        missing_locations = {}
         
         if status_code == 200:
 
@@ -608,7 +614,30 @@ class Client:
                 print ("Accessing ORS server successful")
 
             response_json = response.json()
-            
+
+            response_locations = response_json["metadata"]["query"]["locations"]
+
+            missing_locations = {
+                i: loc for i, loc in enumerate(locations)
+                if not any(
+                    np.allclose(loc, response_loc, atol=1e-5, rtol=0)
+                    for response_loc in response_locations
+                )
+            }
+
+            valid_indices = [
+                i for i in range(len(locations))
+                if i not in missing_locations
+            ]
+
+            group_index_mapping = {
+                new_index: original_index
+                for new_index, original_index in enumerate(valid_indices)
+            }
+
+            if len(missing_locations) > 0:
+                print(f"WARNING: {len(missing_locations)} specified locations are missing from the ORS query: {missing_locations}")
+
             metadata = response_json["metadata"]
             
             features = response_json["features"]
@@ -622,9 +651,28 @@ class Client:
 
             isochrones_gdf[config.ORS_SEGMENT_COL] = 0
             isochrones_gdf_properties_dict = dict(isochrones_gdf["properties"])
-            
-            for i in range(len(isochrones_gdf_properties_dict)):
-                isochrones_gdf.iloc[i,3] = isochrones_gdf_properties_dict[i]["value"]
+
+            if remove_contours:
+                isochrones_gdf = isochrones_gdf[
+                    isochrones_gdf["properties"].apply(
+                        lambda p: "contours" not in p
+                    )
+                ].copy()
+
+            isochrones_gdf = isochrones_gdf.reset_index(drop=True)
+
+            isochrones_gdf[config.ORS_SEGMENT_COL] = (
+                isochrones_gdf["properties"].apply(
+                    lambda p: p.get("value", None)
+                )
+            )
+
+            isochrones_gdf["original_location_index"] = (
+                isochrones_gdf["properties"].apply(
+                    lambda p: group_index_mapping.get(p["group_index"])
+                    if "group_index" in p else None
+                )
+            )
 
             isochrones_gdf = isochrones_gdf.drop(columns=["properties"])
             isochrones_gdf = isochrones_gdf.to_crs(output_crs)
@@ -639,6 +687,11 @@ class Client:
             error_message = ""
 
         else:
+
+            if response_reason == "":
+                response_reason = "No response reason from server."
+                if status_code == 500:
+                    response_reason = f"{response_reason} Possibly specified invalid coordinates and/or confusing of lon/lat."
             
             error_message = f"Error while accessing ORS server. Status code: {status_code} - {response_reason}"
             
@@ -661,7 +714,7 @@ class Client:
         helper.add_timestamp(
             isochrone_output,
             function="ors.Client.isochrone",
-            process=f"Retrieved isochrones ({range_type}, {profile}) with {len(segments)} segments for {len(locations)} locations",
+            process=f"Retrieved isochrones ({range_type}, {profile}) with {len(segments)} segments for {len(locations)-len(missing_locations)} locations. Invalid locations: {len(missing_locations)}.",
             status = "OK" if error_message == "" else error_message
             )
         
