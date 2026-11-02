@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.20
-# Last update: 2026-10-17 12:18
+# Version:     1.0.21
+# Last update: 2026-11-02 19:01
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -210,7 +210,8 @@ def load_geodata(
 
             print(f"WARNING: Invalid geometry information in {location_type} input data. Object is imported as pandas.DataFrame without geometry. Error: {str(e)}")
 
-            geodata_gpd = geodata_tab[[unique_id]]    
+            geodata_gpd = geodata_tab[[unique_id]]
+            geodata_gpd_original = geodata_tab[[unique_id]]
     
     if verbose:
         print("OK")

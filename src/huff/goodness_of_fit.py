@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.15
-# Last update: 2026-10-18 13:56
+# Version:     1.0.16
+# Last update: 2026-11-02 18:47
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -162,8 +162,14 @@ def modelfit(
         APE = abs(observed-expected)/observed*perc_factor
         MAPE = float(np.mean(APE))
         
-    sAPE = abs(observed-expected)/((abs(observed)+abs(expected))/2)*perc_factor
-    
+    obs_exp_denom = (abs(observed) + abs(expected)) / 2
+
+    sAPE = np.where(
+        obs_exp_denom == 0,
+        0,
+        abs(observed - expected) / obs_exp_denom * perc_factor
+    )
+
     data_residuals = pd.DataFrame(
         {
             config.DEFAULT_OBSERVED_COL: observed,

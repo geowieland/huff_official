@@ -4,15 +4,20 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.6.9
-# Last update: 2026-09-08 20:37
+# Version:     1.6.10
+# Last update: 2026-11-02 19:09
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 import geopandas as gp
+import huff
 from huff.models import create_interaction_matrix
 from huff.data_management import load_geodata, load_interaction_matrix, load_marketareas
 from huff.gistools import point_spatial_join, map_with_basemap, distance_matrix_from_gdf
+
+
+huff.info()
+# Information about the huff package
 
 
 # Dealing with customer origins (statistical districts):
@@ -35,28 +40,28 @@ Haslach_buf = Haslach.buffers(
 Haslach.summary()
 # Summary of customer origins
 
-Haslach.plot(
-    point_style = {
-        "name": "Districts",
-        "color": "black",
-        "alpha": 1,
-        "size": 15,
-    },
-    polygon_style = {
-        "name": "Buffers",
-        "color": {
-            "buffer": {
-                500: "midnightblue", 
-                1000: "blue", 
-                1500: "dodgerblue",
-                }
-            },            
-        "alpha": 0.3
-    },
-    map_title = "Districts in Haslach with buffers",    
-)
-# Plot map of customer origins and assigned buffers, 
-# both with user-defined layer styles
+# Haslach.plot(
+#     point_style = {
+#         "name": "Districts",
+#         "color": "black",
+#         "alpha": 1,
+#         "size": 15,
+#     },
+#     polygon_style = {
+#         "name": "Buffers",
+#         "color": {
+#             "buffer": {
+#                 500: "midnightblue", 
+#                 1000: "blue", 
+#                 1500: "dodgerblue",
+#                 }
+#             },            
+#         "alpha": 0.3
+#     },
+#     map_title = "Districts in Haslach with buffers",    
+# )
+# # Plot map of customer origins and assigned buffers, 
+# # both with user-defined layer styles
 
 Haslach.define_marketsize("pop")
 # Definition of market size variable
@@ -114,7 +119,8 @@ Haslach_supermarkets.isochrones(
     # Authentification token FOR TESTING
     output_filepath="Haslach_supermarkets_iso.shp",
     output_crs="EPSG:31467",
-    delay=0.2
+    delay=0.2,
+    verbose = True
     )
 # Obtaining isochrones for walking (5 and 10 minutes)
 # ORS API documentation: https://openrouteservice.org/dev/#/api-docs/v2/

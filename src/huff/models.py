@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.9.7
-# Last update: 2026-10-20 19:12
+# Version:     1.9.8
+# Last update: 2026-11-02 19:20
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -13,6 +13,7 @@
 import pandas as pd
 import geopandas as gp
 import numpy as np
+import math
 import time
 import statsmodels.regression
 from statsmodels.formula.api import ols
@@ -4424,7 +4425,7 @@ class InteractionMatrix:
         cols_t = [col + config.DEFAULT_LCT_SUFFIX for col in cols]
 
         if f"{config.DEFAULT_COLNAME_PROBABILITY}{config.DEFAULT_LCT_SUFFIX}" not in interaction_matrix_df.columns:
-        # Check whether interaction matrix already includes transformed columns
+
             interaction_matrix = self.mci_transformation(
                 cols = cols,
                 verbose = verbose
@@ -6277,7 +6278,7 @@ class HuffModel:
         cols_t = [col + config.DEFAULT_LCT_SUFFIX for col in cols]
 
         if f"{config.DEFAULT_COLNAME_PROBABILITY}{config.DEFAULT_LCT_SUFFIX}" not in interaction_matrix_df.columns:
-        # Check whether interaction matrix already includes transformed columns
+
             interaction_matrix = interaction_matrix.mci_transformation(
                 cols = cols
                 )
@@ -8923,82 +8924,97 @@ def get_isochrones(
             
             raise ValueError("No segments for isochrones were specified")
 
-    coords = [(point.x, point.y) for point in geodata_gpd.geometry]
-    
-    unique_id_values = list(geodata_gpd[unique_id_col].values)
-
     ors_client = Client(
         server = ors_server,
         auth = ors_auth
         )
-    
-    isochrones_gdf = gp.GeoDataFrame(columns=[unique_id_col, "geometry"])
-    
+
+    no_isochrones_retrieved = []
+
     if range_type == "time":
         segments = [segment*60 for segment in segments]
     if range_type == "distance":
         segments = [segment*1000 for segment in segments]
 
-    i = 0
-    no_isochrones_retrieved = []
+    max_locations = config.ORS_ENDPOINTS["Isochrones"]["Restrictions"]["Locations"]
 
-    for x, y in coords:
-        
+    geodata_length = len(geodata_gpd)
+    geodata_batches = math.ceil(geodata_length / max_locations)
+
+    if verbose:
+        print(f"NOTE: Processing {geodata_length} locations. The maximum number of locations for a single ORS query is {max_locations}. Data is segmented into {geodata_batches} batches.")
+
+    coords = [(point.x, point.y) for point in geodata_gpd.geometry]
+
+    unique_id_values = list(geodata_gpd[unique_id_col].values)
+
+    coords_batches = np.array_split(coords, geodata_batches)
+    ids_batches = np.array_split(unique_id_values, geodata_batches)
+
+    geometry_batches = list(zip(coords_batches, ids_batches))
+
+    isochrones_gdf = gp.GeoDataFrame(columns=[unique_id_col, "geometry"])
+
+    for batch_coords, batch_ids in geometry_batches:
+
         isochrone_output = ors_client.isochrone(
-            locations = [[x, y]],
-            segments = segments,
-            range_type = range_type,
-            intersections = intersections,
-            profile = profile,
-            timeout = timeout,
-            save_output = False,
-            output_crs = output_crs,
-            verbose = verbose
-            )
-        
+            locations=batch_coords.tolist(),
+            segments=segments,
+            range_type=range_type,
+            intersections=intersections,
+            profile=profile,
+            timeout=timeout,
+            save_output=False,
+            output_crs=output_crs,
+            verbose=verbose
+        )
+
         if isochrone_output.status_code != 200:
+            no_isochrones_retrieved.extend(batch_ids)
+            continue
 
-            no_isochrones_retrieved.append(unique_id_values[i])
-            unique_id_values.remove(unique_id_values[i])
-
-            continue        
-        
         isochrone_gdf = isochrone_output.get_isochrones_gdf()
 
         if len(isochrone_gdf) == 0:
-            
-            no_isochrones_retrieved.append(unique_id_values[i])
-            unique_id_values.remove(unique_id_values[i])
-
+            no_isochrones_retrieved.extend(batch_ids)
             continue
-        
+
         if donut:
             isochrone_gdf = overlay_difference(
-                polygon_gdf = isochrone_gdf, 
-                sort_col = config.ORS_SEGMENT_COL,
+                polygon_gdf=isochrone_gdf,
+                sort_col=config.ORS_SEGMENT_COL,
                 verbose=verbose
-                )
-            
+            )
+
         time.sleep(delay)
 
-        isochrone_gdf[unique_id_col] = unique_id_values[i]
-        
-        isochrone_gdf = isochrone_gdf.rename(columns={config.ORS_SEGMENT_COL: config.DEFAULT_SEGMENTS_COL})
-        
+        isochrone_gdf[unique_id_col] = np.repeat(
+            batch_ids,
+            len(isochrone_gdf) // len(batch_ids)
+        )
+
+        isochrone_gdf = isochrone_gdf.rename(
+            columns={config.ORS_SEGMENT_COL: config.DEFAULT_SEGMENTS_COL}
+        )
+
         if range_type == "time":
-            isochrone_gdf[f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_min"] = isochrone_gdf[config.DEFAULT_SEGMENTS_COL]/60
+            isochrone_gdf[f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_min"] = (
+                isochrone_gdf[config.DEFAULT_SEGMENTS_COL] / 60
+            )
+
         if range_type == "distance":
-            isochrone_gdf[f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_km"] = isochrone_gdf[config.DEFAULT_SEGMENTS_COL]/1000        
+            isochrone_gdf[f"{config.DEFAULT_SEGMENTS_COL_ABBREV}_km"] = (
+                isochrone_gdf[config.DEFAULT_SEGMENTS_COL] / 1000
+            )
 
         isochrones_gdf = pd.concat(
-            [
-                isochrones_gdf, 
-                isochrone_gdf
-                ], 
+            [isochrones_gdf, isochrone_gdf],
             ignore_index=True
-            )
-        
-        i = i+1
+        )
+
+
+
+
 
     if len(no_isochrones_retrieved) > 0:
         print(f"WARNING: No isochrones were retrieved for {len(no_isochrones_retrieved)} input points. Unique IDs: {', '.join([str(entry) for entry in no_isochrones_retrieved])}.")
