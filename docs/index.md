@@ -19,20 +19,20 @@ Wieland T (2026) Handbook of Market Area and Accessibility Models in the `huff` 
 ### Market Area Models 
 
 #### Calculating Market Areas of Locations
-* [GIS-based Delineation of a Market Area](market-area.md)
-* [Huff Model: Theoretical Background and Formulation](huff-model.md)
-* [Competing Destinations Model](competing-destinations.md)
+[GIS-based Delineation of a Market Area](market-area.md)
+[Huff Model: Theoretical Background and Formulation](huff-model.md)
+[Competing Destinations Model](competing-destinations.md)
 
 #### Empirical Fitting of Market Area Models
-* [Huff Model: Global Optimization](huff-fitting-global.md)
-* [Huff Model: Local Optimization of Attraction](huff-fitting-local.md)
-* [Multiplicative Competitive Interaction (MCI) Model](mci-model.md)
-* [Machine Learning-Based Estimation of Market Areas](machine-learning-market-area.md)
-* [Goodness-Of-Fit Metrics](goodness-of-fit.md)
+[Huff Model: Global Optimization](huff-fitting-global.md)
+[Huff Model: Local Optimization of Attraction](huff-fitting-local.md)
+[Multiplicative Competitive Interaction (MCI) Model](mci-model.md)
+[Machine Learning-Based Estimation of Market Areas](machine-learning-market-area.md)
+[Goodness-Of-Fit Metrics](goodness-of-fit.md)
 
 ### Spatial Accessibility
-* [Hansen Accessibility](hansen-accessibility.md)
-* [Two-Step Floating Catchment Area (2SFCA) Analysis](2sfca.md)
+[Hansen Accessibility](hansen-accessibility.md)
+[Two-Step Floating Catchment Area (2SFCA) Analysis](2sfca.md)
 
 ### Appendix
-* [Glossary](glossary.md)
+[Glossary](glossary.md)

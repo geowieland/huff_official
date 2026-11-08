@@ -8,7 +8,7 @@ While the empirical parameterization of the [Huff](huff-fitting-global.md) or [M
 
 As in the MCI Model, we have $$I$$ [customer origins](glossary.md#customer-origins) ($$i = 1, ..., I$$) and $$J$$ [supply locations](glossary.md#supply-locations) ($$j = 1, ..., J$$). The supply locations are characterized by $$H$$ ($$h = 1,2,...,H$$) attributes. The generalized relationship can be represented as follows:
 
-$$\hat{E}_{ij} = f_\mathcal{A} (\bold{A_{h_j}}; \theta_\mathcal{A})$$
+$$\hat{E}_{ij} = f_\mathcal{A} (A_{h_j}; \theta_\mathcal{A})$$
 
 where $$\hat{E}_{ij}$$ equals the estimated customer or expenditure flows from customer origin $$i$$ to supply location $$j$$, $$A_{h_j}$$ is the $$h$$-th characteristic of shopping location $$j$$, $$\theta$$ is a set of given parameters, and $$\mathcal{A}$$ is a given list of various function and estimation types. Both the function and the parameters (if any exist) depend on the chosen method from the set $$\mathcal{A}$$. The travel time from $$i$$ to $$j$$, $$t_{ij}$$, can be included as a variable, though it does not necessarily have to be.
 
@@ -18,7 +18,7 @@ $$\hat{p}_{ij} = \frac{\hat{E}_{ij}}{\sum_{j=1}^J \hat{E}_{ij}}$$
 
 where $$\hat{p}_{ij}$$ equals the estimated interaction probabilities from customer origin $$i$$ to supply location $$j$$.
 
-The dependent variable $$E_{ij}$$ and the partial utilities $$\bold{A_{h_j}}$$ may be included in its original form, but may also be transformed. If the variables are transformed via the *log-centering transformation* from the MCI Model[4], the formula shown above serves as a generalized version of the MCI Model, in which, however, the mathematical relationship between the variables and the estimation algorithm are not predetermined. This is because, starting from the same (!) interaction matrix, $$p_{ij}$$ and $$E_{ij}$$ are exactly proportional; therefore, the following holds:
+The dependent variable $$E_{ij}$$ and the partial utilities $$A_{h_j}$$ may be included in its original form, but may also be transformed. If the variables are transformed via the *log-centering transformation* from the MCI Model[4], the formula shown above serves as a generalized version of the MCI Model, in which, however, the mathematical relationship between the variables and the estimation algorithm are not predetermined. This is because, starting from the same (!) interaction matrix, $$p_{ij}$$ and $$E_{ij}$$ are exactly proportional; therefore, the following holds:
 
 $$\log \left(\frac{p_{ij}}{\widetilde{p}_i} \right) = \log \left(\frac{E_{ij}}{\widetilde{E}_i} \right)$$
 
