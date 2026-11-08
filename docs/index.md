@@ -1,4 +1,4 @@
-# Handbook of Market Area and Accessibility Models in the `huff` Python Package
+# Handbook of Market Area and Accessibility Models in the huff Python Package
 
 **Author:** Thomas Wieland  
 **ORCID:** [0000-0001-5168-9846](https://orcid.org/0000-0001-5168-9846)  
