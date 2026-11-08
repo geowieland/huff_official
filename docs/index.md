@@ -3,7 +3,7 @@
 **Author:** Thomas Wieland  
 **ORCID:** [0000-0001-5168-9846](https://orcid.org/0000-0001-5168-9846)  
 **EMail:** [geowieland@googlemail.com](geowieland@googlemail.com)  
-**Version:** 1.2.0 · 2026-11-08
+**Version:** 1.2.1 · 2026-11-08
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 

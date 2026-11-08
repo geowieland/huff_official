@@ -26,7 +26,7 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 ## Documentation
 
 - Software paper (preprint): [arXiv](https://arxiv.org/abs/2602.17640) 
-- Methodological handbook: [Handbook of Market Area and Accessibility Models](https://geowieland.github.io/huff_official/)
+- Methodological handbook: [GitHub Pages](https://geowieland.github.io/huff_official/)
 - Article: [Medium](https://medium.com/@geowieland/oldie-but-goodie-market-area-models-and-retail-location-analysis-in-python-9f6609355585?source=friends_link&sk=a0314d63cee214cda92aa8fd13d92b64)
 
 

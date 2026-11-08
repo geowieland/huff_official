@@ -22,13 +22,13 @@ The dependent variable $$E_{ij}$$ and the partial utilities $$A_{h_j}$$ may be i
 
 $$\log \left(\frac{p_{ij}}{\widetilde{p}_i} \right) = \log \left(\frac{E_{ij}}{\widetilde{E}_i} \right)$$
 
-where $$\widetilde{p}_i$$ and $$\widetilde{A}_h$$ are the geometric means of $$p_{ij}$$ and $$A_h$$.
+where $$\widetilde{p}_i$$ and $$\widetilde{E}_i$$ are the geometric means of $$p_{ij}$$ and $$E_i$$.
 
 Since it is not specified how the relationship should be modeled, various models (see below) can be trained and compared using [goodness-of-fit metrics](goodness-of-fit.md).
 
 ## Machine learning algorithms
 
-To develop a model of the aforementioned relationships, one could consider any machine learning algorithm designed for regression problems (i.e., optimizations where the outcome is a continuous variable)[5][6]:
+To develop a model of the aforementioned relationships, one could consider any machine learning algorithm designed for regression problems (i.e., optimizations where the outcome is a continuous variable)[5][6][7]:
 
 ### Ordinary Least Squares (OLS)
 
@@ -94,3 +94,7 @@ New York, NY: Taylor & Francis. [10.1201/9780367816377](https://doi.org/10.1201/
 [6] Géron A (2025)
 *Hands-On Machine Learning with Scikit-Learn and PyTorch: Concepts, Tools, and Techniques to Build Intelligent Systems*.
 O'Reilly Media. https://www.oreilly.com/library/view/hands-on-machine-learning/9798341607972/
+
+[7] Lantz B (2013)
+*Machine Learning with R*.
+Birmingham: Packt Publishing.
