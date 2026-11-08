@@ -1,4 +1,4 @@
-# Simplified Delineation of a Market Area
+# GIS-based Delineation of a Market Area
 
 ## Background
 

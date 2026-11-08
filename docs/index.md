@@ -1,9 +1,9 @@
-# Handbook of Market Area and Accessibility Models
+# Handbook of Market Area and Accessibility Models in the `huff` Python Package
 
 **Author:** Thomas Wieland  
 **ORCID:** [0000-0001-5168-9846](https://orcid.org/0000-0001-5168-9846)  
 **EMail:** [geowieland@googlemail.com](geowieland@googlemail.com)  
-**Version:** 1.1.0 · 2026-10-01
+**Version:** 1.2.0 · 2026-11-08
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
@@ -11,17 +11,28 @@ This handbook aims to provide an overview of the market area models and approach
 
 If you use this handbook, please cite:
 
-Wieland T (2026) Handbook of Market Area and Accessibility Models. [https://geowieland.github.io/huff_official/](https://geowieland.github.io/huff_official/)
+Wieland T (2026) Handbook of Market Area and Accessibility Models in the `huff` Python Package. [https://geowieland.github.io/huff_official/](https://geowieland.github.io/huff_official/)
 
 
 ## Content
 
-* [Simplified Delineation of a Market Area](market-area.md)
-* [Huff Model](huff-model.md)
+### Market Area Models 
+
+#### Calculating Market Areas of Locations
+* [GIS-based Delineation of a Market Area](market-area.md)
+* [Huff Model: Theoretical Background and Formulation](huff-model.md)
+* [Competing Destinations Model](competing-destinations.md)
+
+#### Empirical Fitting of Market Area Models
 * [Huff Model: Global Optimization](huff-fitting-global.md)
 * [Huff Model: Local Optimization of Attraction](huff-fitting-local.md)
-* [Competing Destinations Model](competing-destinations.md)
 * [Multiplicative Competitive Interaction (MCI) Model](mci-model.md)
+* [Machine Learning-Based Estimation of Market Areas](machine-learning-market-area.md)
+* [Goodness-Of-Fit Metrics](goodness-of-fit.md)
+
+### Spatial Accessibility
 * [Hansen Accessibility](hansen-accessibility.md)
 * [Two-Step Floating Catchment Area (2SFCA) Analysis](2sfca.md)
+
+### Appendix
 * [Glossary](glossary.md)

@@ -47,7 +47,7 @@ The attraction values ​​are adjusted step-by-step by the algorithm, performi
 10. For any $$j$$ location ($$j=1,2,...,J$$): 
     - If $$APE_j \le maxtol(APE_j)$$: No further local optimization for location $$j$$ is required. Continue with location $$j + 1$$.
     - If $$APE_j > maxtol(APE_j)$$: Calculate the slope of the attraction function, $$b_j$$. Calculate the adjusted attraction of $$j$$, $$A_{j_{adj}}$$. Set $$A_j$$ in the [interaction matrix](glossary.md#interaction-matrix) to $$A_{j_{adj}}$$. Repeat steps 8 to 10. Continue with location $$j + 1$$.
-11. Calculate evaluation metrics for the global fit of the estimated model such as [RMSE](https://en.wikipedia.org/wiki/Root_mean_square_deviation), [MAPE](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error), or [R-Squared](https://en.wikipedia.org/wiki/Coefficient_of_determination)
+11. Calculate [evaluation metrics](goodness-of-fit.md) for the global fit of the estimated model such as [RMSE](goodness-of-fit.md#root-mean-squared-error-rmse), [MAPE](goodness-of-fit.md#mean-absolute-percentage-error-mape), or [R-Squared](goodness-of-fit.md#coefficient-of-determination-r-squared-r)
 12. Repeat steps 8 to 12 for the complete location system up to $$N$$ times and/or until the local optima and/or the global optimum is sufficiently approximated
 
 If the goal of the Huff analysis is to model changes in market areas (e.g., due to new supply locations, changes in location sizes, or changes in travel costs), define the respective scenario and re-calculate the Huff Model:

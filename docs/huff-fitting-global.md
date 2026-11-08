@@ -16,6 +16,8 @@ where $$T_{j_{obs}}$$ is the actual turnover of location $$j$$, and $$T_{j_{exp}
 
 The optimization algorithm is not specified a priori. Orpana and Lampinen[3] employ a [sequential quadratic programming](https://en.wikipedia.org/wiki/Sequential_quadratic_programming) approach. However, other optimization methods are also conceivable; for the researcher, these differ primarily in terms of computation time and the ability to define bounds and constraints[9].
 
+The model fit may be assessed by [evaluation metrics](goodness-of-fit.md) such as [RMSE](goodness-of-fit.md#root-mean-squared-error-rmse), [MAPE](goodness-of-fit.md#mean-absolute-percentage-error-mape), or [R-Squared](goodness-of-fit.md#coefficient-of-determination-r-squared-r).
+
 ## Further notes
 
 Some studies employ highly specialized operations research techniques for optimization, such as [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing)[4][8].

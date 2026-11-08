@@ -2,7 +2,7 @@
 
 ## Background
 
-The *Multiplicative Competitive Interaction (MCI) Model* was developed by Masao Nakanishi and Lee G. Cooper[1][2][3]. It is both a generalization of the [Huff Model](huff-model.md) and a linear transformation that transforms the Huff Model into an econometric model in which the weighting parameters may be estimated based on empirical data. An MCI Model analysis thus provides statistical inference ($$t$$ value, $$p$$ value, confidence intervals) for the weighting parameters. Performing a [market area analysis](glossary.md#market-area-model) using the MCI Model requires observed data on regional customer or expenditure flows, $$E_{ij}$$, or the corresponding regional market shares, $$p_{ij}$$[4]. The MCI Model is used in empirical studies to test hypotheses on the impact of marketing or location variables on customer patronage and/or to improve the fit of the Huff Model with respect to real-world data[4][5][6][7][8][9].
+The *Multiplicative Competitive Interaction (MCI) Model* was developed by Masao Nakanishi and Lee G. Cooper[1][2][3]. It is both a generalization of the [Huff Model](huff-model.md) and a linear transformation that transforms the Huff Model into an econometric model in which the weighting parameters may be estimated based on empirical data. An MCI Model analysis thus provides statistical inference ($$t$$ value, $$p$$ value, confidence intervals) for the weighting parameters. Performing a [market area analysis](glossary.md#market-area-model) using the MCI Model requires observed data on regional customer or expenditure flows, $$E_{ij}$$, or the corresponding regional market shares, $$p_{ij}$$[4]. The MCI Model is used in empirical studies to test hypotheses on the impact of marketing or location variables on customer patronage and/or to improve the fit of the Huff Model with respect to real-world data[4][5][6][7][8][9][10].
 
 ## Model formulation
 
@@ -42,7 +42,7 @@ A market area analysis using the MCI Model involves the following steps:
 8. Estimate the OLS regression model
 9. Calculate expected probabilities $$p_{ij}$$, and expected customer/expenditure flows $$E_{ij}$$
 10. Sum the expected values $$E_{ij}$$ for each supply location as $$T_{j}$$
-11. Calculate evaluation metrics for the global fit of the estimated model such as [RMSE](https://en.wikipedia.org/wiki/Root_mean_square_deviation), [MAPE](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error), or [R-Squared](https://en.wikipedia.org/wiki/Coefficient_of_determination)
+11. Calculate [evaluation metrics](goodness-of-fit.md) for the global fit of the estimated model such as [RMSE](goodness-of-fit.md#root-mean-squared-error-rmse), [MAPE](goodness-of-fit.md#mean-absolute-percentage-error-mape), or [R-Squared](goodness-of-fit.md#coefficient-of-determination-r-squared-r)
 
 If the goal of the MCI analysis is to model changes in market areas (e.g., due to new supply locations, changes in location sizes, or changes in travel costs), define the respective scenario and re-calculate the estimated MCI Model:
 
@@ -54,7 +54,7 @@ If the goal of the MCI analysis is to model changes in market areas (e.g., due t
 
 The empirical application of the MCI Model has the same requirements as a Huff Model analysis, including the calculation of [travel costs](glossary.md#travel-costs) for all $$I \times J$$ combinations of customer origins and supply locations (in the case that travel times are included in the $$H$$ utility variables). For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
 
-Customer store choices are typically inquired via household surveys, asking for, e.g., typical or previous shopping trips[4][10].
+Customer store choices are typically inquired via household surveys, asking for, e.g., typical or previous shopping trips[4][11]. If no other data is available, license plate analysis can also be used for a (very rough) segmentation[10].
 
 There are some studies that use the MCI Model for a local calibration of the Huff Model, which leads to utility functions differing by customer origins[8][9]. This is possible using the [Geographically Weighted Regression](https://en.wikipedia.org/wiki/Spatial_analysis#Spatial_regression) technique.
 
@@ -89,4 +89,8 @@ where $$\zeta_{h_j}$$ is the zeta-squared value of $$A_{h_{j}}$$.
 
 [9] Wieland T (2015) *Räumliches Einkaufsverhalten und Standortpolitik im Einzelhandel unter Berücksichtigung von Agglomerationseffekten - Theoretische Erklärungsansätze, modellanalytische Zugänge und eine empirisch-ökonometrische Marktgebietsanalyse anhand eines Fallbeispiels aus dem ländlichen Raum Ostwestfalens/Südniedersachsens*. Geographische Handelsforschung 23. Mannheim: MetaGIS. https://nbn-resolving.org/urn:nbn:de:bvb:20-opus-180753
 
-[10] Huff DL, McCallum BM (2008) Calibrating the Huff Model using ArcGIS Business Analyst. ESRI White Paper, September 2008. https://www.esri.com/library/whitepapers/pdfs/calibrating-huff-model.pdf
+[10] Kubis A, Hartmann M (2007)
+Analysis of Location of Large-area Shopping Centres. A Probabilistic Gravity Model for the Halle–Leipzig Area.
+*Jahrbuch für Regionalwissenschaft* 27(1), 43–57. [10.1007/s10037-006-0010-3](https://doi.org/10.1007/s10037-006-0010-3)
+
+[11] Huff DL, McCallum BM (2008) Calibrating the Huff Model using ArcGIS Business Analyst. ESRI White Paper, September 2008. https://www.esri.com/library/whitepapers/pdfs/calibrating-huff-model.pdf

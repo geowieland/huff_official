@@ -1,4 +1,4 @@
-# Huff Model
+# Huff Model: Theoretical Background and Formulation
 
 ## Background
 
