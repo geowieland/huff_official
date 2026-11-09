@@ -4,14 +4,14 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.0.32
-# Last update: 2026-11-02 19:06
+# Version:     1.0.33
+# Last update: 2026-11-09 17:52
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
 
 PACKAGE_NAME = "huff"
-PACKAGE_VERSION = "1.9.15"
+PACKAGE_VERSION = "1.9.16"
 PACKAGE_AUTHOR = "Thomas Wieland"
 PACKAGE_AUTHOR_EMAIL = "geowieland@googlemail.com"
 
@@ -333,6 +333,8 @@ ORS_DEFAULT = [5, 10, 15]
 ORS_DEFAULT_SERVICE = [900, 600, 300]
 
 USE_ORS_DEFAULT = True
+
+ORS_ORIGINAL_LOCATION_IDX = "original_location_index"
 
 
 # OSM config:

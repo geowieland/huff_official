@@ -34,7 +34,7 @@ Thomas Wieland [ORCID](https://orcid.org/0000-0001-5168-9846) [EMail](mailto:geo
 
 If you use this software, please cite:
 
-Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.15) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
+Wieland, T. (2026). huff: Market Area Analysis in Python (Version 1.9.16) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.18639559
 
 
 ## Installation
@@ -250,16 +250,14 @@ Wieland T (2018) A Hurdle Model Approach of Store Choice and Market Area Analysi
 
 Wieland T (2018) Competitive locations of grocery stores in the local supply context - The case of the urban district Freiburg-Haslach. *European Journal of Geography* 9(3): 98-115. https://www.eurogeojournal.eu/index.php/egj/article/view/41
 
-
 ## AI Usage Statement
 
 This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
 
 
-## What's new (v1.9.15)
+## What's new (v1.9.16)
 
-- General:
-  - The isochrones functions/methods in the `models` module now utilize the ORS API more efficiently: the list of locations is split and passed to `ors.Client.isochrone()` in batches, allowing for a greater number of isochrones to be calculated using a single API key (within the permissible maximum limits)
 - Bugfixes:
-  - Fixed potential `UnboundLocalError` which may have occurred in rare cases in `data_management.load_geodata()`
-  - `goodness_of_fit.modelfit()`: Fixed invalid symmetric absolute percentage error calculation when observed and expected values are equal to zero
+  - Fixed bug related to incorrect sorting of isochrones (when donut = True)
+- Other:
+  - ors.Client.isochrone() now displays the remaining ORS rate limit

@@ -42,7 +42,6 @@ test_ors_example2 = ors_client.isochrone(
     verbose = True
 )
 
-
 test_ors_example3 = ors_client.isochrone(
     locations = [[15.686507,1.41943],[8.681495,49.41461],[8.686507,49.41943]],
     # Example from ORS documentation, first coordinate pair in list is invalid

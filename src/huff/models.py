@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.9.8
-# Last update: 2026-11-02 19:20
+# Version:     1.9.9
+# Last update: 2026-11-09 17:51
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -8979,22 +8979,37 @@ def get_isochrones(
             no_isochrones_retrieved.extend(batch_ids)
             continue
 
-        if donut:
-            isochrone_gdf = overlay_difference(
-                polygon_gdf=isochrone_gdf,
-                sort_col=config.ORS_SEGMENT_COL,
-                verbose=verbose
-            )
-
         time.sleep(delay)
 
-        isochrone_gdf[unique_id_col] = np.repeat(
-            batch_ids,
-            len(isochrone_gdf) // len(batch_ids)
-        )
+        isochrone_gdf[unique_id_col] = [
+            batch_ids[index]
+            for index in isochrone_gdf[config.ORS_ORIGINAL_LOCATION_IDX]
+        ]
+
+        if donut:
+            isochrone_gdf = gp.GeoDataFrame(
+                pd.concat(
+                    [
+                        overlay_difference(
+                            polygon_gdf=group,
+                            sort_col=config.ORS_SEGMENT_COL,
+                            verbose=verbose
+                        )
+                        for _, group in isochrone_gdf.groupby(
+                            config.ORS_ORIGINAL_LOCATION_IDX,
+                            sort=False
+                        )
+                    ],
+                    ignore_index=True
+                ),
+                geometry="geometry",
+                crs=isochrone_gdf.crs
+            )
 
         isochrone_gdf = isochrone_gdf.rename(
-            columns={config.ORS_SEGMENT_COL: config.DEFAULT_SEGMENTS_COL}
+            columns={
+                config.ORS_SEGMENT_COL: config.DEFAULT_SEGMENTS_COL
+                }
         )
 
         if range_type == "time":

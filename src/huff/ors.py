@@ -4,8 +4,8 @@
 # Author:      Thomas Wieland 
 #              ORCID: 0000-0001-5168-9846
 #              mail: geowieland@googlemail.com              
-# Version:     1.5.10
-# Last update: 2026-10-18 13:38
+# Version:     1.5.11
+# Last update: 2026-11-09 17:52
 # Copyright (c) 2024-2026 Thomas Wieland
 #-----------------------------------------------------------------------
 
@@ -15,6 +15,7 @@ import numpy as np
 import requests
 import geopandas as gp
 from shapely.geometry import shape
+from datetime import datetime
 import huff.config as config
 import huff.helper as helper
 
@@ -583,7 +584,7 @@ class Client:
                 )
             
             status_code = response.status_code
-            
+           
         except Exception as e:
 
             error_message = f"Error while accessing ORS server: {str(e)}"
@@ -667,7 +668,7 @@ class Client:
                 )
             )
 
-            isochrones_gdf["original_location_index"] = (
+            isochrones_gdf[config.ORS_ORIGINAL_LOCATION_IDX] = (
                 isochrones_gdf["properties"].apply(
                     lambda p: group_index_mapping.get(p["group_index"])
                     if "group_index" in p else None
@@ -710,6 +711,21 @@ class Client:
             save_config,
             error_message
             )
+
+        rate_limit = None
+        rate_limit_remaining = None
+        rate_limit_reset = None
+        try:
+            rate_limit = response.headers.get("X-RateLimit-Limit")
+            rate_limit_remaining = response.headers.get("X-RateLimit-Remaining")
+            rate_limit_reset = response.headers.get("X-RateLimit-Reset")
+            rate_limit_reset_date = datetime.fromtimestamp(int(rate_limit_reset))
+            rate_limit_reset_date = rate_limit_reset_date.strftime("%d.%m.%Y %H:%M:%S")
+            if verbose:
+                print(f"NOTE: Remaining isochrones queries: {rate_limit_remaining}/{rate_limit}. Limit reset at: {rate_limit_reset_date}.")
+        except Exception as e:
+            if verbose:
+                print(f"NOTE: Rate limit information can not be resolved from ORS response.")
                
         helper.add_timestamp(
             isochrone_output,
@@ -985,6 +1001,21 @@ class Client:
             save_config,
             error_message
             )
+
+        rate_limit = None
+        rate_limit_remaining = None
+        rate_limit_reset = None
+        try:
+            rate_limit = response.headers.get("X-RateLimit-Limit")
+            rate_limit_remaining = response.headers.get("X-RateLimit-Remaining")
+            rate_limit_reset = response.headers.get("X-RateLimit-Reset")
+            rate_limit_reset_date = datetime.fromtimestamp(int(rate_limit_reset))
+            rate_limit_reset_date = rate_limit_reset_date.strftime("%d.%m.%Y %H:%M:%S")
+            if verbose:
+                print(f"NOTE: Remaining matrix queries: {rate_limit_remaining}/{rate_limit}. Limit reset at: {rate_limit_reset_date}.")
+        except Exception as e:
+            if verbose: 
+                print(f"NOTE: Rate limit information can not be resolved from ORS response.")
         
         helper.add_timestamp(
             matrix_output,
