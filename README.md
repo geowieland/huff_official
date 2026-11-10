@@ -258,6 +258,6 @@ This software was developed without the use of AI-generated code. GitHub Copilot
 ## What's new (v1.9.16)
 
 - Bugfixes:
-  - Fixed bug related to incorrect sorting of isochrones (when donut = True)
+  - Fixed bug related to incorrect sorting of isochrones (when donut = True) in `models.get_isochrones()`
 - Other:
-  - ors.Client.isochrone() now displays the remaining ORS rate limit
+  - `ors.Client.isochrone()` and `ors.Client.matrix()` now display the remaining ORS rate limit (if verbose = True)

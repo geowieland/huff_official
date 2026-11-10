@@ -22,7 +22,7 @@ affiliations:
 - name: Freiburg, Germany
   index: 1
 
-date: 5 October 2026
+date: 10 November 2026
 bibliography: paper.bib
 ---
 
@@ -58,7 +58,7 @@ The `huff` package for Python v1.9.x essentially provides the following features
 
   - *Basic Huff Model analysis*: Given an interaction matrix, users may calculate probabilities and expected customer flows with respect to customer origins, and total market areas of supply locations.
 
-  - *Model fitting based on empirical data*: Given empirical data on customer flows, regional market shares, or total sales, users may calibrate market area models. Model parametrization may be conducted using the *MCI Model*, by Maximum Likelihood optimization, or by a local optimization algorithm [guessefeldt2002; wieland2017]. Additionally, machine learning-based market area models may be trained using empirical customer flow data. Evaluation metrics are available that are automatically calculated to assess the predictive fit of the models (e.g., *R-squared*, *RMSE*, *MAPE*).
+  - *Model fitting based on empirical data*: Given empirical data on customer flows, regional market shares, or total sales, users may calibrate market area models. Model parametrization may be conducted using the *MCI Model*, by Maximum Likelihood optimization, or by a local optimization algorithm [@guessefeldt2002; @wieland2017]. Additionally, machine learning-based market area models may be trained using empirical customer flow data. Evaluation metrics are available that are automatically calculated to assess the predictive fit of the models (e.g., *R-squared*, *RMSE*, *MAPE*).
 
   - *Accessibility analysis*: The package provides methods of accessibility analysis, which may be combined with market area analysis (*Hansen Accessibility*, *2SFCA Analysis*). Competitor accessibility may also be calculated directly in order to extend the *Huff Model* in terms of the *Competing Destinations Model* [@fotheringham1985].
 
@@ -70,7 +70,7 @@ The `huff` package for Python v1.9.x essentially provides the following features
 To the best of our knowledge, no open-source Python package currently provides market area analysis and parameter estimation for the Huff or MCI Model. In particular, there is no known open-source software package that covers the entire workflow of market area analyses, as described in the "Statement of need" section. Some but not all of the functionalities mentioned are implemented in R packages: Both the `SpatialPosition` package [@giraud2025] and the `huff-tools` package [@pavlis2014] provide basic Huff Model analyses with two parameters, calculation of air distances, and map visualization. The R package `MCI` [@wieland2017] focuses on model fitting based on empirical data, but does not provide processing of geospatial data and the calculation of distances or travel times. Accessibility analysis via 2SFCA Analysis is implemented in the R package `accessibility` [@pereira2024]. The (almost) complete workflow for market area analyses using the Huff/MCI Model is currently only implemented in proprietary GIS software, namely the *ArcGIS Business Analyst* by *ESRI* [@esri2025; @huff2008].
 
 
-## Software architecture and documentation
+## Software design
 
 ### Design choices
 
@@ -94,7 +94,7 @@ The workflow above is illustrated in the *Examples* section of the package [READ
 
 ## Research impact statement
 
-The `huff` package has already been used in a health geography project at Würzburg University Hospital to model the catchment areas for pediatric oncology care; one publication citing the package has resulted from this research project so far [@kapitza2026]. The library is actively used: since its first release in April 2025, it has been downloaded 44,915 times from the Python Package Index (source: [pepy.tech](https://pepy.tech/project/huff), accessed October 5, 2026).
+The `huff` package has already been used in a health geography project at Würzburg University Hospital to model the catchment areas for pediatric oncology care; one publication citing the package has resulted from this research project so far [@kapitza2026]. The library is actively used: since its first release in April 2025, it has been downloaded 48,680 times from the Python Package Index (source: [pepy.tech](https://pepy.tech/project/huff), accessed November 11, 2026).
 
 
 ## AI usage disclosure
