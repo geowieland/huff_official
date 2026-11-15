@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,9 +47,76 @@
   </div>
 </header>
 
-<main class="container content">
-  {{ content }}
-</main>
+<div class="page-layout">
+
+  <!-- Left sidebar navigation -->
+  <aside class="sidebar">
+    <nav class="sidebar-nav">
+      <h2>Contents</h2>
+
+      <a href="{{ '/' | relative_url }}">Home</a>
+
+      <h3>Market Area Models</h3>
+
+      <a href="{{ '/market-area.html' | relative_url }}">
+        GIS-based Delineation of a Market Area
+      </a>
+
+      <a href="{{ '/huff-model.html' | relative_url }}">
+        Huff Model: Theoretical Background and Formulation
+      </a>
+
+      <a href="{{ '/competing-destinations.html' | relative_url }}">
+        Competing Destinations Model
+      </a>
+
+      <h3>Empirical Fitting</h3>
+
+      <a href="{{ '/huff-fitting-global.html' | relative_url }}">
+        Huff Model: Global Optimization
+      </a>
+
+      <a href="{{ '/huff-fitting-local.html' | relative_url }}">
+        Huff Model: Local Optimization of Attraction
+      </a>
+
+      <a href="{{ '/mci-model.html' | relative_url }}">
+        Multiplicative Competitive Interaction Model
+      </a>
+
+      <a href="{{ '/machine-learning-market-area.html' | relative_url }}">
+        Machine Learning-Based Estimation
+      </a>
+
+      <a href="{{ '/goodness-of-fit.html' | relative_url }}">
+        Goodness-Of-Fit Metrics
+      </a>
+
+      <h3>Spatial Accessibility</h3>
+
+      <a href="{{ '/hansen-accessibility.html' | relative_url }}">
+        Hansen Accessibility
+      </a>
+
+      <a href="{{ '/2sfca.html' | relative_url }}">
+        Two-Step Floating Catchment Area (2SFCA)
+      </a>
+
+      <h3>Appendix</h3>
+
+      <a href="{{ '/glossary.html' | relative_url }}">
+        Glossary
+      </a>
+
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <main class="content">
+    {{ content }}
+  </main>
+
+</div>
 
 <footer class="site-footer">
   <div class="container">

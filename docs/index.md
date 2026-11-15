@@ -3,7 +3,7 @@
 **Author:** Thomas Wieland  
 **ORCID:** [0000-0001-5168-9846](https://orcid.org/0000-0001-5168-9846)  
 **EMail:** [geowieland@googlemail.com](geowieland@googlemail.com)  
-**Version:** 1.2.1 · 2026-11-08
+**Version:** 1.2.2 · 2026-11-15
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
@@ -12,6 +12,20 @@ This handbook aims to provide an overview of the market area models and approach
 If you use this handbook, please cite:
 
 Wieland T (2026) Handbook of Market Area and Accessibility Models in the `huff` Python Package. [https://geowieland.github.io/huff_official/](https://geowieland.github.io/huff_official/)
+
+
+---
+
+<div class="toc-sidebar" markdown="1">
+
+### Contents
+
+* TOC
+{:toc}
+
+</div>
+
+---
 
 
 ## Content
