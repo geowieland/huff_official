@@ -18,11 +18,6 @@ Wieland T (2026) Handbook of Market Area and Accessibility Models in the `huff` 
 
 <div class="toc-sidebar" markdown="1">
 
-### Contents
-
-* TOC
-{:toc}
-
 </div>
 
 ---
