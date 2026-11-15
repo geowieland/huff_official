@@ -14,7 +14,6 @@ If you use this handbook, please cite:
 Wieland T (2026) Handbook of Market Area and Accessibility Models in the `huff` Python Package. [https://geowieland.github.io/huff_official/](https://geowieland.github.io/huff_official/)
 
 
----
 
 <div class="toc-sidebar" markdown="1">
 
