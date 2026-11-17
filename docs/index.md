@@ -3,7 +3,7 @@
 **Author:** Thomas Wieland  
 **ORCID:** [0000-0001-5168-9846](https://orcid.org/0000-0001-5168-9846)  
 **EMail:** [geowieland@googlemail.com](geowieland@googlemail.com)  
-**Version:** 1.2.2 · 2026-11-15
+**Version:** 1.2.3 · 2026-11-17
 
 ![](https://raw.githubusercontent.com/geowieland/huff_official/main/images/Huff_Freiburg.png)
 
@@ -19,26 +19,3 @@ Wieland T (2026) Handbook of Market Area and Accessibility Models in the `huff` 
 
 </div>
 
----
-
-
-## Content
-
-### Market Area Models  
-#### Calculating Market Areas of Locations  
-[GIS-based Delineation of a Market Area](market-area.md)  
-[Huff Model: Theoretical Background and Formulation](huff-model.md)  
-[Competing Destinations Model](competing-destinations.md)  
-#### Empirical Fitting of Market Area Models  
-[Huff Model: Global Optimization](huff-fitting-global.md)  
-[Huff Model: Local Optimization of Attraction](huff-fitting-local.md)  
-[Multiplicative Competitive Interaction (MCI) Model](mci-model.md)  
-[Machine Learning-Based Estimation of Market Areas](machine-learning-market-area.md)  
-[Goodness-Of-Fit Metrics](goodness-of-fit.md)
-
-### Spatial Accessibility  
-[Hansen Accessibility](hansen-accessibility.md)  
-[Two-Step Floating Catchment Area (2SFCA) Analysis](2sfca.md)
-
-### Appendix  
-[Glossary](glossary.md)
