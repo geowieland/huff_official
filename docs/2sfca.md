@@ -2,11 +2,11 @@
 
 ## Background
 
-The *Two-step Floating Catchment Area (2SFCA) Analysis* was developed by Luo and Wang[1] in the context of health geography, more specifically: to measure the [spatial accessibility](glossary.md#accessibility) of healthcare providers. The basic idea is to include both the capacity utilization of the providers (supply-to-demand ratio) and their accessibility from the [demand locations](glossary.md#customer-origins). Furthermore, a [catchment threshold](market-area.md) is introduced, which is a maximum [distance or travel time](glossary.md#travel-costs) up to which [supply locations](glossary.md#supply-locations) and demand locations are considered.
+The *Two-step Floating Catchment Area (2SFCA) Analysis* was developed by Luo and Wang[<a href="#ref-1">1</a>] in the context of health geography, more specifically: to measure the [spatial accessibility](glossary.md#accessibility) of healthcare providers. The basic idea is to include both the capacity utilization of the providers (supply-to-demand ratio) and their accessibility from the [demand locations](glossary.md#customer-origins). Furthermore, a [catchment threshold](market-area.md) is introduced, which is a maximum [distance or travel time](glossary.md#travel-costs) up to which [supply locations](glossary.md#supply-locations) and demand locations are considered.
 
 ## Model formulation
 
-The basic 2SFCA Analysis is calculated as follows [1]:
+The basic 2SFCA Analysis is calculated as follows [<a href="#ref-1">1</a>]:
 
 Step 1: $$R_j = \frac{S_j}{\sum_{k \in \{d_{kj} \leq d_0\}} P_k}$$
 
@@ -32,17 +32,29 @@ A basic 2SFCA Analysis involves the following steps:
 
 The empirical application of the 2SFCA Analysis has the same requirements as a Huff Model analysis, including the calculation of [travel costs](glossary.md#travel-costs) for all $$I \times J$$ combinations of customer origins and supply locations. For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
 
-The approach was extended by including [distance decay functions](glossary.md#distance-decay-function) from market area models instead of defining a distance threshold[2][3].
+The approach was extended by including [distance decay functions](glossary.md#distance-decay-function) from market area models instead of defining a distance threshold[<a href="#ref-2">2</a>][<a href="#ref-3">3</a>].
 
-For a broader discussion of 2SFCA Analysis, including a comparison with other approaches to modeling accessibility, see the paper by Rauch et al.[4]
+For a broader discussion of 2SFCA Analysis, including a comparison with other approaches to modeling accessibility, see the paper by Rauch et al.[<a href="#ref-4">4</a>]
 
 
 ## References
 
-[1] Luo W, Wang F (2003) Measures of spatial accessibility to health care in a GIS environment: synthesis and a case study in the Chicago region. *Environment and Planning B: Planning and Design* 30: 865-884. [10.1068/b29120](https://doi.org/10.1068/b29120)
+<a id="ref-1"></a>
+[1] Luo W, Wang F (2003) 
+Measures of spatial accessibility to health care in a GIS environment: synthesis and a case study in the Chicago region. 
+*Environment and Planning B: Planning and Design* 30: 865-884. [10.1068/b29120](https://doi.org/10.1068/b29120)
 
-[2] Luo J (2014) Integrating the Huff Model and Floating Catchment Area Methods to Analyze Spatial Access to Healthcare Services. *Transactions in GIS* 18(3): 436-448. [10.1111/tgis.12096](https://doi.org/10.1111/tgis.12096)
+<a id="ref-2"></a>
+[2] Luo J (2014) 
+Integrating the Huff Model and Floating Catchment Area Methods to Analyze Spatial Access to Healthcare Services. 
+*Transactions in GIS* 18(3): 436-448. [10.1111/tgis.12096](https://doi.org/10.1111/tgis.12096)
 
-[3] Subal J, Paal P, Krisp JM (2021) Quantifying spatial accessibility of general practitioners by applying a modified huff three-step floating catchment area (MH3SFCA) method. *International Journal of Health Geography* 20: 9. [10.1186/s12942-021-00263-3](https://doi.org/10.1186/s12942-021-00263-3)
+<a id="ref-3"></a>
+[3] Subal J, Paal P, Krisp JM (2021) 
+Quantifying spatial accessibility of general practitioners by applying a modified huff three-step floating catchment area (MH3SFCA) method. 
+*International Journal of Health Geography* 20: 9. [10.1186/s12942-021-00263-3](https://doi.org/10.1186/s12942-021-00263-3)
 
-[4] Rauch S, Stangl S, Haas T, Rauh J, Heuschmann PU (2023) Spatial inequalities in preventive breast cancer care: A comparison of different accessibility approaches for prevention facilities in Bavaria, Germany. *Journal of Transport & Health* 29: 101567. [10.1016/j.jth.2023.101567](https://doi.org/10.1016/j.jth.2023.101567)
+<a id="ref-4"></a>
+[4] Rauch S, Stangl S, Haas T, Rauh J, Heuschmann PU (2023) 
+Spatial inequalities in preventive breast cancer care: A comparison of different accessibility approaches for prevention facilities in Bavaria, Germany. 
+*Journal of Transport & Health* 29: 101567. [10.1016/j.jth.2023.101567](https://doi.org/10.1016/j.jth.2023.101567)

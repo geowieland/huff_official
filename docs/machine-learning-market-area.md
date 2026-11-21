@@ -2,7 +2,7 @@
 
 ## Background
 
-While the empirical parameterization of the [Huff](huff-fitting-global.md) or [MCI Model](mci-model.md) typically uses empirically determined market shares as the dependent variable, there are also a number of other studies that instead model empirical customer or expenditure flows directly, employing various modeling approaches (e.g., count data models)[1][2][3]. This procedure can be generalized, as a wide range of mathematical operations and estimation procedures can be considered. Performing a [market area analysis](glossary.md#market-area-model) using the a machine learning approach as shown below requires observed data on regional customer or expenditure flows, $$E_{ij}$$.
+While the empirical parameterization of the [Huff](huff-fitting-global.md) or [MCI Model](mci-model.md) typically uses empirically determined market shares as the dependent variable, there are also a number of other studies that instead model empirical customer or expenditure flows directly, employing various modeling approaches (e.g., count data models)[<a href="#ref-1">1</a>][<a href="#ref-2">2</a>][<a href="#ref-3">3</a>]. This procedure can be generalized, as a wide range of mathematical operations and estimation procedures can be considered. Performing a [market area analysis](glossary.md#market-area-model) using the a machine learning approach as shown below requires observed data on regional customer or expenditure flows, $$E_{ij}$$.
 
 ## Concept
 
@@ -18,7 +18,7 @@ $$\hat{p}_{ij} = \frac{\hat{E}_{ij}}{\sum_{j=1}^J \hat{E}_{ij}}$$
 
 where $$\hat{p}_{ij}$$ equals the estimated interaction probabilities from customer origin $$i$$ to supply location $$j$$.
 
-The dependent variable $$E_{ij}$$ and the partial utilities $$A_{h_j}$$ may be included in its original form, but may also be transformed. If the variables are transformed via the *log-centering transformation* from the MCI Model[4], the formula shown above serves as a generalized version of the MCI Model, in which, however, the mathematical relationship between the variables and the estimation algorithm are not predetermined. This is because, starting from the same (!) interaction matrix, $$p_{ij}$$ and $$E_{ij}$$ are exactly proportional; therefore, the following holds:
+The dependent variable $$E_{ij}$$ and the partial utilities $$A_{h_j}$$ may be included in its original form, but may also be transformed. If the variables are transformed via the *log-centering transformation* from the MCI Model[<a href="#ref-4">4</a>], the formula shown above serves as a generalized version of the MCI Model, in which, however, the mathematical relationship between the variables and the estimation algorithm are not predetermined. This is because, starting from the same (!) interaction matrix, $$p_{ij}$$ and $$E_{ij}$$ are exactly proportional; therefore, the following holds:
 
 $$\log \left(\frac{p_{ij}}{\widetilde{p}_i} \right) = \log \left(\frac{E_{ij}}{\widetilde{E}_i} \right)$$
 
@@ -28,7 +28,7 @@ Since it is not specified how the relationship should be modeled, various models
 
 ## Machine learning algorithms
 
-To develop a model of the aforementioned relationships, one could consider any machine learning algorithm designed for regression problems (i.e., optimizations where the outcome is a continuous variable)[5][6][7]:
+To develop a model of the aforementioned relationships, one could consider any machine learning algorithm designed for regression problems (i.e., optimizations where the outcome is a continuous variable)[<a href="#ref-5">5</a>][<a href="#ref-6">6</a>][<a href="#ref-7">7</a>]:
 
 ### Ordinary Least Squares (OLS)
 
@@ -73,28 +73,35 @@ MLP is a feedforward [artificial neural network](https://en.wikipedia.org/wiki/N
 
 ## References
 
+<a id="ref-1"></a>
 [1] Fox EJ, Postrel S, McLaughlin A (2007)
 The Impact of Retail Location on Retailer Revenues: An Empirical Investigation
 https://www.researchgate.net/publication/228637298_The_Impact_of_Retail_Location_on_Retailer_Revenues_An_Empirical_Investigation
 
+<a id="ref-2"></a>
 [2] Okoruwa A, Nourse H, Terza J (1994) 
 Estimating Sales for Retail Centers: An Application of the Poisson Gravity Model. 
 *Journal of Real Estate Research* 9(1), 85–97. [10.1080/10835547.1994.12090741](https://doi.org/10.1080/10835547.1994.12090741)
 
+<a id="ref-3"></a>
 [3] Wieland T (2018) 
 A Hurdle Model Approach of Store Choice and Market Area Analysis in Grocery Retailing. 
 *Papers in Applied Geography* 4(4): 370-389. [10.1080/23754931.2018.1519458](https://doi.org/10.1080/23754931.2018.1519458)
 
+<a id="ref-4"></a>
 [4] Nakanishi M, Cooper LG (1974) Parameter estimation for a Multiplicative Competitive Interaction Model: Least squares approach. *Journal of Marketing Research* 11(3): 303–311. [10.2307/3151146](https://doi.org/10.2307/3151146).
 
+<a id="ref-5"></a>
 [5] Boehmke B, Greenwell B (2020) 
 *Hands-On Machine Learning with R*. 1 ed. 
 New York, NY: Taylor & Francis. [10.1201/9780367816377](https://doi.org/10.1201/9780367816377)
 
+<a id="ref-6"></a>
 [6] Géron A (2025)
 *Hands-On Machine Learning with Scikit-Learn and PyTorch: Concepts, Tools, and Techniques to Build Intelligent Systems*.
 O'Reilly Media. https://www.oreilly.com/library/view/hands-on-machine-learning/9798341607972/
 
+<a id="ref-7"></a>
 [7] Lantz B (2013)
 *Machine Learning with R*.
 Birmingham: Packt Publishing.

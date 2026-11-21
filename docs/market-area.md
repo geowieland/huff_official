@@ -2,7 +2,7 @@
 
 ## Background
 
-Given an existing [supply location](glossary.md#supply-locations), a [market area](glossary.md#market-area) may be delineated empirically using customer spotting techniques, e.g., via surveys or loyalty card data. The simplest way to delineate a market area of a new supply location (or when no empirical data on customers are available) is to define a zone around a location based on a maximum distance or travel time. This maximum may be interpreted as a catchment threshold indicating an (artificial) limit beyond which demanders are no longer taken into account. The [customer origins](glossary.md#customer-origins) within the resulting area are regarded as a part of the market area. The total area may also be segmented geographically[1][2]. In a [GIS (Geographic Information System)](https://en.wikipedia.org/wiki/Geographic_information_system) context, assigning the origins to the market area may be undergone with overlay analysis, more precisely: with a [spatial join](https://en.wikipedia.org/wiki/Spatial_join)[3]. The methods of delineation differ in terms of how the (approximated) market area is calculated or which type of [travel costs](glossary.md#travel-costs) is used as a basis.
+Given an existing [supply location](glossary.md#supply-locations), a [market area](glossary.md#market-area) may be delineated empirically using customer spotting techniques, e.g., via surveys or loyalty card data. The simplest way to delineate a market area of a new supply location (or when no empirical data on customers are available) is to define a zone around a location based on a maximum distance or travel time. This maximum may be interpreted as a catchment threshold indicating an (artificial) limit beyond which demanders are no longer taken into account. The [customer origins](glossary.md#customer-origins) within the resulting area are regarded as a part of the market area. The total area may also be segmented geographically[<a href="#ref-1">1</a>][<a href="#ref-2">2</a>]. In a [GIS (Geographic Information System)](https://en.wikipedia.org/wiki/Geographic_information_system) context, assigning the origins to the market area may be undergone with overlay analysis, more precisely: with a [spatial join](https://en.wikipedia.org/wiki/Spatial_join)[<a href="#ref-3">3</a>]. The methods of delineation differ in terms of how the (approximated) market area is calculated or which type of [travel costs](glossary.md#travel-costs) is used as a basis.
 
 
 ## Buffers
@@ -13,7 +13,7 @@ As a first approximation, a market area may be delineated using a [buffer](https
 
 Source: own illustration (Base map: OpenStreetMap)
 
-Buffer and overlay analyses are standard applications in a GIS context that have frequently been used in location planning in the past[3]. Apart from the input locations, they require no additional data. However, they do not take into account actual traffic conditions (road network, one-way streets, natural barriers such as mountains or rivers). In contrast, [accessibility](glossary.md#accessibility) is expressed in terms of straight-line distance, which implies a homogeneous surface. 
+Buffer and overlay analyses are standard applications in a GIS context that have frequently been used in location planning in the past[<a href="#ref-3">3</a>]. Apart from the input locations, they require no additional data. However, they do not take into account actual traffic conditions (road network, one-way streets, natural barriers such as mountains or rivers). In contrast, [accessibility](glossary.md#accessibility) is expressed in terms of straight-line distance, which implies a homogeneous surface.
 
 ## Road distances and travel times
 
@@ -35,15 +35,24 @@ Street distance and travel times thus take into account realistic traffic condit
 
 The same methodology may be applied in [accessibility](glossary.md#accessibility) analysis. In these cases, the proximity analysis is mostly conducted from the customer origins level. Furthermore, the basic [Two-Step Floating Catchment Area Analysis](2sfca.md) is based on a distance-specific delineation.
 
-Results of customer spotting may be used for the parametrization of [distance-decay functions](glossary.md#distance-decay-function)[2].
+Results of customer spotting may be used for the parametrization of [distance-decay functions](glossary.md#distance-decay-function)[<a href="#ref-2">2</a>].
 
 Customer spotting data and pre-defined market areas (such as buffers, isochrones etc.) may be combined. For example, empirically recorded customer locations can be overlaid with predefined catchment area radii, distances, or travel times.
 
 
 ## References
 
-[1] Levy M, Weitz BA, Grewal D (2014) *Retailing Management*. New York: McGraw Hill.
+<a id="ref-1"></a>
+[1] Levy M, Weitz BA, Grewal D (2014) 
+*Retailing Management*. 
+New York: McGraw Hill.
 
-[2] Wieland T (2017) Market Area Analysis for Retail and Service Locations with MCI. *R Journal* 9(1): 298-323. [10.32614/RJ-2017-020](https://doi.org/10.32614/RJ-2017-020)
+<a id="ref-2"></a>
+[2] Wieland T (2017) 
+Market Area Analysis for Retail and Service Locations with MCI. 
+*R Journal* 9(1): 298-323. [10.32614/RJ-2017-020](https://doi.org/10.32614/RJ-2017-020)
 
-[3] Benoit D, Clarke GP (1997) Assessing GIS for retail location planning. *Journal of Retailing and Consumer Services* 4(4): 239-258. [10.1016/S0969-6989(96)00047-1](https://doi.org/10.1016/S0969-6989(96)00047-1)
+<a id="ref-3"></a>
+[3] Benoit D, Clarke GP (1997) 
+Assessing GIS for retail location planning. 
+*Journal of Retailing and Consumer Services* 4(4): 239-258. [10.1016/S0969-6989(96)00047-1](https://doi.org/10.1016/S0969-6989(96)00047-1)

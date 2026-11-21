@@ -2,11 +2,11 @@
 
 ## Background
 
-The *Hansen Accessibility*, named after him, was developed by Walter G. Hansen in the context of urban planning and land use[1]. Starting from a [customer origin](glossary.md#customer-origins) (e.g., place of residence), it represents the sum of all opportunities (e.g., jobs, shopping facilities, leisure activities, medical services), weighted by [travel costs](glossary.md#travel-costs). It is a common formulation of [spatial accessibility](glossary.md#accessibility).
+The *Hansen Accessibility*, named after him, was developed by Walter G. Hansen in the context of urban planning and land use[<a href="#ref-1">1</a>]. Starting from a [customer origin](glossary.md#customer-origins) (e.g., place of residence), it represents the sum of all opportunities (e.g., jobs, shopping facilities, leisure activities, medical services), weighted by [travel costs](glossary.md#travel-costs). It is a common formulation of [spatial accessibility](glossary.md#accessibility).
 
 ## Model formulation
 
-The Hansen Accessibility is formalized as follows[1]:
+The Hansen Accessibility is formalized as follows[<a href="#ref-1">1</a>]:
 
 $$A_i = \sum_{j=1}^J O_j f(d_{ij})$$
 
@@ -31,18 +31,27 @@ The empirical application of the Hansen Accessibility has the same requirements 
 
 The Hansen Accessibility served as the model for incorporating cluster effects into the [Competing Destinations Model](competing-destinations.md).
 
-Harris[2] developed a very similar indicator for market potential from the provider's perspective:
+Harris[<a href="#ref-2">2</a>] developed a very similar indicator for market potential from the provider's perspective:
 
 $$M_j = \sum^I_{i=1} O_i d_{ij}^{-1}$$
 
 where $$M_j$$ is the market potential of supplier $$j$$, $$O_i$$ is the market potential at origin $$i$$, $$d_{ij}$$ is the distance or travel time between $$i$$ and $$j$$, and $$I$$ equals the number of customer origins.
 
-The principle of Hansen Accessibility (a weighted sum of all options) may be applied to more complex indicators parameterized using empirical-econometric market area or choice models[3].
+The principle of Hansen Accessibility (a weighted sum of all options) may be applied to more complex indicators parameterized using empirical-econometric market area or choice models[<a href="#ref-3">3</a>].
 
 ## References
 
-[1] Hansen WG (1959) How Accessibility Shapes Land Use. *Journal of the American Institute of Planners* 25(2): 73-76. [10.1080/01944365908978307](https://doi.org/10.1080/01944365908978307)
+<a id="ref-1"></a>
+[1] Hansen WG (1959) 
+How Accessibility Shapes Land Use. 
+*Journal of the American Institute of Planners* 25(2): 73-76. [10.1080/01944365908978307](https://doi.org/10.1080/01944365908978307)
 
-[2] Harris CD (1954) The Market as a Factor in the Localization of Industry in the United States. *Annals of the Association of American Geographers* 44(4): 315–348. [10.1080/00045605409352140](https://doi.org/10.1080/00045605409352140)
+<a id="ref-2"></a>
+[2] Harris CD (1954) 
+The Market as a Factor in the Localization of Industry in the United States. 
+*Annals of the Association of American Geographers* 44(4): 315–348. [10.1080/00045605409352140](https://doi.org/10.1080/00045605409352140)
 
-[3] Rauch S, Wieland T, Rauh J (2025) Accessibility of food - A multilevel approach comparing a choice based model with perceived accessibility in Mainfranken. *Journal of Transport Geography* 128: 104367. [10.1016/j.jtrangeo.2025.104367](https://doi.org/10.1016/j.jtrangeo.2025.104367)
+<a id="ref-3"></a>
+[3] Rauch S, Wieland T, Rauh J (2025) 
+Accessibility of food - A multilevel approach comparing a choice based model with perceived accessibility in Mainfranken. 
+*Journal of Transport Geography* 128: 104367. [10.1016/j.jtrangeo.2025.104367](https://doi.org/10.1016/j.jtrangeo.2025.104367)

@@ -2,17 +2,17 @@
 
 ## Background
 
-The *Multiplicative Competitive Interaction (MCI) Model* was developed by Masao Nakanishi and Lee G. Cooper[1][2][3]. It is both a generalization of the [Huff Model](huff-model.md) and a linear transformation that transforms the Huff Model into an econometric model in which the weighting parameters may be estimated based on empirical data. An MCI Model analysis thus provides statistical inference ($$t$$ value, $$p$$ value, confidence intervals) for the weighting parameters. Performing a [market area analysis](glossary.md#market-area-model) using the MCI Model requires observed data on regional customer or expenditure flows, $$E_{ij}$$, or the corresponding regional market shares, $$p_{ij}$$[4]. The MCI Model is used in empirical studies to test hypotheses on the impact of marketing or location variables on customer patronage and/or to improve the fit of the Huff Model with respect to real-world data[4][5][6][7][8][9][10].
+The *Multiplicative Competitive Interaction (MCI) Model* was developed by Masao Nakanishi and Lee G. Cooper[<a href="#ref-1">1</a>][<a href="#ref-2">2</a>][<a href="#ref-3">3</a>]. It is both a generalization of the [Huff Model](huff-model.md) and a linear transformation that transforms the Huff Model into an econometric model in which the weighting parameters may be estimated based on empirical data. An MCI Model analysis thus provides statistical inference ($$t$$ value, $$p$$ value, confidence intervals) for the weighting parameters. Performing a [market area analysis](glossary.md#market-area-model) using the MCI Model requires observed data on regional customer or expenditure flows, $$E_{ij}$$, or the corresponding regional market shares, $$p_{ij}$$[<a href="#ref-4">4</a>]. The MCI Model is used in empirical studies to test hypotheses on the impact of marketing or location variables on customer patronage and/or to improve the fit of the Huff Model with respect to real-world data[<a href="#ref-4">4</a>][<a href="#ref-5">5</a>][<a href="#ref-6">6</a>][<a href="#ref-7">7</a>][<a href="#ref-8">8</a>][<a href="#ref-9">9</a>][<a href="#ref-10">10</a>].
 
 ## Model formulation
 
-The Multiplicative Competitive Interaction Model is formalized as follows [1]:
+The Multiplicative Competitive Interaction Model is formalized as follows [<a href="#ref-1">1</a>]:
 
 $$p_{ij} = \frac{\prod_{h=1}^H A_{h_j}^{\gamma_h}}{\sum_{j=1}^J \prod_{h=1}^H A_{h_j}^{\gamma_h}}$$
 
 where $$A_{h_j}$$ is the $$h$$-th characteristic of supplier $$j$$, and $$\gamma_h$$ is the corresponding weighting coefficient.
 
-This model equation is linearized with the *log-centering transformation*[1]:
+This model equation is linearized with the *log-centering transformation*[<a href="#ref-1">1</a>]:
 
 $$\log \left(\frac{p_{ij}}{\widetilde{p}_i} \right) = \sum_{h=1}^H \hat{\gamma}_h \log \frac{A_{h_j}}{\widetilde{A}_h} + \log \left( \frac{\epsilon_{ij}}{\widetilde{\epsilon}_i} \right)$$
 
@@ -24,7 +24,7 @@ $$\hat{p}_{ij} = \frac{\prod_{h=1}^H A_{h_j}^{\hat{\gamma}_h}}{\sum_{j=1}^J \pro
 
 where $$\hat{p}_{ij}$$ is the estimated interaction probability (or market share) of origin $$i$$ with respect to location $$j$$.
 
-Instead of substituting the estimated parameters into the formula above, one can also use the *inverse log-centering transformation*[2]:
+Instead of substituting the estimated parameters into the formula above, one can also use the *inverse log-centering transformation*[<a href="#ref-2">2</a>]:
 
 $$\hat{p}_{ij} = \frac{\exp{\sum_{h=1}^H \hat{\gamma}_h \log \frac{A_{h_j}}{\widetilde{A}_{h_j}}}} {\sum_{j=1}^J \exp{\sum_{h=1}^H \hat{\gamma}_h \log \frac{A_{h_j}}{\widetilde{A}_{h_j}}}}$$
 
@@ -54,11 +54,11 @@ If the goal of the MCI analysis is to model changes in market areas (e.g., due t
 
 The empirical application of the MCI Model has the same requirements as a Huff Model analysis, including the calculation of [travel costs](glossary.md#travel-costs) for all $$I \times J$$ combinations of customer origins and supply locations (in the case that travel times are included in the $$H$$ utility variables). For more information on the calculation of a travel cost matrix, see the corresponding [Huff Model](huff-model.md#calculation-of-travel-costs) section.
 
-Customer store choices are typically inquired via household surveys, asking for, e.g., typical or previous shopping trips[4][11]. If no other data is available, license plate analysis can also be used for a (very rough) segmentation[10].
+Customer store choices are typically inquired via household surveys, asking for, e.g., typical or previous shopping trips[<a href="#ref-4">4</a>][<a href="#ref-11">11</a>]. If no other data is available, license plate analysis can also be used for a (very rough) segmentation[<a href="#ref-10">10</a>].
 
-There are some studies that use the MCI Model for a local calibration of the Huff Model, which leads to utility functions differing by customer origins[8][9]. This is possible using the [Geographically Weighted Regression](https://en.wikipedia.org/wiki/Spatial_analysis#Spatial_regression) technique.
+There are some studies that use the MCI Model for a local calibration of the Huff Model, which leads to utility functions differing by customer origins[<a href="#ref-8">8</a>][<a href="#ref-9">9</a>]. This is possible using the [Geographically Weighted Regression](https://en.wikipedia.org/wiki/Spatial_analysis#Spatial_regression) technique.
 
-Variables entering the MCI Model must have values greater than zero. Dummy variables do not need to be (and cannot be) transformed using the log-centering transformation; they may be included using the inverse log-centering transformation[4]. In cases where interval-scaled variables, which may take on negative values ​​(e.g., scoring values), are included in the model instead of ratio-scaled variables, Cooper and Nakanishi propose the zeta-squared transformation[3]:
+Variables entering the MCI Model must have values greater than zero. Dummy variables do not need to be (and cannot be) transformed using the log-centering transformation; they may be included using the inverse log-centering transformation[<a href="#ref-4">4</a>]. In cases where interval-scaled variables, which may take on negative values ​​(e.g., scoring values), are included in the model instead of ratio-scaled variables, Cooper and Nakanishi propose the zeta-squared transformation[<a href="#ref-3">3</a>]:
 
 $$z_{h_j} = \frac{A_{h_{j}}-\bar{A_{h}}}{\sigma_{A_{h}}}$$
 
@@ -71,26 +71,57 @@ where $$\zeta_{h_j}$$ is the zeta-squared value of $$A_{h_{j}}$$.
 
 ## References
 
-[1] Nakanishi M, Cooper LG (1974) Parameter estimation for a Multiplicative Competitive Interaction Model: Least squares approach. *Journal of Marketing Research* 11(3): 303–311. [10.2307/3151146](https://doi.org/10.2307/3151146).
+<a id="ref-1"></a>
+[1] Nakanishi M, Cooper LG (1974) 
+Parameter estimation for a Multiplicative Competitive Interaction Model: Least squares approach. 
+*Journal of Marketing Research* 11(3): 303–311. [10.2307/3151146](https://doi.org/10.2307/3151146).
 
-[2] Nakanishi M, Cooper LG (1982) Technical Note — Simplified Estimation Procedures for MCI Models. *Marketing Science* 1(3): 314-322. [10.1287/mksc.1.3.314](https://doi.org/10.1287/mksc.1.3.314)
+<a id="ref-2"></a>
+[2] Nakanishi M, Cooper LG (1982) 
+Technical Note — Simplified Estimation Procedures for MCI Models. 
+*Marketing Science* 1(3): 314-322. [10.1287/mksc.1.3.314](https://doi.org/10.1287/mksc.1.3.314)
 
-[3] Cooper LG, Nakanishi M (1983) Standardizing Variables in Multiplicative Choice Models. *Journal of Consumer Research* 10(1): 96–108. [10.1086/208948](https://doi.org/10.1086/208948)
+<a id="ref-3"></a>
+[3] Cooper LG, Nakanishi M (1983) 
+Standardizing Variables in Multiplicative Choice Models. 
+*Journal of Consumer Research* 10(1): 96–108. [10.1086/208948](https://doi.org/10.1086/208948)
 
-[4] Wieland T (2017) Market Area Analysis for Retail and Service Locations with MCI. *R Journal* 9(1): 298-323. [10.32614/RJ-2017-020](https://doi.org/10.32614/RJ-2017-020)
+<a id="ref-4"></a>
+[4] Wieland T (2017) 
+Market Area Analysis for Retail and Service Locations with MCI. 
+*R Journal* 9(1): 298-323. [10.32614/RJ-2017-020](https://doi.org/10.32614/RJ-2017-020)
 
-[5] Baviera-Puig A, Buitrago-Vera J, Escriba-Perez C (2016) Geomarketing models in supermarket location strategies. *Journal of Business Economics and Management* 17(6): 1205–1221. [10.3846/16111699.2015.1113198](https://doi.org/10.3846/16111699.2015.1113198)
+<a id="ref-5"></a>
+[5] Baviera-Puig A, Buitrago-Vera J, Escriba-Perez C (2016) 
+Geomarketing models in supermarket location strategies. 
+*Journal of Business Economics and Management* 17(6): 1205–1221. [10.3846/16111699.2015.1113198](https://doi.org/10.3846/16111699.2015.1113198)
 
-[6] Latruwe T, Van der Wee M, Vanleenhove P, Michielsen K, Verbrugge S, Colle D (2023) Improving inpatient and daycare admission estimates with gravity models. *Health Services and Outcomes Research Methodology* 23, 452–467. [10.1007/s10742-022-00298-4](https://doi.org/10.1007/s10742-022-00298-4)
+<a id="ref-6"></a>
+[6] Latruwe T, Van der Wee M, Vanleenhove P, Michielsen K, Verbrugge S, Colle D (2023) 
+Improving inpatient and daycare admission estimates with gravity models. 
+*Health Services and Outcomes Research Methodology* 23, 452–467. [10.1007/s10742-022-00298-4](https://doi.org/10.1007/s10742-022-00298-4)
 
-[7] Oruc N, Tihi B (2013) Competitive Location Assessment – the MCI Approach. *South East European Journal of Economics and Business* 7(2): 35-49. [10.2478/v10033-012-0013-7](https://doi.org/10.2478/v10033-012-0013-7)
+<a id="ref-7"></a>
+[7] Oruc N, Tihi B (2013) 
+Competitive Location Assessment – the MCI Approach. 
+*South East European Journal of Economics and Business* 7(2): 35-49. [10.2478/v10033-012-0013-7](https://doi.org/10.2478/v10033-012-0013-7)
 
-[8] Suárez-Vega R, Gutiérrez-Acuña JL, Rodríguez-Díaz M (2015) Locating a supermarket using a locally calibrated Huff model. *International Journal of Geographical Information Science* 29(2): 217–233. [10.1080/13658816.2014.958154](https://doi.org/10.1080/13658816.2014.958154)
+<a id="ref-8"></a>
+[8] Suárez-Vega R, Gutiérrez-Acuña JL, Rodríguez-Díaz M (2015) 
+Locating a supermarket using a locally calibrated Huff model. 
+*International Journal of Geographical Information Science* 29(2): 217–233. [10.1080/13658816.2014.958154](https://doi.org/10.1080/13658816.2014.958154)
 
-[9] Wieland T (2015) *Räumliches Einkaufsverhalten und Standortpolitik im Einzelhandel unter Berücksichtigung von Agglomerationseffekten - Theoretische Erklärungsansätze, modellanalytische Zugänge und eine empirisch-ökonometrische Marktgebietsanalyse anhand eines Fallbeispiels aus dem ländlichen Raum Ostwestfalens/Südniedersachsens*. Geographische Handelsforschung 23. Mannheim: MetaGIS. https://nbn-resolving.org/urn:nbn:de:bvb:20-opus-180753
+<a id="ref-9"></a>
+[9] Wieland T (2015) 
+*Räumliches Einkaufsverhalten und Standortpolitik im Einzelhandel unter Berücksichtigung von Agglomerationseffekten - Theoretische Erklärungsansätze, modellanalytische Zugänge und eine empirisch-ökonometrische Marktgebietsanalyse anhand eines Fallbeispiels aus dem ländlichen Raum Ostwestfalens/Südniedersachsens*. 
+Geographische Handelsforschung 23. Mannheim: MetaGIS. https://nbn-resolving.org/urn:nbn:de:bvb:20-opus-180753
 
+<a id="ref-10"></a>
 [10] Kubis A, Hartmann M (2007)
 Analysis of Location of Large-area Shopping Centres. A Probabilistic Gravity Model for the Halle–Leipzig Area.
 *Jahrbuch für Regionalwissenschaft* 27(1), 43–57. [10.1007/s10037-006-0010-3](https://doi.org/10.1007/s10037-006-0010-3)
 
-[11] Huff DL, McCallum BM (2008) Calibrating the Huff Model using ArcGIS Business Analyst. ESRI White Paper, September 2008. https://www.esri.com/library/whitepapers/pdfs/calibrating-huff-model.pdf
+<a id="ref-11"></a>
+[11] Huff DL, McCallum BM (2008) 
+*Calibrating the Huff Model using ArcGIS Business Analyst*.
+ESRI White Paper, September 2008. https://www.esri.com/library/whitepapers/pdfs/calibrating-huff-model.pdf

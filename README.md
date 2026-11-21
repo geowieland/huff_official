@@ -252,7 +252,7 @@ Wieland T (2018) Competitive locations of grocery stores in the local supply con
 
 ## AI Usage Statement
 
-This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official).
+This software was developed without the use of AI-generated code. GitHub Copilot in Microsoft Visual Studio Code using the GPT-5 mini model (by OpenAI) was used to assist in drafting and refining docstrings for documentation. The corresponding guidelines and constraints defined by the author are documented in `AGENTS-docstrings.md` in the [public GitHub repository](https://github.com/geowieland/huff_official). The text of the methodological handbook was written without the use of AI tools. ChatGPT, running with GPT-6 Luna, was used to construct the template for the default HTML layout.
 
 
 ## What's new (v1.9.16)
